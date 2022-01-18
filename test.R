@@ -50,7 +50,7 @@ all.equal(o3, e3)
 max(abs(o1 - e2))
 
 # test running time ----
-library(microbenchmark)
+library("microbenchmark")
 
 microbenchmark(A%*%B, armaMatMult(A, B), eigenMatMult(A, B), eigenMapMatMult(A, B))
 microbenchmark(A%*%B, eigenMatMult(A, B), eigenMapMatMult(A, B))
@@ -64,4 +64,49 @@ microbenchmark(A%*%t(B), eigenMatMulttrans(A,B), eigenMapMatMulttrans(A, B))
 
 # on avarage 612.49599/42.55237 = 14.39393
 
-x <- .Random.seed
+bar1 = data.frame(expr = NULL, time = NULL, dim = NULL)
+for (i in 10^seq(1,4)){
+  set.seed(12345)
+  A <- matrix(rnorm(i*i), i, i)
+  set.seed(54321)
+  B <- matrix(rnorm(i*i), i, i)
+  foo1 = microbenchmark(A%*%B, eigenMapMatMult(A, B))
+  foo1$dim = i
+  bar1 = rbind(bar1, foo1)
+}
+
+save(bar1, file = "./test_running_time.1.RData")
+
+## plot running time ----
+library("ggplot2")
+
+bar1$min = bar1$time/(10^9)
+
+p1 = ggplot(bar1[which(bar1$dim < 10000),], aes(x=dim, y=min, color=expr)) +
+  geom_point() +
+  geom_smooth() +
+  labs(title="Plot of Computational Time and Data Complexity",
+       x ="Data Complexity \n (Matrix Dimensions)", y = "Process Time (seconds)") +
+  scale_color_manual(name = "Algorithm", labels = c("pre-optimization", "optimized"),  values = c("red", "blue")) +
+  scale_x_continuous(breaks=c(0, 250, 500, 750, 1000), labels=c("0", "250 \n x 250", "500 \n x 500", "750 \n x 750", "1000 \n x 1000"))
+
+p1
+
+autoplot(bar1[which(bar1$dim < 10000),c(1,2)])
+
+p2 = ggplot(bar1[,], aes(x=dim, y=min, color=expr)) +
+  geom_point() +
+  geom_smooth() +
+  labs(title="Plot of Computational Time and Data Complexity",
+       x ="Data Complexity \n (Matrix Dimensions)", y = "Process Time (seconds)") +
+  scale_color_manual(name = "Algorithm", labels = c("pre-optimization", "optimized"),  values = c("red", "blue")) +
+  scale_x_continuous(breaks=c(0, 2500, 5000, 7500, 10000), labels=c("0", "2500 \n x 2500", "5000 \n x 5000", "7500 \n x 7500", "10000 \n x 10000"))
+
+p2
+
+# nameing of package ----
+library(available)
+
+available("Q.regressR")
+
+# Skelequant, Q-bone, iQ-Oss, SkeletoR, Q-regressR
