@@ -111,7 +111,9 @@ peek1 = textConnection(peek_head(paste0(data.dir,"/",list1[i]), n = 10, intern =
 col.n = max(count.fields(peek1, sep = ","))
 
 file1 = read.csv(paste0(data.dir,"/",list1[i]), skip = skip , header = header, 
-                 colClasses = c(rep("NULL", c(1:col.n)[data.column]-1), rep("numeric", 1), rep("NULL", (col.n-c(1:col.n)[data.column]))))
+                 colClasses = c(rep("NULL", c(1:col.n)[data.column]-1), 
+                                rep("numeric", 1), 
+                                rep("NULL", (col.n-c(1:col.n)[data.column]))))
 
 
 library("fpeek")
