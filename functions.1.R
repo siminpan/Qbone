@@ -105,12 +105,12 @@ header = F
 
 i = 1
 
-list1 = list.files(path = paste0(data.dir), pattern = ".csv$", recursive = TRUE)
+file.list = list.files(path = paste0(data.dir), pattern = ".csv$", recursive = TRUE)
 
-peek1 = textConnection(peek_head(paste0(data.dir,"/",list1[i]), n = 10, intern = TRUE)[-1])
-col.n = max(count.fields(peek1, sep = ","))
+peek.n10 = textConnection(peek_head(paste0(data.dir,"/",file.list[i]), n = 10, intern = TRUE)[-1])
+col.n = max(count.fields(peek.n10, sep = ","))
 
-file1 = read.csv(paste0(data.dir,"/",list1[i]), skip = skip , header = header, 
+file1 = read.csv(paste0(data.dir,"/",file.list[i]), skip = skip , header = header, 
                  colClasses = c(rep("NULL", c(1:col.n)[data.column]-1), 
                                 rep("numeric", 1), 
                                 rep("NULL", (col.n-c(1:col.n)[data.column]))))
@@ -133,28 +133,43 @@ ReadQbone <- function(
     if (!dir.exists(paths = run)) {
       stop("Directory provided does not exist")
     }
-    barcode.loc <- file.path(run, 'barcodes.tsv')
-    gene.loc <- file.path(run, 'genes.tsv')
-    features.loc <- file.path(run, 'features.tsv.gz')
-    matrix.loc <- file.path(run, 'matrix.mtx')
-    # Flag to indicate if this data is from CellRanger >= 3.0
-    pre_ver_3 <- file.exists(gene.loc)
-    if (!pre_ver_3) {
-      addgz <- function(s) {
-        return(paste0(s, ".gz"))
-      }
-      barcode.loc <- addgz(s = barcode.loc)
-      matrix.loc <- addgz(s = matrix.loc)
+    file.list = list.files(path = paste0(data.dir), pattern = ".csv$", recursive = TRUE)
+    if (length(file.list) ==0){
+      stop("Directory provided does not contain any .csv file")
     }
-    if (!file.exists(barcode.loc)) {
-      stop("Barcode file missing. Expecting ", basename(path = barcode.loc))
+    # if group ?
+    for (i in 1:length(file.list)){
+      peek.n10 = textConnection(peek_head(paste0(data.dir,"/",file.list[i]), n = 10, intern = TRUE)[-1])
+      col.n = max(count.fields(peek.n10, sep = ","))
+      
+      file1 = read.csv(paste0(data.dir,"/",file.list[i]), skip = skip , header = header, 
+                       colClasses = c(rep("NULL", c(1:col.n)[data.column]-1), 
+                                      rep("numeric", 1), 
+                                      rep("NULL", (col.n-c(1:col.n)[data.column]))))
     }
-    if (!pre_ver_3 && !file.exists(features.loc) ) {
-      stop("Gene name or features file missing. Expecting ", basename(path = features.loc))
-    }
-    if (!file.exists(matrix.loc)) {
-      stop("Expression matrix file missing. Expecting ", basename(path = matrix.loc))
-    }
+    
+    # barcode.loc <- file.path(run, 'barcodes.tsv')
+    # gene.loc <- file.path(run, 'genes.tsv')
+    # features.loc <- file.path(run, 'features.tsv.gz')
+    # matrix.loc <- file.path(run, 'matrix.mtx')
+    # # Flag to indicate if this data is from CellRanger >= 3.0
+    # pre_ver_3 <- file.exists(gene.loc)
+    # if (!pre_ver_3) {
+    #   addgz <- function(s) {
+    #     return(paste0(s, ".gz"))
+    #   }
+    #   barcode.loc <- addgz(s = barcode.loc)
+    #   matrix.loc <- addgz(s = matrix.loc)
+    # }
+    # if (!file.exists(barcode.loc)) {
+    #   stop("Barcode file missing. Expecting ", basename(path = barcode.loc))
+    # }
+    # if (!pre_ver_3 && !file.exists(features.loc) ) {
+    #   stop("Gene name or features file missing. Expecting ", basename(path = features.loc))
+    # }
+    # if (!file.exists(matrix.loc)) {
+    #   stop("Expression matrix file missing. Expecting ", basename(path = matrix.loc))
+    # }
     data <- readMM(file = matrix.loc)
     cell.barcodes <- read.table(file = barcode.loc, header = FALSE, sep = '\t', row.names = NULL)
     if (ncol(x = cell.barcodes) > 1) {
