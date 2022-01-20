@@ -119,6 +119,7 @@ file1 = read.csv(paste0(data.dir,"/",file.list[i]), skip = skip , header = heade
 library("fpeek")
 ReadQbone <- function(
   data.dir,
+  groupbyfolder = F, 
   data.column = 1,
   skip = 1,
   header = F
@@ -128,6 +129,11 @@ ReadQbone <- function(
   # strip.suffix = FALSE
 ) {
   full.data <- list()
+  meta.file <- c()
+  if (groupbyfolder == T){
+    meta.group <- c()
+  }
+  # check dir/file existence
   for (i in seq_along(along.with = data.dir)) {
     run <- data.dir[i]
     if (!dir.exists(paths = run)) {
@@ -137,16 +143,35 @@ ReadQbone <- function(
     if (length(file.list) ==0){
       stop("Directory provided does not contain any .csv file")
     }
-    # if group ?
+  }
+  # read file
     for (i in 1:length(file.list)){
       peek.n10 = textConnection(peek_head(paste0(data.dir,"/",file.list[i]), n = 10, intern = TRUE)[-1])
       col.n = max(count.fields(peek.n10, sep = ","))
       
-      file1 = read.csv(paste0(data.dir,"/",file.list[i]), skip = skip , header = header, 
-                       colClasses = c(rep("NULL", c(1:col.n)[data.column]-1), 
-                                      rep("numeric", 1), 
-                                      rep("NULL", (col.n-c(1:col.n)[data.column]))))
+      file1 =  drop(as.matrix(drop(as.matrix(
+        read.csv(paste0(data.dir,"/",file.list[i]),
+                 skip = skip , header = header,
+                 colClasses = c(rep("NULL", c(1:col.n)[data.column]-1),
+                                rep("numeric", 1),
+                                rep("NULL", (col.n-c(1:col.n)[data.column]))))
+                        ))))
+      full.data[[i]] <- file1
+      meta.file <- c(meta.file, gsub(".csv", "", basename(file.list[i])))
+      if (groupbyfolder == T){
+        meta.group <- c(meta.group, dirname(file.list[i]))
+      }
     }
+    
+    # if groupbyfolder ? dirname(file.list)
+    # file name gsub(".csv", "", basename(file.list[i]))
+    
+    
+    
+    # CreateSeuratObject.Assay 
+    # https://rdrr.io/cran/SeuratObject/src/R/seurat.R
+    #   object <- new(
+    #                 Class = 'Seurat',
     
     # barcode.loc <- file.path(run, 'barcodes.tsv')
     # gene.loc <- file.path(run, 'genes.tsv')
