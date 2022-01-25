@@ -64,6 +64,8 @@ Qbone <- setClass(
   slots = c(
     raw.data = 'list',
     meta.data = 'data.frame',
+    active.assay = 'character',
+    active.ident = 'factor',
     lasso.list = 'list',
     project.name = 'character',
     misc = 'list',
@@ -158,6 +160,10 @@ q2 = ReadQbone(data.dir, groupbyfolder = F)
 q3 = ReadQbone(data.dir, groupbyfolder = T)
 
 ## need utils and mthods ----
+
+# "[[.Seurat"  in seurat.R
+# https://rdrr.io/cran/SeuratObject/src/R/seurat.R
+
 .AddMetaData <- function(object, metadata, col.name = NULL) {
   if (is.null(x = col.name) && is.atomic(x = metadata)) {
     stop("'col.name' must be provided for atomic metadata types (eg. vectors)")
@@ -165,7 +171,7 @@ q3 = ReadQbone(data.dir, groupbyfolder = T)
   if (inherits(x = metadata, what = c('matrix', 'Matrix'))) {
     metadata <- as.data.frame(x = metadata)
   }
-  col.name <- col.name # %||% names(x = metadata) %||% colnames(x = metadata)
+  col.name <- col.name %||% names(x = metadata) %||% colnames(x = metadata) # `%||%`  in utilities.R https://rdrr.io/cran/Seurat/src/R/utilities.R
   if (is.null(x = col.name)) {
     stop("No metadata name provided and could not infer it from metadata object")
   }
@@ -328,6 +334,11 @@ ReadQbone(data.dir)
 nopeek(data.dir)
 microbenchmark(ReadQbone(data.dir),
                nopeek(data.dir))
+
+# Unit: seconds
+#                 expr       min       lq      mean    median        uq       max neval
+# ReadQbone(data.dir)  6.295032  6.41334  6.542009  6.547169  6.663608  6.859548   100
+# nopeek(data.dir)    11.677127 11.89641 12.061280 12.019549 12.215060 12.640033   100
 
 # Load data in ----
 library("fpeek")
