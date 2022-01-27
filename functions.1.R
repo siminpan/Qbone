@@ -40,7 +40,7 @@ o3 = A%*%t(B)
 e3 = eigenMapMatMulttrans(A,B)
 e4 = eigenMatMulttrans(A,B)
 
-# test class ----
+# test class example ----
 studentBio <- list(studentName = "Harry Potter", studentAge = 19, studentContact="London")
 class(studentBio) <- "StudentInfo"
 studentBio
@@ -72,13 +72,35 @@ Qbone <- setClass(
     # version = 'package_version',
     commands = 'list',
     tools = 'list'
+  ), 
+  prototype = c(
+    raw.data = list(),
+    meta.data = data.frame(id = NULL),
+    active.assay = NA_character_,
+    active.ident = factor(),
+    lasso.list = list(),
+    project.name = "Qbone",
+    misc = list(),
+    # version = 'package_version',
+    commands = list(),
+    tools = list()
   )
 )
 
-# Subset method ----
-# https://rdrr.io/cran/SeuratObject/man/Seurat-methods.html
+q0 = new("Qbone")
+
+# https://adv-r.hadley.nz/s4.html#helper
+# CreateSeuratObject.default <- 
+
+# generic ----
+# standardGeneric() is the S4 equivalent to UseMethod().
+
+# It is bad practice to use {} in the generic as it triggers a special case that is more expensive, and generally best avoided.
+
 
 # Read Qbone ----
+library("methods")
+# For this reason, it’s a good idea to include an explicit library(methods) whenever you’re using S4.
 library("fpeek")
 ReadQbone <- function(
   data.dir,
@@ -159,8 +181,10 @@ data.dir = "/home/span/Documents/MOSJ-3DCT/data/csv.group2"
 q2 = ReadQbone(data.dir, groupbyfolder = F)
 q3 = ReadQbone(data.dir, groupbyfolder = T)
 
-## need utils and mthods ----
+# need utils and mthods ----
 
+## Subset method ----
+# https://rdrr.io/cran/SeuratObject/man/Seurat-methods.html
 # "[[.Seurat"  in seurat.R
 # https://rdrr.io/cran/SeuratObject/src/R/seurat.R
 
