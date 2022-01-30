@@ -106,8 +106,8 @@ ReadQbone <- function(
   data.dir,
   groupbyfolder = F, 
   data.column = 1,
-  skip = 1,
-  header = F,
+  # skip = 1,
+  # header = F,
   project = "QboneProject"
   # gene.column = 2,
   # cell.column = 1,
@@ -133,15 +133,30 @@ ReadQbone <- function(
   }
   # read file & sort
   for (i in 1:length(file.list)){
-    peek.n10 = textConnection(peek_head(paste0(data.dir,"/",file.list[i]), n = 10, intern = TRUE)[-1])
-    col.n = max(count.fields(peek.n10, sep = ","))
+    # no need for V3
+    # peek.n10 = textConnection(peek_head(paste0(data.dir,"/",file.list[i]), n = 10, intern = TRUE)[-1])
+    # col.n = max(count.fields(peek.n10, sep = ","))
     
     file1 =  drop(as.matrix(drop(as.matrix(
-      read.csv(paste0(data.dir,"/",file.list[i]),
-               skip = skip , header = header,
-               colClasses = c(rep("NULL", c(1:col.n)[data.column]-1),
-                              rep("numeric", 1),
-                              rep("NULL", (col.n-c(1:col.n)[data.column]))))
+      # V1
+      # read.csv(paste0(data.dir,"/",file.list[i]),
+      #          skip = skip , header = header,
+      #          colClasses = c(rep("NULL", c(1:col.n)[data.column]-1),
+      #                         rep("numeric", 1),
+      #                         rep("NULL", (col.n-c(1:col.n)[data.column]))))
+      # V2
+      # readr::read_csv(paste0(data.dir,"/",file.list[i]),
+      #                 skip = skip , col_names = header,
+      #                 col_types = paste0(
+      #                   stringr::str_dup("-", c(1:col.n)[data.column]-1),
+      #                   stringr::str_dup("n", 1),
+      #                   stringr::str_dup("-", (col.n-c(1:col.n)[data.column]))
+      #                 )
+      # V3
+      data.table::fread(paste0(data.dir,"/",file.list[i]), 
+                        # skip = skip , 
+                        select=c(data.column)
+      )
     ))))
     full.data[[i]] <- sort(file1)
     meta.file <- c(meta.file, gsub(".csv", "", basename(file.list[i])))
@@ -202,8 +217,8 @@ q3 = ReadQbone(data.dir, groupbyfolder = T)
   object[[col.name]] <- metadata
   return(object)
 }
-rlang::`%||%`
-AddMetaData <- .AddMetaData
+
+AddMetaData <- .AddMetaData # https://rdrr.io/cran/SeuratObject/src/R/seurat.R
 
 AddMetaData(q2, c(1:15), col.name = "number") 
 
@@ -211,8 +226,8 @@ ReadQbone2 <- function(
   data.dir,
   groupbyfolder = F, 
   data.column = 1,
-  skip = 1,
-  header = F,
+  # skip = 1,
+  # header = F,
   project = "QboneProject"
   # gene.column = 2,
   # cell.column = 1,
@@ -238,15 +253,31 @@ ReadQbone2 <- function(
   }
   # read file & sort
   for (i in 1:length(file.list)){
-    peek.n10 = textConnection(peek_head(paste0(data.dir,"/",file.list[i]), n = 10, intern = TRUE)[-1])
-    col.n = max(count.fields(peek.n10, sep = ","))
+    # no need for V3
+    # peek.n10 = textConnection(peek_head(paste0(data.dir,"/",file.list[i]), n = 10, intern = TRUE)[-1])
+    # col.n = max(count.fields(peek.n10, sep = ","))
     
     file1 =  drop(as.matrix(drop(as.matrix(
-      read.csv(paste0(data.dir,"/",file.list[i]),
-               skip = skip , header = header,
-               colClasses = c(rep("NULL", c(1:col.n)[data.column]-1),
-                              rep("numeric", 1),
-                              rep("NULL", (col.n-c(1:col.n)[data.column]))))
+      # V1
+      # read.csv(paste0(data.dir,"/",file.list[i]),
+      #          skip = skip , header = header,
+      #          colClasses = c(rep("NULL", c(1:col.n)[data.column]-1),
+      #                         rep("numeric", 1),
+      #                         rep("NULL", (col.n-c(1:col.n)[data.column]))))
+      # V2
+      # readr::read_csv(paste0(data.dir,"/",file.list[i]),
+      #                 skip = skip , col_names = header,
+      #                 col_types = paste0(
+      #                   stringr::str_dup("-", c(1:col.n)[data.column]-1),
+      #                   stringr::str_dup("n", 1),
+      #                   stringr::str_dup("-", (col.n-c(1:col.n)[data.column]))
+      #                 )
+      # )
+      #V3
+      data.table::fread(paste0(data.dir,"/",file.list[i]), 
+                        # skip = skip , 
+                        select=c(data.column)
+      )
     ))))
     full.data[[i]] <- sort(file1)
     meta.file <- c(meta.file, gsub(".csv", "", basename(file.list[i])))
@@ -358,11 +389,115 @@ ReadQbone(data.dir)
 nopeek(data.dir)
 microbenchmark(ReadQbone(data.dir),
                nopeek(data.dir))
-
+# v1 read.csv
 # Unit: seconds
 #                 expr       min       lq      mean    median        uq       max neval
 # ReadQbone(data.dir)  6.295032  6.41334  6.542009  6.547169  6.663608  6.859548   100
 # nopeek(data.dir)    11.677127 11.89641 12.061280 12.019549 12.215060 12.640033   100
+
+# v2 read_csv
+# Unit: milliseconds                                                                                                               
+# expr        min         lq       mean     median         uq        max neval
+# ReadQbone(data.dir)   603.3834   671.3038   695.3638   687.6152   707.7549   954.6117   100
+# nopeek(data.dir) 11749.8619 11855.3312 11999.2320 12017.4779 12083.4712 12329.0297   100
+
+## readr::read_csv() ----
+
+microbenchmark(read.csv(paste0(data.dir,"03_VTK_IO.csv")),
+               readr::read_csv(paste0(data.dir,"03_VTK_IO.csv"))
+)
+data.dir = "/home/span/Documents/MOSJ-3DCT/data/csv.test"
+data.column = 1
+skip = 1
+header = F
+peek.n10 = textConnection(peek_head(paste0(data.dir,"/03_VTK_IO.csv"), n = 10, intern = TRUE)[-1])
+col.n = max(count.fields(peek.n10, sep = ","))
+
+read1 = readr::read_csv(paste0(data.dir,"/03_VTK_IO.csv"), 
+                        skip = skip , col_names = header,
+                        col_types = paste0(
+                          stringr::str_dup("-", c(1:col.n)[data.column]-1),
+                          stringr::str_dup("n", 1),
+                          stringr::str_dup("-", (col.n-c(1:col.n)[data.column]))
+                        )
+                        )
+
+read2 = read.csv(paste0(data.dir,"/03_VTK_IO.csv"),
+                 skip = skip , header = header,
+                 colClasses = c(rep("NULL", c(1:col.n)[data.column]-1),
+                                rep("numeric", 1),
+                                rep("NULL", (col.n-c(1:col.n)[data.column]))))
+all.equal(read1[,1], read2[,1])
+identical(read1[,1], read2[,1])
+file1 =  drop(as.matrix(drop(as.matrix(
+  # readr::read_csv()
+  readr::read_csv(paste0(data.dir,"/03_VTK_IO.csv"), 
+                  skip = skip , col_names = header,
+                  col_types = paste0(
+                    stringr::str_dup("-", c(1:col.n)[data.column]-1),
+                    stringr::str_dup("n", 1),
+                    stringr::str_dup("-", (col.n-c(1:col.n)[data.column]))
+                  )
+)))))
+class(file1)
+file2 =  drop(as.matrix(drop(as.matrix(
+  # readr::read_csv()
+  read.csv(paste0(data.dir,"/03_VTK_IO.csv"),
+           skip = skip , header = header,
+           colClasses = c(rep("NULL", c(1:col.n)[data.column]-1),
+                          rep("numeric", 1),
+                          rep("NULL", (col.n-c(1:col.n)[data.column]))))
+                  )
+  )))
+class(file2)
+all.equal(file1, file2)
+identical(file1, file2)
+sum(file1 != file2)
+file1.1 = file1[(file1 != file2)]
+file2.1 = file2[(file1 != file2)]
+sprintf("%.54f",file1.1[1])
+sprintf("%.54f",file2.1[1])
+
+## data.table::fread() ----
+
+read3 = data.table::fread(paste0(data.dir,"/03_VTK_IO.csv"), 
+                        # skip = skip , 
+                        select=c(data.column)
+)
+file3 =  drop(as.matrix(drop(as.matrix(
+  data.table::fread(paste0(data.dir,"/03_VTK_IO.csv"), 
+                    # skip = skip , 
+                    select=c(data.column)
+  )
+))))
+all.equal(file1, file3)
+identical(file1, file3)
+
+microbenchmark(data.table::fread(paste0(data.dir,"/03_VTK_IO.csv"),
+                                 select=c(data.column)),
+               readr::read_csv(paste0(data.dir,"/03_VTK_IO.csv"),
+                               skip = skip , col_names = header,
+                               col_types = paste0(
+                                 stringr::str_dup("-", c(1:col.n)[data.column]-1),
+                                 stringr::str_dup("n", 1),
+                                 stringr::str_dup("-", (col.n-c(1:col.n)[data.column]))
+                               ))
+               )
+# Unit: milliseconds                                                                                                               
+# expr
+# data.table::fread()
+# readr::read_csv()
+#       min        lq      mean    median        uq       max neval
+#  54.49732  56.41148  65.77239  62.13816  75.45741  94.98466   100
+# 126.07687 151.37307 171.42465 161.03843 173.08058 467.76940   100
+
+## arrow::read_feather()  ----
+
+
+
+## vroom ----
+# https://github.com/r-lib/vroom 
+
 
 # Load data in ----
 library("fpeek")
