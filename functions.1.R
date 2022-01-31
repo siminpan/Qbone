@@ -63,7 +63,9 @@ Qbone <- setClass(
   Class = 'Qbone',
   slots = c(
     raw.data = 'list',
+    thin.data = 'list',
     meta.data = 'data.frame',
+    thin.meta = 'list',
     active.assay = 'character',
     active.ident = 'factor',
     lasso.list = 'list',
@@ -75,7 +77,9 @@ Qbone <- setClass(
   ), 
   prototype = c(
     raw.data = list(),
+    thin.data = list(),
     meta.data = data.frame(id = NULL),
+    thin.meta = list(), # list(T, "0.1")
     active.assay = NA_character_,
     active.ident = factor(),
     lasso.list = list(),
@@ -102,7 +106,7 @@ q0 = new("Qbone")
 library("methods")
 # For this reason, it’s a good idea to include an explicit library(methods) whenever you’re using S4.
 library("fpeek")
-ReadQbone <- function(
+ReadQbone0 <- function(
   data.dir,
   groupbyfolder = F, 
   data.column = 1,
@@ -174,12 +178,8 @@ ReadQbone <- function(
     Class = 'Qbone',
     raw.data = full.data,
     meta.data = meta.data,
-    lasso.list = list(),
     project.name = project,
     # version = packageVersion(pkg = 'Qbone'),
-    misc = list(),
-    commands = list(),
-    tools = list()
   )
   return(object)
 }
@@ -190,11 +190,12 @@ ReadQbone <- function(
 # Ident
 
 data.dir = "/home/span/Documents/MOSJ-3DCT/data/csv"
-q1 = ReadQbone(data.dir)
+data.dir = "/home/span/Documents/MOSJ-3DCT/data/csv.test"
+q1 = ReadQbone0(data.dir)
 
 data.dir = "/home/span/Documents/MOSJ-3DCT/data/csv.group2"
-q2 = ReadQbone(data.dir, groupbyfolder = F)
-q3 = ReadQbone(data.dir, groupbyfolder = T)
+q2 = ReadQbone0(data.dir, groupbyfolder = F)
+q3 = ReadQbone0(data.dir, groupbyfolder = T)
 
 # need utils and mthods ----
 
@@ -222,13 +223,55 @@ AddMetaData <- .AddMetaData # https://rdrr.io/cran/SeuratObject/src/R/seurat.R
 
 AddMetaData(q2, c(1:15), col.name = "number") 
 
-ReadQbone2 <- function(
+# CreateSeuratObject.Assay <- function
+# https://rdrr.io/cran/SeuratObject/src/R/seurat.R
+# Assay <- setClass( https://rdrr.io/cran/SeuratObject/src/R/assay.R
+
+CreateQboneObject <- function(
+  data,
+  project = 'QboneProject',
+  assay = "Bone",
+  names.field = 1,
+  names.delim = '_',
+  meta.data = NULL,
+  ...
+) {
+  # if (is.null(assay)){
+  #   stop('"assay =" is missing, with no default. Please provide a name of your assay ("Bone", "Image" etc.)')
+  # }
+  if (missing(x = data)) {
+    stop("Must provide 'data'")
+  }
+  
+  object <- new(
+    Class = 'Qbone',
+    raw.data = full.data,
+    meta.data = meta.data,
+    project.name = project,
+    # version = packageVersion(pkg = 'Qbone'),
+  )
+  
+}
+
+list1 = list(c("123", "345"), "234")
+names(list1) <- c("name1", "name2")
+list1 = list(q1@raw.data)
+names(list1)
+i = 2
+list1[[i]]
+list2 = list(list1 = list1, list2 = list1)
+lengths(list2)
+is.atomic(q1@raw.data[[1]])
+
+# Read10X 
+# https://rdrr.io/cran/Seurat/src/R/preprocessing.R
+ReadQbone <- function(
   data.dir,
   groupbyfolder = F, 
   data.column = 1,
   # skip = 1,
   # header = F,
-  project = "QboneProject"
+  # project = "QboneProject"
   # gene.column = 2,
   # cell.column = 1,
   # unique.features = TRUE,
