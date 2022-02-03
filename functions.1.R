@@ -82,7 +82,7 @@ Qbone <- setClass(
     assays = list(),
     # raw.data = list(),
     # thin.data = list(),
-    meta.data = data.frame(id = NULL),
+    # meta.data = data.frame(id = NULL),
     # thin.meta = list(), # list(T, "0.1")
     active.assay = NA_character_,
     active.ident = factor(),
@@ -273,7 +273,8 @@ UpdateSlots <- function(object) {
     }
   } else {
     slot.use <- unlist(x = lapply(
-      X = c('assays', 'reductions', 'graphs', 'neighbors', 'commands', 'images'),
+      # X = c('assays', 'reductions', 'graphs', 'neighbors', 'commands', 'images'),
+      X = c('assays', 'graphs', 'images'),
       FUN = function(s) {
         if (any(i %in% names(x = slot(object = x, name = s)))) {
           return(s)
@@ -314,6 +315,36 @@ FindObject <- function(object, name) {
   return(NULL)
 }
 
+FilterObjects <- function(object, classes.keep = c('Assay')) {
+  object <- UpdateSlots(object = object)
+  slots <- na.omit(object = Filter(
+    f = function(x) {
+      sobj <- slot(object = object, name = x)
+      return(is.list(x = sobj) && !is.data.frame(x = sobj) && !is.package_version(x = sobj))
+    },
+    x = slotNames(x = object)
+  ))
+  slots <- grep(pattern = 'tools', x = slots, value = TRUE, invert = TRUE)
+  slots <- grep(pattern = 'misc', x = slots, value = TRUE, invert = TRUE)
+  slots.objects <- unlist(
+    x = lapply(
+      X = slots,
+      FUN = function(x) {
+        return(names(x = slot(object = object, name = x)))
+      }
+    ),
+    use.names = FALSE
+  )
+  object.classes <- sapply(
+    X = slots.objects,
+    FUN = function(i) {
+      return(inherits(x = object[[i]], what = classes.keep))
+    }
+  )
+  object.classes <- which(x = object.classes, useNames = TRUE)
+  return(names(x = object.classes))
+}
+
 DefaultAssay.Seurat <- function(object, ...) {
   CheckDots(...)
   object <- UpdateSlots(object = object)
@@ -328,6 +359,13 @@ DefaultAssay.Seurat <- function(object, ...) {
   }
   slot(object = object, name = 'active.assay') <- value
   return(object)
+}
+
+CheckGC <- function(option = 'Qbone.memsafe') {
+  if (isTRUE(x = getOption(x = option, default = FALSE))) {
+    gc(verbose = FALSE)
+  }
+  return(invisible(x = NULL))
 }
 
 
@@ -624,10 +662,13 @@ setMethod( # because R doesn't allow S3-style [[<- for S4 classes
     #     x = slot(object = x, name = slot.use)
     #   )
     }
-    CheckGC()
+    # CheckGC()
+    gc(verbose = FALSE)
     return(x)
   }
 )
+
+# inherits is faster than method::is
 
 .AddMetaData <- function(object, metadata, col.name = NULL) {
   if (is.null(x = col.name) && is.atomic(x = metadata)) {
@@ -693,25 +734,28 @@ CreateQboneObject <- function(
   object <- new(
     Class = 'Qbone',
     assays = assay.list,
+    meta.data = meta.data,
     active.assay = assay,
     # active.ident = idents,
     project.name = project
     # version = packageVersion(pkg = 'Qbone'),
   )
-  if (!is.null(x = meta.data)) {
-    object <- AddMetaData(object = object, metadata = meta.data)
-  }
+  # if (!is.null(x = meta.data)) {
+  #   object <- AddMetaData(object = object, metadata = meta.data)
+  # }
 }
 
 
 
 class(c(data,data))
 list1 = list(c("123", "345"), "234")
-cqo1 = CreateQboneObject(data = list1, 
-                         project = 'QboneProject',
-                         assay = "Bone",
+cqo1 = CreateQboneObject(data = list1,
                          meta.data = data.frame(name = c("a", "b"))
                          )
+
+cqo2 = AddMetaData(cqo1, c("a", "b"), col.name = "names")
+
+cqo2[["name"]] <- data.frame(name = c("a", "b"))
 
 names(list1) <- c("name1", "name2")
 list1 = list(q1@raw.data)
@@ -767,7 +811,7 @@ ReadQbone <- function(
 }
 
 data.dir = "/home/span/Documents/MOSJ-3DCT/data/csv.test"
-q1 = ReadQbone(data.dir)
+q1 = ReadQbone(data.dir, groupbyfolder = T)
 
 q1[['id']]
 
