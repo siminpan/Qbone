@@ -62,13 +62,16 @@ contact(studentBio)
 Qbone <- setClass(
   Class = 'Qbone',
   slots = c(
-    raw.data = 'list',
-    thin.data = 'list',
+    assays = 'list',
+    # raw.data = 'list',
+    # thin.data = 'list',
     meta.data = 'data.frame',
-    thin.meta = 'list',
+    # thin.meta = 'list',
     active.assay = 'character',
     active.ident = 'factor',
-    lasso.list = 'list',
+    # lasso.list = 'list',
+    graphs = 'list',
+    images = 'list',
     project.name = 'character',
     misc = 'list',
     # version = 'package_version',
@@ -76,13 +79,16 @@ Qbone <- setClass(
     tools = 'list'
   ), 
   prototype = c(
-    raw.data = list(),
-    thin.data = list(),
+    assays = list(),
+    # raw.data = list(),
+    # thin.data = list(),
     meta.data = data.frame(id = NULL),
-    thin.meta = list(), # list(T, "0.1")
+    # thin.meta = list(), # list(T, "0.1")
     active.assay = NA_character_,
     active.ident = factor(),
-    lasso.list = list(),
+    # lasso.list = list(),
+    graphs = list(),
+    images = list(),
     project.name = "Qbone",
     misc = list(),
     # version = 'package_version',
@@ -96,7 +102,7 @@ q0 = new("Qbone")
 # https://adv-r.hadley.nz/s4.html#helper
 # CreateSeuratObject.default <- 
 
-# generic ----
+# generic note----
 # standardGeneric() is the S4 equivalent to UseMethod().
 
 # It is bad practice to use {} in the generic as it triggers a special case that is more expensive, and generally best avoided.
@@ -178,7 +184,7 @@ ReadQbone0 <- function(
     Class = 'Qbone',
     raw.data = full.data,
     meta.data = meta.data,
-    project.name = project,
+    project.name = project
     # version = packageVersion(pkg = 'Qbone'),
   )
   return(object)
@@ -192,6 +198,7 @@ ReadQbone0 <- function(
 data.dir = "/home/span/Documents/MOSJ-3DCT/data/csv"
 data.dir = "/home/span/Documents/MOSJ-3DCT/data/csv.test"
 q1 = ReadQbone0(data.dir)
+q1[["id"]]
 
 data.dir = "/home/span/Documents/MOSJ-3DCT/data/csv.group2"
 q2 = ReadQbone0(data.dir, groupbyfolder = F)
@@ -203,6 +210,424 @@ q3 = ReadQbone0(data.dir, groupbyfolder = T)
 # https://rdrr.io/cran/SeuratObject/man/Seurat-methods.html
 # "[[.Seurat"  in seurat.R
 # https://rdrr.io/cran/SeuratObject/src/R/seurat.R
+
+# ../R/utils.R ----
+`%||%` <- function(lhs, rhs) {
+  if (!is.null(x = lhs)) {
+    return(lhs)
+  } else {
+    return(rhs)
+  }
+}
+
+# SeuratObject  /R/seurat.R ----
+
+UpdateSlots <- function(object) {
+  object.list <- sapply(
+    X = slotNames(x = object),
+    FUN = function(x) {
+      return(tryCatch(
+        expr = slot(object = object, name = x),
+        error = function(...) {
+          return(NULL)
+        }
+      ))
+    },
+    simplify = FALSE,
+    USE.NAMES = TRUE
+  )
+  object.list <- Filter(f = Negate(f = is.null), x = object.list)
+  object.list <- c('Class' = class(x = object)[1], object.list)
+  object <- do.call(what = 'new', args = object.list)
+  for (x in setdiff(x = slotNames(x = object), y = names(x = object.list))) {
+    xobj <- slot(object = object, name = x)
+    if (is.vector(x = xobj) && !is.list(x = xobj) && length(x = xobj) == 0) {
+      slot(object = object, name = x) <- vector(mode = class(x = xobj), length = 1L)
+    }
+  }
+  return(object)
+}
+
+"[[.Qbone" <- function(x, i, ..., drop = FALSE) {
+  x <- UpdateSlots(object = x)
+  if (missing(x = i)) {
+    i <- colnames(x = slot(object = x, name = 'meta.data'))
+  }
+  if (length(x = i) == 0) {
+    return(data.frame(row.names = colnames(x = x)))
+  } else if (length(x = i) > 1 || any(i %in% colnames(x = slot(object = x, name = 'meta.data')))) {
+    if (any(!i %in% colnames(x = slot(object = x, name = 'meta.data')))) {
+      warning(
+        "Cannot find the following bits of meta data: ",
+        paste0(
+          i[!i %in% colnames(x = slot(object = x, name = 'meta.data'))],
+          collapse = ', '
+        )
+      )
+    }
+    i <- i[i %in% colnames(x = slot(object = x, name = 'meta.data'))]
+    data.return <- slot(object = x, name = 'meta.data')[, i, drop = FALSE, ...]
+    if (drop) {
+      data.return <- unlist(x = data.return, use.names = FALSE)
+      names(x = data.return) <- rep.int(x = colnames(x = x), times = length(x = i))
+    }
+  } else {
+    slot.use <- unlist(x = lapply(
+      X = c('assays', 'reductions', 'graphs', 'neighbors', 'commands', 'images'),
+      FUN = function(s) {
+        if (any(i %in% names(x = slot(object = x, name = s)))) {
+          return(s)
+        }
+        return(NULL)
+      }
+    ))
+    if (is.null(x = slot.use)) {
+      stop("Cannot find '", i, "' in this Seurat object", call. = FALSE)
+    }
+    data.return <- slot(object = x, name = slot.use)[[i]]
+  }
+  return(data.return)
+}
+
+# slotNames(object)
+
+FindObject <- function(object, name) {
+  collections <- c(
+    'assays',
+    'graphs',
+    'commands',
+    'images'
+  )
+  object.names <- lapply(
+    X = collections,
+    FUN = function(x) {
+      return(names(x = slot(object = object, name = x)))
+    }
+  )
+  names(x = object.names) <- collections
+  object.names <- Filter(f = Negate(f = is.null), x = object.names)
+  for (i in names(x = object.names)) {
+    if (name %in% names(x = slot(object = object, name = i))) {
+      return(i)
+    }
+  }
+  return(NULL)
+}
+
+DefaultAssay.Seurat <- function(object, ...) {
+  CheckDots(...)
+  object <- UpdateSlots(object = object)
+  return(slot(object = object, name = 'active.assay'))
+}
+
+"DefaultAssay<-.Seurat" <- function(object, ..., value) {
+  CheckDots(...)
+  object <- UpdateSlots(object = object)
+  if (!value %in% names(x = slot(object = object, name = 'assays'))) {
+    stop("Cannot find assay ", value)
+  }
+  slot(object = object, name = 'active.assay') <- value
+  return(object)
+}
+
+
+setMethod( # because R doesn't allow S3-style [[<- for S4 classes
+  f = '[[<-',
+  signature = c('x' = 'Qbone'),
+  definition = function(x, i, ..., value) {
+    x <- UpdateSlots(object = x)
+    # Require names, no index setting
+    if (!is.character(x = i)) {
+      stop("'i' must be a character", call. = FALSE)
+    }
+    # Allow removing of other object
+    if (is.null(x = value)) {
+      slot.use <- if (i %in% colnames(x = x[[]])) {
+        'meta.data'
+      } else {
+        FindObject(object = x, name = i)
+      }
+      if (is.null(x = slot.use)) {
+        stop("Cannot find object ", i, call. = FALSE)
+      }
+      if (i == DefaultAssay(object = x)) {
+        stop("Cannot delete the default assay", call. = FALSE)
+      }
+    }
+    # remove disallowed characters from object name
+    newi <- if (is.null(x = value)) {
+      i
+    } else {
+      make.names(names = i)
+    }
+    if (any(i != newi)) {
+      warning(
+        "Invalid name supplied, making object name syntactically valid. New object name is ",
+        newi,
+        "; see ?make.names for more details on syntax validity",
+        call. = FALSE,
+        immediate. = TRUE
+      )
+      i <- newi
+    }
+    # Figure out where to store data
+    slot.use <- if (inherits(x = value, what = 'Assay')) {
+      # Ensure we have the same number of cells
+      if (ncol(x = value) != ncol(x = x)) {
+        stop(
+          "Cannot add a different number of cells than already present",
+          call. = FALSE
+        )
+      }
+      # Ensure cell order stays the same
+      if (all(Cells(x = value) %in% Cells(x = x)) && !all(Cells(x = value) == Cells(x = x))) {
+        for (slot in c('counts', 'data', 'scale.data')) {
+          assay.data <- GetAssayData(object = value, slot = slot)
+          if (!IsMatrixEmpty(x = assay.data)) {
+            assay.data <- assay.data[, Cells(x = x), drop = FALSE]
+          }
+          # Use slot because SetAssayData is being weird
+          slot(object = value, name = slot) <- assay.data
+        }
+      }
+      'assays'
+    } else if (inherits(x = value, what = 'SpatialImage')) {
+      # Ensure that all cells for this image are present
+      if (!all(Cells(x = value) %in% Cells(x = x))) {
+        stop("", call. = FALSE)
+      }
+      # Ensure Assay that SpatialImage is associated with is present in Seurat object
+      if (!DefaultAssay(object = value) %in% Assays(object = x)) {
+        warning(
+          "Adding image data that isn't associated with any assay present",
+          call. = FALSE,
+          immediate. = TRUE
+        )
+      }
+      'images'
+    } else if (inherits(x = value, what = 'Graph')) {
+      # Ensure Assay that Graph is associated with is present in the Seurat object
+      if (is.null(x = DefaultAssay(object = value))) {
+        warning(
+          "Adding a Graph without an assay associated with it",
+          call. = FALSE,
+          immediate. = TRUE
+        )
+      } else if (!any(DefaultAssay(object = value) %in% Assays(object = x))) {
+        stop("Cannot find assay '", DefaultAssay(object = value), "' in this Seurat object", call. = FALSE)
+      }
+      # Ensure Graph object is in order
+      if (all(Cells(x = value) %in% Cells(x = x)) && !all(Cells(x = value) == Cells(x = x))) {
+        value <- value[Cells(x = x), Cells(x = x)]
+      }
+      'graphs'
+    } else if (inherits(x = value, what = 'DimReduc')) {
+      # All DimReducs must be associated with an Assay
+      if (is.null(x = DefaultAssay(object = value))) {
+        stop("Cannot add a DimReduc without an assay associated with it", call. = FALSE)
+      }
+      # Ensure Assay that DimReduc is associated with is present in the Seurat object
+      if (!IsGlobal(object = value) && !any(DefaultAssay(object = value) %in% Assays(object = x))) {
+        stop("Cannot find assay '", DefaultAssay(object = value), "' in this Seurat object", call. = FALSE)
+      }
+      # Ensure DimReduc object is in order
+      if (all(Cells(x = value) %in% Cells(x = x)) && !all(Cells(x = value) == Cells(x = x))) {
+        slot(object = value, name = 'cell.embeddings') <- value[[Cells(x = x), ]]
+      }
+      'reductions'
+    } else if (inherits(x = value, what = "Neighbor")) {
+      # Ensure all cells are present in the Seurat object
+      if (length(x = Cells(x = value)) > length(x = Cells(x = x))) {
+        stop(
+          "Cannot have more cells in the Neighbor object than are present in the Seurat object.",
+          call. = FALSE
+        )
+      }
+      if (!all(Cells(x = value) %in% Cells(x = x))) {
+        stop(
+          "Cannot add cells in the Neighbor object that aren't present in the Seurat object.",
+          call. = FALSE
+        )
+      }
+      'neighbors'
+    } else if (inherits(x = value, what = 'SeuratCommand')) {
+      # Ensure Assay that SeuratCommand is associated with is present in the Seurat object
+      if (is.null(x = DefaultAssay(object = value))) {
+        warning(
+          "Adding a command log without an assay associated with it",
+          call. = FALSE,
+          immediate. = TRUE
+        )
+      } else if (!any(DefaultAssay(object = value) %in% Assays(object = x))) {
+        stop("Cannot find assay '", DefaultAssay(object = value), "' in this Seurat object", call. = FALSE)
+      }
+      'commands'
+    } else if (is.null(x = value)) {
+      slot.use
+    } else {
+      'meta.data'
+    }
+    if (slot.use == 'meta.data') {
+      # Add data to object metadata
+      meta.data <- x[[]]
+      cell.names <- rownames(x = meta.data)
+      # If we have metadata with names, ensure they match our order
+      if (is.data.frame(x = value) && !is.null(x = rownames(x = value))) {
+        meta.order <- match(x = rownames(x = meta.data), table = rownames(x = value))
+        value <- value[meta.order, , drop = FALSE]
+      }
+      if (length(x = i) > 1) {
+        # Add multiple pieces of metadata
+        value <- rep_len(x = value, length.out = length(x = i))
+        for (index in 1:length(x = i)) {
+          meta.data[i[index]] <- value[index]
+        }
+      } else {
+        # Add a single column to metadata
+        if (length(x = intersect(x = names(x = value), y = cell.names)) > 0) {
+          meta.data[, i] <- value[cell.names]
+        } else if (length(x = value) %in% c(nrow(x = meta.data), 1) || is.null(x = value)) {
+          meta.data[, i] <- value
+        } else {
+          stop("Cannot add more or fewer cell meta.data information without values being named with cell names", call. = FALSE)
+        }
+      }
+      # Check to ensure that we aren't adding duplicate names
+      if (any(colnames(x = meta.data) %in% FilterObjects(object = x))) {
+        bad.cols <- colnames(x = meta.data)[which(colnames(x = meta.data) %in% FilterObjects(object = x))]
+        stop(
+          paste0(
+            "Cannot add a metadata column with the same name as an Assay or DimReduc - ",
+            paste(bad.cols, collapse = ", ")),
+          call. = FALSE
+        )
+      }
+      # Store the revised metadata
+      slot(object = x, name = 'meta.data') <- meta.data
+    } else {
+      # Add other object to Seurat object
+      # Ensure cells match in value and order
+      if (!inherits(x = value, what = c('SeuratCommand', 'NULL', 'SpatialImage', 'Neighbor')) && !all(Cells(x = value) == Cells(x = x))) {
+        stop("All cells in the object being added must match the cells in this object", call. = FALSE)
+      }
+      # Ensure we're not duplicating object names
+      duplicate <- !is.null(x = FindObject(object = x, name = i)) &&
+        !inherits(x = value, what = c(class(x = x[[i]]), 'NULL')) &&
+        !inherits(x = x[[i]], what = class(x = value))
+      if (isTRUE(x = duplicate)) {
+        stop(
+          "This object already contains ",
+          i,
+          " as a",
+          ifelse(
+            test = tolower(x = substring(text = class(x = x[[i]]), first = 1, last = 1)) %in% c('a', 'e', 'i', 'o', 'u'),
+            yes = 'n ',
+            no = ' '
+          ),
+          class(x = x[[i]]),
+          ", so ",
+          i,
+          " cannot be used for a ",
+          class(x = value),
+          call. = FALSE
+        )
+      }
+    #   # Check keyed objects
+    #   if (inherits(x = value, what = c('Assay', 'DimReduc', 'SpatialImage'))) {
+    #     if (length(x = Key(object = value)) == 0 || nchar(x = Key(object = value)) == 0) {
+    #       Key(object = value) <- paste0(tolower(x = i), '_')
+    #     }
+    #     Key(object = value) <- UpdateKey(key = Key(object = value))
+    #     # Check for duplicate keys
+    #     object.keys <- Key(object = x)
+    #     vkey <- Key(object = value)
+    #     if (vkey %in% object.keys && !isTRUE(x = object.keys[i] == vkey)) {
+    #       new.key <- if (is.na(x = object.keys[i])) {
+    #         # Attempt to create a duplicate key based off the name of the object being added
+    #         new.keys <- paste0(
+    #           paste0(tolower(x = i), c('', RandomName(length = 2L))),
+    #           '_'
+    #         )
+    #         # Select new key to use
+    #         key.use <- min(which(x = !new.keys %in% object.keys))
+    #         new.key <- if (is.infinite(x = key.use)) {
+    #           RandomName(length = 17L)
+    #         } else {
+    #           new.keys[key.use]
+    #         }
+    #         warning(
+    #           "Cannot add objects with duplicate keys (offending key: ",
+    #           Key(object = value),
+    #           "), setting key to '",
+    #           new.key,
+    #           "'",
+    #           call. = FALSE
+    #         )
+    #         new.key
+    #       } else {
+    #         # Use existing key
+    #         warning(
+    #           "Cannot add objects with duplicate keys (offending key: ",
+    #           Key(object = value),
+    #           ") setting key to original value '",
+    #           object.keys[i],
+    #           "'",
+    #           call. = FALSE
+    #         )
+    #         object.keys[i]
+    #       }
+    #       # Set new key
+    #       Key(object = value) <- new.key
+    #     }
+    #   }
+    #   # For Assays, run CalcN
+    #   if (inherits(x = value, what = 'Assay')) {
+    #     if ((!i %in% Assays(object = x)) |
+    #         (i %in% Assays(object = x) && !identical(
+    #           x = GetAssayData(object = x, assay = i, slot = "counts"),
+    #           y = GetAssayData(object = value, slot = "counts"))
+    #         )) {
+    #       n.calc <- CalcN(object = value)
+    #       if (!is.null(x = n.calc)) {
+    #         names(x = n.calc) <- paste(names(x = n.calc), i, sep = '_')
+    #         x[[names(x = n.calc)]] <- n.calc
+    #       }
+    #     }
+    #   }
+    #   # When removing an Assay, clear out associated DimReducs, Graphs, and SeuratCommands
+    #   if (is.null(x = value) && inherits(x = x[[i]], what = 'Assay')) {
+    #     objs.assay <- FilterObjects(
+    #       object = x,
+    #       classes.keep = c('DimReduc', 'SeuratCommand', 'Graph')
+    #     )
+    #     objs.assay <- Filter(
+    #       f = function(o) {
+    #         return(all(DefaultAssay(object = x[[o]]) == i) && !IsGlobal(object = x[[o]]))
+    #       },
+    #       x = objs.assay
+    #     )
+    #     for (o in objs.assay) {
+    #       x[[o]] <- NULL
+    #     }
+    #   }
+    #   # If adding a command, ensure it gets put at the end of the command list
+    #   if (inherits(x = value, what = 'SeuratCommand')) {
+    #     slot(object = x, name = slot.use)[[i]] <- NULL
+    #     slot(object = x, name = slot.use) <- Filter(
+    #       f = Negate(f = is.null),
+    #       x = slot(object = x, name = slot.use)
+    #     )
+    #   }
+    #   slot(object = x, name = slot.use)[[i]] <- value
+    #   slot(object = x, name = slot.use) <- Filter(
+    #     f = Negate(f = is.null),
+    #     x = slot(object = x, name = slot.use)
+    #   )
+    }
+    CheckGC()
+    return(x)
+  }
+)
 
 .AddMetaData <- function(object, metadata, col.name = NULL) {
   if (is.null(x = col.name) && is.atomic(x = metadata)) {
@@ -221,69 +646,93 @@ q3 = ReadQbone0(data.dir, groupbyfolder = T)
 
 AddMetaData <- .AddMetaData # https://rdrr.io/cran/SeuratObject/src/R/seurat.R
 
-AddMetaData(q2, c(1:15), col.name = "number") 
+AddMetaData(q0, c(1:2), col.name = "number") 
 
 # CreateSeuratObject.Assay <- function
 # https://rdrr.io/cran/SeuratObject/src/R/seurat.R
 # Assay <- setClass( https://rdrr.io/cran/SeuratObject/src/R/assay.R
 
 CreateQboneObject <- function(
-  data,
+  data = data,
   project = 'QboneProject',
   assay = "Bone",
-  names.field = 1,
-  names.delim = '_',
-  meta.data = NULL,
-  ...
-) {
+  # names.field = 1,
+  # names.delim = '_',
+  meta.data = NULL
+  # ...
+){
   # if (is.null(assay)){
   #   stop('"assay =" is missing, with no default. Please provide a name of your assay ("Bone", "Image" etc.)')
   # }
   if (missing(x = data)) {
     stop("Must provide 'data'")
   }
+  if (is.list(data)){
+    if (!is.null(x = meta.data)) {
+      if (nrow(x = meta.data) != length(data)) {
+        stop("There is a mismatch between the number of Metadata and the number of input data.")
+      }
+    } else {
+      warning("Metadata is not provided.")
+    }
+    for (i in 1:length(data)){
+      if (is.atomic(data[[i]])){
+        data[[i]] <- sort(data[[i]])
+      } else {
+        stop(paste0("Input data data[[",i,"]] is not atomic, please confirm data structure."))
+      }
+    }
+  } else {
+    stop("Input data expected to be a list. Other class is not supported yet.")
+  }
+  # Check assay key
+  assay.list <- list(data)
+  names(x = assay.list) <- assay
+  # Set idents
   
   object <- new(
     Class = 'Qbone',
-    raw.data = full.data,
-    meta.data = meta.data,
-    project.name = project,
+    assays = assay.list,
+    active.assay = assay,
+    # active.ident = idents,
+    project.name = project
     # version = packageVersion(pkg = 'Qbone'),
   )
-  
+  if (!is.null(x = meta.data)) {
+    object <- AddMetaData(object = object, metadata = meta.data)
+  }
 }
 
+
+
+class(c(data,data))
 list1 = list(c("123", "345"), "234")
+cqo1 = CreateQboneObject(data = list1, 
+                         project = 'QboneProject',
+                         assay = "Bone",
+                         meta.data = data.frame(name = c("a", "b"))
+                         )
+
 names(list1) <- c("name1", "name2")
 list1 = list(q1@raw.data)
 names(list1)
 i = 2
 list1[[i]]
 list2 = list(list1 = list1, list2 = list1)
-lengths(list2)
+length(list1)
 is.atomic(q1@raw.data[[1]])
+is.recursive(q1@raw.data[[1]])
 
 # Read10X 
 # https://rdrr.io/cran/Seurat/src/R/preprocessing.R
 ReadQbone <- function(
   data.dir,
   groupbyfolder = F, 
-  data.column = 1,
-  # skip = 1,
-  # header = F,
-  # project = "QboneProject"
-  # gene.column = 2,
-  # cell.column = 1,
-  # unique.features = TRUE,
-  # strip.suffix = FALSE
-) {
+  data.column = 1
+){
   full.data <- list()
   meta.file <- c()
   meta.group <- c()
-  # if (groupbyfolder == T){
-  #   meta.group <- c()
-  # }
-  # check dir/file existence
   for (i in seq_along(along.with = data.dir)) {
     run <- data.dir[i]
     if (!dir.exists(paths = run)) {
@@ -296,33 +745,12 @@ ReadQbone <- function(
   }
   # read file & sort
   for (i in 1:length(file.list)){
-    # no need for V3
-    # peek.n10 = textConnection(peek_head(paste0(data.dir,"/",file.list[i]), n = 10, intern = TRUE)[-1])
-    # col.n = max(count.fields(peek.n10, sep = ","))
-    
     file1 =  drop(as.matrix(drop(as.matrix(
-      # V1
-      # read.csv(paste0(data.dir,"/",file.list[i]),
-      #          skip = skip , header = header,
-      #          colClasses = c(rep("NULL", c(1:col.n)[data.column]-1),
-      #                         rep("numeric", 1),
-      #                         rep("NULL", (col.n-c(1:col.n)[data.column]))))
-      # V2
-      # readr::read_csv(paste0(data.dir,"/",file.list[i]),
-      #                 skip = skip , col_names = header,
-      #                 col_types = paste0(
-      #                   stringr::str_dup("-", c(1:col.n)[data.column]-1),
-      #                   stringr::str_dup("n", 1),
-      #                   stringr::str_dup("-", (col.n-c(1:col.n)[data.column]))
-      #                 )
-      # )
-      #V3
-      data.table::fread(paste0(data.dir,"/",file.list[i]), 
-                        # skip = skip , 
+      data.table::fread(paste0(data.dir,"/",file.list[i]),
                         select=c(data.column)
       )
     ))))
-    full.data[[i]] <- sort(file1)
+    full.data[[i]] <- file1 # sort(file1)
     meta.file <- c(meta.file, gsub(".csv", "", basename(file.list[i])))
     if (groupbyfolder == T){
       meta.group <- c(meta.group, dirname(file.list[i]))
@@ -334,25 +762,12 @@ ReadQbone <- function(
   } else {
     meta.data = data.frame(id = meta.file)
   }
-  object <- new(
-    Class = 'Qbone',
-    raw.data = full.data,
-    meta.data = data.frame(row.names = meta.file),
-    lasso.list = list(),
-    project.name = project,
-    # version = packageVersion(pkg = 'Qbone'),
-    misc = list(),
-    commands = list(),
-    tools = list()
-  )
-  if (!is.null(x = meta.data)) {
-    object <- AddMetaData(object = object, metadata = meta.data)
-  }
+  object <- CreateQboneObject(data = full.data, meta.data = meta.data)
   return(object)
 }
 
-data.dir = "/home/span/Documents/MOSJ-3DCT/data/csv"
-q1 = ReadQbone2(data.dir)
+data.dir = "/home/span/Documents/MOSJ-3DCT/data/csv.test"
+q1 = ReadQbone(data.dir)
 
 q1[['id']]
 
