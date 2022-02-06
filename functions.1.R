@@ -803,6 +803,7 @@ cqo2[["newneame"]] <- c("a1", "b1")
 
 # inherits is faster than method::is
 
+# https://rdrr.io/cran/SeuratObject/src/R/zzz.R
 .AddMetaData <- function(object, metadata, col.name = NULL) {
   if (is.null(x = col.name) && is.atomic(x = metadata)) {
     stop("'col.name' must be provided for atomic metadata types (eg. vectors)")
@@ -989,6 +990,8 @@ data.dir = "/home/span/Documents/MOSJ-3DCT/data/csv.test"
 q1 = ReadQbone(data.dir, groupbyfolder = T)
 
 q1[['id']]
+
+q1[['id']] <- c("03_VTK", "04_VTK")
 
 Idents.Qbone <- function(object, ...) {
   CheckDots(...)
