@@ -1,5 +1,5 @@
 #' @include generics.R
-#' @include assay.R
+#' @include qboneassay.R
 #' @importFrom methods setClass
 #' @importFrom data.table fread
 #' @useDynLib Qbone
