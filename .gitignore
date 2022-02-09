@@ -18,3 +18,6 @@
 *README.html
 *README_cache/
 #*README_files/
+.Rdata
+.httr-oauth
+.DS_Store
