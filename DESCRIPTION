@@ -15,7 +15,8 @@ LinkingTo:
 Imports: 
     Rcpp, methods, data.table
 Collate: 
+    'utils.R'
     'generics.R'
-    'assay.R'
+    'qboneassay.R'
     'Qbone.R'
     'RcppExports.R'

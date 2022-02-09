@@ -5,9 +5,7 @@ using Eigen::MatrixXd;                  // variable size matrix, double precisio
 using Eigen::VectorXd;                  // variable size vector, double precision
 using Eigen::SelfAdjointEigenSolver;    // one of the eigenvalue solvers
 
-// not really working
-// https://github.com/ChingChuan-Chen/RcppBlaze/issues/3
-// static_assert(__AVX2__, "AVX 2 is required! Try --march=native or -mavx2");
+// references  https://stackoverflow.com/questions/35923787/fast-large-matrix-multiplication-in-r
 
 // [[Rcpp::export]]
 SEXP eigenMatMult(Eigen::MatrixXd A, Eigen::MatrixXd B){

@@ -31,6 +31,8 @@ B <- matrix(rnorm(10000), 100, 100)
 sourceCpp("example.cpp")
 sourceCpp("example2.cpp")
 
+# // references  https://stackoverflow.com/questions/35923787/fast-large-matrix-multiplication-in-r
+
 sourceCpp("cmatrix.cpp")
 
 o1 = A%*%B

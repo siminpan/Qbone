@@ -18,7 +18,6 @@ QboneAssay <- setClass(
     scale.data = 'list',
     key = 'character',
     assay.orig = 'character',
-    # var.features = 'vector',
     meta.assays = 'data.frame',
     misc = 'list'
   ),
@@ -27,7 +26,6 @@ QboneAssay <- setClass(
     scale.data = list(),
     key = character(),
     assay.orig = character(),
-    # var.features = 'vector',
     meta.assays = data.frame(),
     misc = list()
   )
