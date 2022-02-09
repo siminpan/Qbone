@@ -13,4 +13,9 @@ RoxygenNote: 7.1.2
 LinkingTo: 
     Rcpp, RcppEigen
 Imports: 
-    Rcpp
+    Rcpp, methods, data.table
+Collate: 
+    'generics.R'
+    'assay.R'
+    'Qbone.R'
+    'RcppExports.R'
