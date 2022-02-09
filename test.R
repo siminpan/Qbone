@@ -25,8 +25,8 @@ getwd()
 
 
 # matrix ----
-A <- matrix(rnorm(1000000), 1000, 1000)
-B <- matrix(rnorm(1000000), 1000, 1000)
+A <- matrix(rnorm(10000), 100, 100)
+B <- matrix(rnorm(10000), 100, 100)
 
 sourceCpp("example.cpp")
 sourceCpp("example2.cpp")
@@ -44,8 +44,8 @@ e4 = eigenMatMulttrans(A,B)
 
 # test result equality----
 # https://stackoverflow.com/questions/23032387/how-to-compare-two-matrices-to-see-if-they-are-identical-in-r
-identical(o3, e3)
-all.equal(o3, e3)
+identical(o1, e1)
+all.equal(o1, e1)
 
 max(abs(o1 - e2))
 

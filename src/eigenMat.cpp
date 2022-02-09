@@ -1,8 +1,4 @@
-// [[Rcpp::depends(RcppArmadillo, RcppEigen)]]
-
 #include <RcppEigen.h>
-
-// [[Rcpp::depends(RcppEigen)]]
 
 using Eigen::Map;                       // 'maps' rather than copies
 using Eigen::MatrixXd;                  // variable size matrix, double precision
