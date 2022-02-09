@@ -8,7 +8,7 @@
 NULL
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# Class definitions
+# Class definitions ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 #' The Qbone Class
@@ -63,8 +63,54 @@ Qbone <- setClass(
     images = list(),
     project.name = "Qbone",
     misc = list(),
-    version = packageVersion(pkg = "Qbone"),
+    # version = packageVersion(pkg = "Qbone"),
     commands = list(),
     tools = list()
   )
 )
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Functions ----
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+"[[.Qbone" <- function(x, i, ..., drop = FALSE) {
+  x <- UpdateSlots(object = x)
+  if (missing(x = i)) {
+    i <- colnames(x = slot(object = x, name = 'meta.data'))
+  }
+  if (length(x = i) == 0) {
+    return(data.frame(row.names = colnames(x = x)))
+  } else if (length(x = i) > 1 || any(i %in% colnames(x = slot(object = x, name = 'meta.data')))) {
+    if (any(!i %in% colnames(x = slot(object = x, name = 'meta.data')))) {
+      warning(
+        "Cannot find the following bits of meta data: ",
+        paste0(
+          i[!i %in% colnames(x = slot(object = x, name = 'meta.data'))],
+          collapse = ', '
+        )
+      )
+    }
+    i <- i[i %in% colnames(x = slot(object = x, name = 'meta.data'))]
+    data.return <- slot(object = x, name = 'meta.data')[, i, drop = FALSE, ...]
+    if (drop) {
+      data.return <- unlist(x = data.return, use.names = FALSE)
+      names(x = data.return) <- rep.int(x = colnames(x = x), times = length(x = i))
+    }
+  } else {
+    slot.use <- unlist(x = lapply(
+      # X = c('assays', 'reductions', 'graphs', 'neighbors', 'commands', 'images'),
+      X = c('assays', 'graphs', 'images'),
+      FUN = function(s) {
+        if (any(i %in% names(x = slot(object = x, name = s)))) {
+          return(s)
+        }
+        return(NULL)
+      }
+    ))
+    if (is.null(x = slot.use)) {
+      stop("Cannot find '", i, "' in this Qbone object", call. = FALSE)
+    }
+    data.return <- slot(object = x, name = slot.use)[[i]]
+  }
+  return(data.return)
+}

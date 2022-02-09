@@ -77,7 +77,7 @@ Qbone <- setClass(
     # version = 'package_version',
     commands = 'list',
     tools = 'list'
-  ), 
+  ),
   prototype = c(
     assays = list(),
     # raw.data = list(),
@@ -109,7 +109,7 @@ QboneAssay <- setClass(
     # var.features = 'vector',
     meta.assays = 'data.frame',
     misc = 'OptionalList'
-  ), 
+  ),
   prototype = c(
     data = list(),
     scale.data = list(),
@@ -122,7 +122,7 @@ QboneAssay <- setClass(
 )
 
 # https://adv-r.hadley.nz/s4.html#helper
-# CreateSeuratObject.default <- 
+# CreateSeuratObject.default <-
 
 # generic note----
 # standardGeneric() is the S4 equivalent to UseMethod().
@@ -136,7 +136,7 @@ library("methods")
 library("fpeek")
 ReadQbone0 <- function(
   data.dir,
-  groupbyfolder = F, 
+  groupbyfolder = F,
   data.column = 1,
   # skip = 1,
   # header = F,
@@ -168,7 +168,7 @@ ReadQbone0 <- function(
     # no need for V3
     # peek.n10 = textConnection(peek_head(paste0(data.dir,"/",file.list[i]), n = 10, intern = TRUE)[-1])
     # col.n = max(count.fields(peek.n10, sep = ","))
-    
+
     file1 =  drop(as.matrix(drop(as.matrix(
       # V1
       # read.csv(paste0(data.dir,"/",file.list[i]),
@@ -185,8 +185,8 @@ ReadQbone0 <- function(
       #                   stringr::str_dup("-", (col.n-c(1:col.n)[data.column]))
       #                 )
       # V3
-      data.table::fread(paste0(data.dir,"/",file.list[i]), 
-                        # skip = skip , 
+      data.table::fread(paste0(data.dir,"/",file.list[i]),
+                        # skip = skip ,
                         select=c(data.column)
       )
     ))))
@@ -232,6 +232,23 @@ q3 = ReadQbone0(data.dir, groupbyfolder = T)
 # https://rdrr.io/cran/SeuratObject/man/Seurat-methods.html
 # "[[.Seurat"  in seurat.R
 # https://rdrr.io/cran/SeuratObject/src/R/seurat.R
+
+# from rlang ----
+#' Default value for `NULL`
+#'
+#' This infix function makes it easy to replace `NULL`s with a default
+#' value. It's inspired by the way that Ruby's or operation (`||`)
+#' works.
+#'
+#' @param x,y If `x` is NULL, will return `y`; otherwise returns `x`.
+#' @export
+#' @name op-null-default
+#' @examples
+#' 1 %||% 2
+#' NULL %||% 2
+`%||%` <- function(x, y) {
+  if (is_null(x)) y else x
+}
 
 # ../R/utils.R ----
 `%||%` <- function(lhs, rhs) {
@@ -843,7 +860,7 @@ cqo2[["newneame"]] <- c("a1", "b1")
 
 AddMetaData <- .AddMetaData # https://rdrr.io/cran/SeuratObject/src/R/seurat.R
 
-AddMetaData(q0, c(1:2), col.name = "number") 
+AddMetaData(q0, c(1:2), col.name = "number")
 
 
 ExtractField <- function(string, field = 1, delim = "_") {
@@ -900,7 +917,7 @@ CreateQboneObject <- function(
     stop("Input data expected to be a list. Other class is not supported yet.")
   }
   # Check assay key
-  
+
   names(data) <- meta.data[,1]
   samples <- list(data)
   names(x = samples) <- "samples"
@@ -927,7 +944,7 @@ CreateQboneObject <- function(
     idents <- rep.int(x = factor(x = project), times = length(data))
   }
   names(x = idents) <- names(data)
-  
+
   object <- new(
     Class = 'Qbone',
     assays = assay.list,
@@ -965,11 +982,11 @@ length(list1)
 is.atomic(q1@raw.data[[1]])
 is.recursive(q1@raw.data[[1]])
 
-# Read10X 
+# Read10X
 # https://rdrr.io/cran/Seurat/src/R/preprocessing.R
 ReadQbone <- function(
   data.dir,
-  groupbyfolder = F, 
+  groupbyfolder = F,
   data.column = 1
 ){
   full.data <- list()
@@ -1091,9 +1108,9 @@ Idents(q2)
 # https://rdrr.io/cran/Seurat/src/R/objects.R
 
 ThinData <- function(
-  
+
 ){
-  
+
 }
 
 
@@ -1104,7 +1121,7 @@ data.dir = "/home/span/Documents/MOSJ-3DCT/data/csv.test"
 
 nopeek <- function(
   data.dir,
-  groupbyfolder = F, 
+  groupbyfolder = F,
   data.column = 1,
   skip = 1,
   header = F,
@@ -1135,7 +1152,7 @@ nopeek <- function(
   for (i in 1:length(file.list)){
     # peek.n10 = textConnection(peek_head(paste0(data.dir,"/",file.list[i]), n = 10, intern = TRUE)[-1])
     col.n = max(count.fields(paste0(data.dir,"/",file.list[i]), sep = ","))
-    
+
     file1 =  drop(as.matrix(drop(as.matrix(
       read.csv(paste0(data.dir,"/",file.list[i]),
                skip = skip , header = header,
@@ -1180,7 +1197,7 @@ microbenchmark(ReadQbone(data.dir),
 # nopeek(data.dir)    11.677127 11.89641 12.061280 12.019549 12.215060 12.640033   100
 
 # v2 read_csv
-# Unit: milliseconds                                                                                                               
+# Unit: milliseconds
 # expr        min         lq       mean     median         uq        max neval
 # ReadQbone(data.dir)   603.3834   671.3038   695.3638   687.6152   707.7549   954.6117   100
 # nopeek(data.dir) 11749.8619 11855.3312 11999.2320 12017.4779 12083.4712 12329.0297   100
@@ -1197,7 +1214,7 @@ header = F
 peek.n10 = textConnection(peek_head(paste0(data.dir,"/03_VTK_IO.csv"), n = 10, intern = TRUE)[-1])
 col.n = max(count.fields(peek.n10, sep = ","))
 
-read1 = readr::read_csv(paste0(data.dir,"/03_VTK_IO.csv"), 
+read1 = readr::read_csv(paste0(data.dir,"/03_VTK_IO.csv"),
                         skip = skip , col_names = header,
                         col_types = paste0(
                           stringr::str_dup("-", c(1:col.n)[data.column]-1),
@@ -1215,7 +1232,7 @@ all.equal(read1[,1], read2[,1])
 identical(read1[,1], read2[,1])
 file1 =  drop(as.matrix(drop(as.matrix(
   # readr::read_csv()
-  readr::read_csv(paste0(data.dir,"/03_VTK_IO.csv"), 
+  readr::read_csv(paste0(data.dir,"/03_VTK_IO.csv"),
                   skip = skip , col_names = header,
                   col_types = paste0(
                     stringr::str_dup("-", c(1:col.n)[data.column]-1),
@@ -1244,13 +1261,13 @@ sprintf("%.54f",file2.1[1])
 
 ## data.table::fread() ----
 
-read3 = data.table::fread(paste0(data.dir,"/03_VTK_IO.csv"), 
-                        # skip = skip , 
+read3 = data.table::fread(paste0(data.dir,"/03_VTK_IO.csv"),
+                        # skip = skip ,
                         select=c(data.column)
 )
 file3 =  drop(as.matrix(drop(as.matrix(
-  data.table::fread(paste0(data.dir,"/03_VTK_IO.csv"), 
-                    # skip = skip , 
+  data.table::fread(paste0(data.dir,"/03_VTK_IO.csv"),
+                    # skip = skip ,
                     select=c(data.column)
   )
 ))))
@@ -1267,7 +1284,7 @@ microbenchmark(data.table::fread(paste0(data.dir,"/03_VTK_IO.csv"),
                                  stringr::str_dup("-", (col.n-c(1:col.n)[data.column]))
                                ))
                )
-# Unit: milliseconds                                                                                                               
+# Unit: milliseconds
 # expr
 # data.table::fread()
 # readr::read_csv()
@@ -1280,7 +1297,7 @@ microbenchmark(data.table::fread(paste0(data.dir,"/03_VTK_IO.csv"),
 
 
 ## vroom ----
-# https://github.com/r-lib/vroom 
+# https://github.com/r-lib/vroom
 
 
 # Load data in ----
@@ -1311,9 +1328,9 @@ file.list = list.files(path = paste0(data.dir), pattern = ".csv$", recursive = T
 peek.n10 = textConnection(peek_head(paste0(data.dir,"/",file.list[i]), n = 10, intern = TRUE)[-1])
 col.n = max(count.fields(peek.n10, sep = ","))
 
-file1 = read.csv(paste0(data.dir,"/",file.list[i]), skip = skip , header = header, 
-                 colClasses = c(rep("NULL", c(1:col.n)[data.column]-1), 
-                                rep("numeric", 1), 
+file1 = read.csv(paste0(data.dir,"/",file.list[i]), skip = skip , header = header,
+                 colClasses = c(rep("NULL", c(1:col.n)[data.column]-1),
+                                rep("numeric", 1),
                                 rep("NULL", (col.n-c(1:col.n)[data.column]))))
 
 
@@ -1324,16 +1341,16 @@ file1 = read.csv(paste0(data.dir,"/",file.list[i]), skip = skip , header = heade
   (x <- c(sort(sample(1:20, 9)), NA))
   (y <- c(sort(sample(3:23, 7)), NA))
   intersect(x, y, drop = FALSE)
-  
+
   c(1,10,5,2,3)[order(c(1,10,5,2,3))]
   sort(c(1,10,5,2,3))
-  
-    # CreateSeuratObject.Assay 
+
+    # CreateSeuratObject.Assay
     # https://rdrr.io/cran/SeuratObject/src/R/seurat.R
     #   object <- new(
     #                 Class = 'Seurat',
-    # .AddMetaData 
+    # .AddMetaData
     # https://rdrr.io/cran/SeuratObject/src/R/zzz.R
-    
+
 q1 = ReadQbone(data.dir)
 # Thinning the data at the same time
