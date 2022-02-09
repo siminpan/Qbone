@@ -103,12 +103,21 @@ QboneAssay <- setClass(
   Class = 'QboneAssay',
   slots = c(
     data = 'list',
-    scale.data = 'matrix',
+    scale.data = 'list',
     key = 'character',
     assay.orig = 'OptionalCharacter',
-    var.features = 'vector',
-    meta.features = 'data.frame',
+    # var.features = 'vector',
+    meta.assays = 'data.frame',
     misc = 'OptionalList'
+  ), 
+  prototype = c(
+    data = list(),
+    scale.data = list(),
+    key = character(),
+    assay.orig = character(),
+    # var.features = 'vector',
+    meta.assays = data.frame(),
+    misc = list()
   )
 )
 
