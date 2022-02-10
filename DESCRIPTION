@@ -19,5 +19,5 @@ Collate:
     'zzz.R'
     'generics.R'
     'qboneassay.R'
-    'Qbone.R'
+    'QboneObject.R'
     'RcppExports.R'

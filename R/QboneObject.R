@@ -104,7 +104,6 @@ Qbone <- setClass(
 #' @name Qbone-methods
 #' @rdname Qbone-methods
 #'
-#' @concept Qbone
 #'
 NULL
 
