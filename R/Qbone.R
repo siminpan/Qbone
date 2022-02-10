@@ -1,8 +1,9 @@
+#' @include zzz.R
 #' @include generics.R
 #' @include qboneassay.R
 #' @include utils.R
+#' @importFrom methods setClass new
 #' @importFrom data.table fread
-#' @useDynLib Qbone
 #'
 NULL
 

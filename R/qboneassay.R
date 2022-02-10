@@ -1,3 +1,4 @@
+#' @include zzz.R
 #' @include generics.R
 #' @include utils.R
 #' @importFrom methods setClass new
@@ -19,17 +20,17 @@ QboneAssay <- setClass(
     data = 'list',
     scale.data = 'list',
     key = 'character',
-    assay.orig = 'character',
+    assay.orig = 'optionalCharacter',
     meta.assays = 'data.frame',
-    misc = 'list'
+    misc = 'optionalList'
   ),
   prototype = c(
     data = list(),
     scale.data = list(),
     key = character(),
-    assay.orig = character(),
+    assay.orig = NULL,
     meta.assays = data.frame(),
-    misc = list()
+    misc = NULL
   )
 )
 
