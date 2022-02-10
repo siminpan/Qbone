@@ -80,7 +80,38 @@ Qbone <- setClass(
 # R-defined generics ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+#' Qbone Methods
+#'
+#' Methods for \code{\link{Qbone}} objects for generics defined in other
+#' packages
+#'
+#' @param x,object A \code{\link{Qbone}} object
+#' @param i,features Depends on the method
+#' \describe{
+#'  \item{\code{[}, \code{subset}}{Feature names or indices}
+#'  \item{\code{$}, \code{$<-}}{Name of a single metadata column}
+#'  \item{\code{[[}, \code{[[<-}}{
+#'   Name of one or more metadata columns or an associated object; associated
+#'   objects include \code{\link{Assay}}, \code{\link{DimReduc}},
+#'   \code{\link{Graph}}, \code{\link{SeuratCommand}}, or
+#'   \code{\link{SpatialImage}} objects
+#'  }
+#' }
+#' @param j,cells Sample names or indices
+#' @param n The number of rows of metadata to return
+#' @param ... Arguments passed to other methods
+#'
+#' @name Qbone-methods
+#' @rdname Qbone-methods
+#'
+#' @concept Qbone
+#'
+NULL
+
+
 ## [[.Qbone ----
+#' @describeIn Qbone-methods Metadata and associated object accessor
+#'
 #' @param drop See \code{\link[base]{drop}}
 #'
 #' @return \code{[[}: If \code{i} is missing, the metadata data frame; if
@@ -131,7 +162,8 @@ Qbone <- setClass(
   }
   return(data.return)
 }
-
+#' @describeIn Qbone-methods Metadata and associated object accessor
+#'
 #' @param value Additional metadata or associated objects to add; \strong{note}:
 #' can pass \code{NULL} to remove metadata or an associated object
 #'
