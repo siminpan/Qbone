@@ -952,7 +952,7 @@ CreateQboneObject <- function(
     active.assay = assay,
     active.ident = idents,
     project.name = project,
-    # version = packageVersion(pkg = 'Qbone'),
+    version = packageVersion(pkg = 'Qbone'),
     ...
   )
   # if (!is.null(x = meta.data)) {
@@ -968,7 +968,7 @@ cqo1 = CreateQboneObject(data = list1,
                          meta.data = data.frame(name = c("a_1", "b_1"))
                          )
 
-cqo2 = AddMetaData(cqo1, c("c", "d"), col.name = "names")
+cqo2 = addMetaData(cqo1, c("c", "d"), col.name = "names")
 
 cqo2[["name"]] <- data.frame(name = c("a", "b"))
 

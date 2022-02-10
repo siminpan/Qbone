@@ -7,61 +7,112 @@ NULL
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 ## Samples ----
-# Samples <- function(x) {
-#   UseMethod(generic = 'Samples', object = x)
-# }
+#' Get samples present in an object
+#' @param x An object
+#'
+#' @return A vector of sample names
+#'
+#' @rdname samples
+#' @export samples
+#'
+samples <- function(x) {
+  UseMethod(generic = 'samples', object = x)
+}
 
-setGeneric("samples", function(x) standardGeneric("samples"))
+# setGeneric("samples", function(x) standardGeneric("samples"))
 
 ## CreateQboneObject ----
-# CreateQboneObject <- function(
-#   counts,
-#   project = 'CreateQboneObject',
+
+# createQboneObject <- function(
+#   data,
+#   project = 'createQboneObject',
 #   assay = 'Bone',
 #   names.field = 1,
 #   names.delim = '_',
 #   meta.data = NULL,
 #   ...
 # ) {
-#   UseMethod(generic = 'CreateQboneObject', object = counts)
+#   UseMethod(generic = 'createQboneObject', object = data)
 # }
 
-setGeneric("createQboneObject", function(x) standardGeneric("createQboneObject"))
+# setGeneric("createQboneObject", function(x) standardGeneric("createQboneObject"))
 
 ## DefaultAssay ----
-# DefaultAssay <- function(object, ...) {
-#   UseMethod(generic = 'defaultAssay', object = object)
-# }
 
-setGeneric("defaultAssay", function(x) standardGeneric("defaultAssay"))
+#' Get and set the default assay
+#' @param object An object
+#' @param ... Arguments passed to other methods
+#'
+#' @return \code{DefaultAssay}: The name of the default assay
+#'
+#' @rdname defaultAssay
+#' @export defaultAssay
+#'
+defaultAssay <- function(object, ...) {
+  UseMethod(generic = 'defaultAssay', object = object)
+}
+
+# setGeneric("defaultAssay", function(x) standardGeneric("defaultAssay"))
 
 
-## "DefaultAssay<-" ----
-# "DefaultAssay<-" <- function(object, ..., value) {
-#   UseMethod(generic = 'DefaultAssay<-', object = object)
-# }
+#' @param value Name of assay to set as default
+#'
+#' @return \code{defaultAssay<-}: An object with the default assay updated
+#'
+#' @rdname defaultAssay
+#' @export defaultAssay<-
+#'
+"defaultAssay<-" <- function(object, ..., value) {
+  UseMethod(generic = 'sefaultAssay<-', object = object)
+}
 
-setGeneric("defaultAssay<-", function(x) standardGeneric("defaultAssay<-"))
+# setGeneric("defaultAssay<-", function(x) standardGeneric("defaultAssay<-"))
 
-## AddMetaData ----
-# AddMetaData <- function(object, metadata, col.name = NULL) {
-#   UseMethod(generic = 'AddMetaData', object = object)
-# }
+## addMetaData ----
+#' Add in metadata associated
+#' @param object An object
+#' @param metadata A vector, list, or data.frame with metadata to add
+#' @param col.name A name for meta data if not a named list or data.frame
+#'
+#' @return \code{object} with metadata added
+#'
+#' @rdname addMetaData
+#' @export addMetaData
+#'
+#'
+addMetaData <- function(object, metadata, col.name = NULL) {
+  UseMethod(generic = 'addMetaData', object = object)
+}
 
-setGeneric("addMetaData", function(x) standardGeneric("addMetaData"))
+# setGeneric("addMetaData", function(x) standardGeneric("addMetaData"))
 
 
 ## Idents ----
-# Idents <- function(object, ... ) {
-#   UseMethod(generic = 'Idents', object = object)
-# }
+#' Get, set, and manipulate an object's identity classes
+#'
+#' @param x,object An object
+#' @param ... Arguments passed to other methods
+#'
+#' @rdname idents
+#' @export idents
+#'
+idents <- function(object, ... ) {
+  UseMethod(generic = 'idents', object = object)
+}
 
-setGeneric("idents", function(x) standardGeneric("idents"))
+# setGeneric("idents", function(x) standardGeneric("idents"))
 
 
-## "Idents<-" ----
-# "Idents<-" <- function(object, ..., value) {
-#   UseMethod(generic = 'Idents<-', object = object)
-# }
+#' @param value The name of the identities to pull from object metadata or the
+#' identities themselves
+#'
+#' @return \code{idents<-}: \code{object} with the cell identities changed
+#'
+#' @rdname idents
+#' @export idents<-
+#'
+"idents<-" <- function(object, ..., value) {
+  UseMethod(generic = 'idents<-', object = object)
+}
 
-setGeneric("idents<-", function(x) standardGeneric("idents<-"))
+# setGeneric("idents<-", function(x) standardGeneric("idents<-"))

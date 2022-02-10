@@ -1,7 +1,8 @@
 #' @include zzz.R
 #' @include generics.R
 #' @include utils.R
-#' @importFrom methods setClass new
+#' @importFrom methods setClass new slot slot<- slotNames
+#' @importFrom stats na.omit
 #'
 NULL
 
@@ -12,7 +13,14 @@ NULL
 ## The QboneAssay Class ----
 #' The QboneAssay Class
 #' The QboneAssay object is the basic unit of Qbone.
-
+#'
+#' @name QboneAssay-class
+#' @rdname QboneAssay-class
+#' @exportClass QboneAssay
+#'
+#'
+#' @seealso \code{\link{QboneAssay-methods}}
+#'
 
 QboneAssay <- setClass(
   Class = 'QboneAssay',
