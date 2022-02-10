@@ -6,13 +6,14 @@ NULL
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Class definitions ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+## S3 ----
 setOldClass(Classes = 'package_version')
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Internal ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+## %||% ----
 #' Set a default value depending on if an object is \code{NULL}
 #' From rlang package.
 #'
@@ -28,9 +29,10 @@ setOldClass(Classes = 'package_version')
 # Functions ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+## UpdateSlots ----
 #' Update slots in an object
 
-UpdateSlots <- function(object) {
+updateSlots <- function(object) {
   object.list <- sapply(
     X = slotNames(x = object),
     FUN = function(x) {

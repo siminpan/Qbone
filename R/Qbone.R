@@ -1,7 +1,6 @@
 #' @include generics.R
 #' @include qboneassay.R
 #' @include utils.R
-#' @importFrom methods setClass
 #' @importFrom data.table fread
 #' @useDynLib Qbone
 #'
@@ -11,6 +10,7 @@ NULL
 # Class definitions ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+## The Qbone Class ----
 #' The Qbone Class
 #'
 #' The Qbone object is a representation of data analysis using Quantile
@@ -51,7 +51,8 @@ Qbone <- setClass(
     images = 'list',
     project.name = 'character',
     misc = 'list',
-    version = 'package_version',
+    version = 'package_version', # function OK but infinite list under this slot.
+                                 # list(packageVersion()) ended up the same.
     commands = 'list',
     tools = 'list'
   ),
@@ -73,8 +74,13 @@ Qbone <- setClass(
 # Functions ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# R-defined generics ----
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 "[[.Qbone" <- function(x, i, ..., drop = FALSE) {
-  x <- UpdateSlots(object = x)
+  x <- updateSlots(object = x)
   if (missing(x = i)) {
     i <- colnames(x = slot(object = x, name = 'meta.data'))
   }
@@ -98,7 +104,6 @@ Qbone <- setClass(
     }
   } else {
     slot.use <- unlist(x = lapply(
-      # X = c('assays', 'reductions', 'graphs', 'neighbors', 'commands', 'images'),
       X = c('assays', 'graphs', 'images'),
       FUN = function(s) {
         if (any(i %in% names(x = slot(object = x, name = s)))) {

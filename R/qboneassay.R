@@ -1,6 +1,6 @@
 #' @include generics.R
 #' @include utils.R
-#' @importFrom methods new slot slot<-
+#' @importFrom methods setClass new
 #'
 NULL
 
@@ -8,6 +8,7 @@ NULL
 # Class definitions ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+## The QboneAssay Class ----
 #' The QboneAssay Class
 #' The QboneAssay object is the basic unit of Qbone.
 

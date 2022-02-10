@@ -2,38 +2,62 @@
 # Generics ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Samples <- function(x) {
-  UseMethod(generic = 'Samples', object = x)
-}
+## Samples ----
+# Samples <- function(x) {
+#   UseMethod(generic = 'Samples', object = x)
+# }
 
-CreateQboneObject <- function(
-  counts,
-  project = 'CreateQboneObject',
-  assay = 'Bone',
-  names.field = 1,
-  names.delim = '_',
-  meta.data = NULL,
-  ...
-) {
-  UseMethod(generic = 'CreateQboneObject', object = counts)
-}
+setGeneric("samples", function(x) standardGeneric("samples"))
 
-DefaultAssay <- function(object, ...) {
-  UseMethod(generic = 'DefaultAssay', object = object)
-}
+## CreateQboneObject ----
+# CreateQboneObject <- function(
+#   counts,
+#   project = 'CreateQboneObject',
+#   assay = 'Bone',
+#   names.field = 1,
+#   names.delim = '_',
+#   meta.data = NULL,
+#   ...
+# ) {
+#   UseMethod(generic = 'CreateQboneObject', object = counts)
+# }
 
-"DefaultAssay<-" <- function(object, ..., value) {
-  UseMethod(generic = 'DefaultAssay<-', object = object)
-}
+setGeneric("createQboneObject", function(x) standardGeneric("createQboneObject"))
 
-AddMetaData <- function(object, metadata, col.name = NULL) {
-  UseMethod(generic = 'AddMetaData', object = object)
-}
+## DefaultAssay ----
+# DefaultAssay <- function(object, ...) {
+#   UseMethod(generic = 'defaultAssay', object = object)
+# }
 
-Idents <- function(object, ... ) {
-  UseMethod(generic = 'Idents', object = object)
-}
+setGeneric("defaultAssay", function(x) standardGeneric("defaultAssay"))
 
-"Idents<-" <- function(object, ..., value) {
-  UseMethod(generic = 'Idents<-', object = object)
-}
+
+## "DefaultAssay<-" ----
+# "DefaultAssay<-" <- function(object, ..., value) {
+#   UseMethod(generic = 'DefaultAssay<-', object = object)
+# }
+
+setGeneric("defaultAssay<-", function(x) standardGeneric("defaultAssay<-"))
+
+## AddMetaData ----
+# AddMetaData <- function(object, metadata, col.name = NULL) {
+#   UseMethod(generic = 'AddMetaData', object = object)
+# }
+
+setGeneric("addMetaData", function(x) standardGeneric("addMetaData"))
+
+
+## Idents ----
+# Idents <- function(object, ... ) {
+#   UseMethod(generic = 'Idents', object = object)
+# }
+
+setGeneric("idents", function(x) standardGeneric("idents"))
+
+
+## "Idents<-" ----
+# "Idents<-" <- function(object, ..., value) {
+#   UseMethod(generic = 'Idents<-', object = object)
+# }
+
+setGeneric("idents<-", function(x) standardGeneric("idents<-"))

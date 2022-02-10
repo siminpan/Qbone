@@ -1117,6 +1117,11 @@ ThinData <- function(
 # test speed ReadQbone ----
 library("microbenchmark")
 
+microbenchmark(rlang::is_null(NULL),
+               is.null(NULL))
+microbenchmark(rlang::is_null(numeric()),
+               is.null(numeric()))
+
 data.dir = "/home/span/Documents/MOSJ-3DCT/data/csv.test"
 
 nopeek <- function(
