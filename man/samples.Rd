@@ -2,12 +2,12 @@
 % Please edit documentation in R/generics.R, R/QboneObject.R
 \name{samples}
 \alias{samples}
-\alias{samples,Qbone-method}
+\alias{samples.Qbone}
 \title{Get samples present in an object}
 \usage{
 samples(x)
 
-\S4method{samples}{Qbone}(x)
+\method{samples}{Qbone}(x)
 }
 \arguments{
 \item{x}{An object}

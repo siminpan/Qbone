@@ -16,9 +16,10 @@ NULL
 #' @rdname samples
 #' @export samples
 #'
-setGeneric("samples", function(x) standardGeneric("samples"))
+samples <- function(x) UseMethod(generic = 'samples', object = x)
+# as S3 method
 # samples <- function(x) UseMethod(generic = 'samples', object = x)
-
+# as S4 method
 # setGeneric("samples", function(x) standardGeneric("samples"))
 
 ## CreateQboneObject ----

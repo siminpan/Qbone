@@ -10,6 +10,26 @@ The QboneAssay object is the basic unit of Qbone.}
 The QboneAssay Class
 The QboneAssay object is the basic unit of Qbone.
 }
+\section{Slots}{
+
+\describe{
+\item{\code{data}}{Normalized expression data}
+
+\item{\code{scale.data}}{Scaled expression data}
+
+\item{\code{key}}{Key for the Assay}
+
+\item{\code{assay.orig}}{Original assay that this assay is based off of. Used to
+track assay provenance}
+
+\item{\code{var.features}}{Vector of features exhibiting high variance across
+single cells}
+
+\item{\code{meta.features}}{Feature-level metadata}
+
+\item{\code{misc}}{Utility slot for storing additional data associated with the assay}
+}}
+
 \seealso{
 \code{\link{QboneAssay-methods}}
 }

@@ -58,7 +58,7 @@ Qbone <- setClass(
     project.name = 'character',
     misc = 'list',
     version = 'package_version', # function OK but infinite list under this slot.
-                                 # list(packageVersion()) ended up the same.
+    # list(packageVersion()) ended up the same.
     commands = 'list',
     tools = 'list'
   ),
@@ -189,6 +189,22 @@ idents.Qbone <- function(object, ...) {
 }
 
 
+## samples.Qbone ----
+#' @rdname samples
+#' @export
+#'
+samples.Qbone <- function(x) {
+  return(names(x@assays[[defaultAssay(x)]][["samples"]]))
+}
+# as S3 method
+# samples.Qbone <- function(x) {
+#   return(names(x@assays[[defaultAssay(x)]][["samples"]]))
+# }
+# as S4 method
+# setMethod("samples", "Qbone", function(x) {
+#   return(names(x@assays[[defaultAssay(x)]][["samples"]]))
+# })
+
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # R-defined generics ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -277,18 +293,6 @@ NULL
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # S4 methods ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-## samples.Qbone ----
-#' @rdname samples
-#' @export
-#'
-setMethod("samples", "Qbone", function(x) {
-  return(names(x@assays[[defaultAssay(x)]][["samples"]]))
-})
-# samples.Qbone <- function(x) {
-#   return(names(x@assays[[defaultAssay(x)]][["samples"]]))
-# }
-
 
 ## [[<- Qbone ----
 #' @describeIn Qbone-methods Metadata and associated object accessor
@@ -684,4 +688,3 @@ FilterObjects <- function(object, classes.keep = c('QboneAssay')) {
   object.classes <- which(x = object.classes, useNames = TRUE)
   return(names(x = object.classes))
 }
-
