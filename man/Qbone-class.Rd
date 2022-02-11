@@ -13,7 +13,7 @@ for R.
 \section{Slots}{
 
 \describe{
-\item{\code{assays}}{A list of assays for this project.
+\item{\code{assays}}{A list of assays data for this project.
 structure like assay name
 ├── sample list
 │        ├── sample 1

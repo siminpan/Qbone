@@ -1,6 +1,6 @@
 #' @include zzz.R
 #' @include generics.R
-#' @include QboneAssay.R
+#' @include QboneData.R
 #' @include utils.R
 #' @importFrom methods setClass new slot slot<- slotNames setMethod
 #' @importFrom stats na.omit
@@ -20,7 +20,7 @@ NULL
 #' Functional Regression using Quantlets (doi: 10.1080/01621459.2019.1609969)
 #' for R.
 #'
-#' @slot assays A list of assays for this project.
+#' @slot assays A list of assays data for this project.
 #' structure like assay name
 #'                  ├── sample list
 #'                  │        ├── sample 1
@@ -346,7 +346,7 @@ setMethod( # because R doesn't allow S3-style [[<- for S4 classes
       i <- newi
     }
     # Figure out where to store data
-    slot.use <- if (inherits(x = value, what = 'QboneAssay')) {
+    slot.use <- if (inherits(x = value, what = 'QboneData')) {
       # Ensure we have the same number of samples
       if (ncol(x = value) != ncol(x = x)) {
         stop(
@@ -659,7 +659,7 @@ FindObject <- function(object, name) {
 #'
 #' @noRd
 #'
-FilterObjects <- function(object, classes.keep = c('QboneAssay')) {
+FilterObjects <- function(object, classes.keep = c('QboneData')) {
   object <- updateSlots(object = object)
   slots <- na.omit(object = Filter(
     f = function(x) {

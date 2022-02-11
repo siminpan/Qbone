@@ -18,6 +18,6 @@ Collate:
     'utils.R'
     'zzz.R'
     'generics.R'
-    'QboneAssay.R'
+    'QboneData.R'
     'QboneObject.R'
     'RcppExports.R'

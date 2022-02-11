@@ -10,9 +10,9 @@ NULL
 # Class definitions ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-## The QboneAssay Class ----
-#' The QboneAssay Class
-#' The QboneAssay object is the basic unit of Qbone.
+## The QboneData Class ----
+#' The QboneData Class
+#' The QboneData object is the basic unit of Qbone.
 #'
 #' @slot data Normalized expression data
 #' @slot scale.data Scaled expression data
@@ -24,15 +24,15 @@ NULL
 #' @slot meta.features Feature-level metadata
 #' @slot misc Utility slot for storing additional data associated with the assay
 #'
-#' @name QboneAssay-class
-#' @rdname QboneAssay-class
-#' @exportClass QboneAssay
+#' @name QboneData-class
+#' @rdname QboneData-class
+#' @exportClass QboneData
 #'
 #'
-#' @seealso \code{\link{QboneAssay-methods}}
+#' @seealso \code{\link{QboneData-methods}}
 #'
-QboneAssay <- setClass(
-  Class = 'QboneAssay',
+QboneData <- setClass(
+  Class = 'QboneData',
   slots = c(
     data = 'list',
     scale.data = 'list',
@@ -55,7 +55,32 @@ QboneAssay <- setClass(
 # Functions ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+#' Create an QboneData object
+#'
+#' @param data Prenormalized data; if provided, do not pass \code{counts}
+#' @param min.cells Include features detected in at least this many cells. Will
+#' subset the counts matrix as well. To reintroduce excluded features, create a
+#' new object with a lower cutoff.
+#' @param min.features Include cells where at least this many features are
+#' detected.
+#' @param check.matrix Check counts matrix for NA, NaN, Inf, and non-integer values
+#' @param ... Arguments passed to \code{\link{as.sparse}}
+#'
+#' @return A \code{\link{Assay}} object
+#'
+#' @importFrom methods as
+#'
+#' @export
+#'
+CreateAssayObject <- function(
+  data,
+  min.cells = 0,
+  min.features = 0,
+  check.matrix = FALSE,
+  ...
+) {
 
+}
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Qbone-defined generics ----
