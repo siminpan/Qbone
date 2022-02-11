@@ -7,6 +7,7 @@ NULL
 #' @docType package
 #' @name Qbone-package
 #' @rdname Qbone-package
+#' @aliases Qbone-package
 #'
 "_PACKAGE"
 
