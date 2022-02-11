@@ -16,6 +16,7 @@ NULL
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 setClassUnion(name = 'optionalCharacter', members = c('NULL', 'character'))
+
 setClassUnion(name = 'optionalList', members = c('NULL', 'list'))
 
 setOldClass(Classes = 'package_version')

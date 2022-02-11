@@ -45,7 +45,7 @@ NULL
 #' @name Qbone-class
 #' @rdname Qbone-class
 #' @exportClass Qbone
-
+#'
 Qbone <- setClass(
   Class = 'Qbone',
   slots = c(
@@ -76,6 +76,125 @@ Qbone <- setClass(
   )
 )
 
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Functions ----
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+# Assays(
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Qbone-defined generics ----
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+## addMetaData ----
+#' @rdname addMetaData
+#' @export
+#' @method addMetaData Qbone
+#'
+addMetaData.Qbone <- .addMetaData
+
+## defaultAssay.Qbone ----
+#' @rdname defaultAssay
+#' @export
+#' @method defaultAssay Qbone
+#'
+defaultAssay.Qbone <- function(object, ...) {
+  CheckDots(...)
+  object <- updateSlots(object = object)
+  return(slot(object = object, name = 'active.assay'))
+}
+
+## defaultAssay<-.Qbone" ----
+#' @rdname defaultAssay
+#' @export
+#' @method defaultAssay<- Qbone
+#'
+"defaultAssay<-.Qbone" <- function(object, ..., value) {
+  CheckDots(...)
+  object <- updateSlots(object = object)
+  if (!value %in% names(x = slot(object = object, name = 'assays'))) {
+    stop("Cannot find assay ", value)
+  }
+  slot(object = object, name = 'active.assay') <- value
+  return(object)
+}
+
+## idents.Qbone ----
+#' @rdname idents
+#' @export
+#' @method idents Qbone
+#'
+idents.Qbone <- function(object, ...) {
+  CheckDots(...)
+  object <- updateSlots(object = object)
+  return(slot(object = object, name = 'active.ident'))
+}
+
+
+## idents<-.Qbone ----
+#' @param samples Set cell identities for specific samples
+#' @param drop Drop unused levels
+#'
+#' @rdname idents
+#' @export
+#' @method idents<- Qbone
+#'
+"idents<-.Qbone" <- function(object, samples = NULL, drop = FALSE, ..., value) {
+  CheckDots(...)
+  object <- updateSlots(object = object)
+  samples <- samples %||% samples(object)
+  if (is.numeric(x = samples)) {
+    samples <- samples(object)[samples]
+  }
+  samples <- intersect(x = samples, y = samples(object))
+  samples <- match(x = samples, table = samples(object))
+  if (length(x = samples) == 0) {
+    warning("Cannot find samples provided")
+    return(object)
+  }
+  idents.new <- if (length(x = value) == 1 && value %in% colnames(x = object[[]])) {
+    unlist(x = object[[value]], use.names = FALSE)[samples]
+  } else {
+    if (is.list(x = value)) {
+      value <- unlist(x = value, use.names = FALSE)
+    }
+    rep_len(x = value, length.out = length(x = samples))
+  }
+  new.levels <- if (is.factor(x = idents.new)) {
+    levels(x = idents.new)
+  } else {
+    unique(x = idents.new)
+  }
+  old.levels <- levels(x = object)
+  levels <- c(new.levels, old.levels)
+  idents.new <- as.vector(x = idents.new)
+  idents <- as.vector(x = idents(object = object))
+  idents[samples] <- idents.new
+  idents[is.na(x = idents)] <- 'NA'
+  levels <- intersect(x = levels, y = unique(x = idents))
+  names(x = idents) <- samples(object)
+  missing.samples <- which(x = is.na(x = names(x = idents)))
+  if (length(x = missing.samples) > 0) {
+    idents <- idents[-missing.samples]
+  }
+  idents <- factor(x = idents, levels = levels)
+  slot(object = object, name = 'active.ident') <- idents
+  if (drop) {
+    object <- droplevels(x = object)
+  }
+  return(object)
+}
+
+## samples.Qbone ----
+#' @rdname samples
+#' @export
+#'
+samples.Qbone <- function(x) {
+  return(names(x@assays[[defaultAssay(x)]][["samples"]]))
+}
+
+
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # R-defined generics ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -92,12 +211,12 @@ Qbone <- setClass(
 #'  \item{\code{$}, \code{$<-}}{Name of a single metadata column}
 #'  \item{\code{[[}, \code{[[<-}}{
 #'   Name of one or more metadata columns or an associated object; associated
-#'   objects include \code{\link{Assay}}, \code{\link{DimReduc}},
+#'   objects include \code{\link{Assay}}, \code{\link{DimReduc}},                  || double check
 #'   \code{\link{Graph}}, \code{\link{SeuratCommand}}, or
 #'   \code{\link{SpatialImage}} objects
 #'  }
 #' }
-#' @param j,cells Sample names or indices
+#' @param j,samples Sample names or indices
 #' @param n The number of rows of metadata to return
 #' @param ... Arguments passed to other methods
 #'
@@ -120,7 +239,6 @@ NULL
 #' @export
 #' @method [[ Qbone
 #'
-
 "[[.Qbone" <- function(x, i, ..., drop = FALSE) {
   x <- updateSlots(object = x)
   if (missing(x = i)) {
@@ -161,6 +279,12 @@ NULL
   }
   return(data.return)
 }
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# S4 methods ----
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+## [[<- Qbone ----
 #' @describeIn Qbone-methods Metadata and associated object accessor
 #'
 #' @param value Additional metadata or associated objects to add; \strong{note}:
@@ -212,11 +336,11 @@ setMethod( # because R doesn't allow S3-style [[<- for S4 classes
       i <- newi
     }
     # Figure out where to store data
-    slot.use <- if (inherits(x = value, what = 'Assay')) {
-      # Ensure we have the same number of cells
+    slot.use <- if (inherits(x = value, what = 'QboneAssay')) {
+      # Ensure we have the same number of samples
       if (ncol(x = value) != ncol(x = x)) {
         stop(
-          "Cannot add a different number of cells than already present",
+          "Cannot add a different number of samples than already present",
           call. = FALSE
         )
       }
@@ -233,7 +357,7 @@ setMethod( # because R doesn't allow S3-style [[<- for S4 classes
       }
       'assays'
     } else if (inherits(x = value, what = 'SpatialImage')) {
-      # Ensure that all cells for this image are present
+      # Ensure that all samples for this image are present
       if (!all(samples(x = value) %in% samples(x = x))) {
         stop("", call. = FALSE)
       }
@@ -277,16 +401,16 @@ setMethod( # because R doesn't allow S3-style [[<- for S4 classes
       }
       'reductions'
     } else if (inherits(x = value, what = "Neighbor")) {
-      # Ensure all cells are present in the Qbone object
+      # Ensure all samples are present in the Qbone object
       if (length(x = samples(x = value)) > length(x = samples(x = x))) {
         stop(
-          "Cannot have more cells in the Neighbor object than are present in the Qbone object.",
+          "Cannot have more samples in the Neighbor object than are present in the Qbone object.",
           call. = FALSE
         )
       }
       if (!all(samples(x = value) %in% samples(x = x))) {
         stop(
-          "Cannot add cells in the Neighbor object that aren't present in the Qbone object.",
+          "Cannot add samples in the Neighbor object that aren't present in the Qbone object.",
           call. = FALSE
         )
       }
@@ -347,9 +471,9 @@ setMethod( # because R doesn't allow S3-style [[<- for S4 classes
       slot(object = x, name = 'meta.data') <- meta.data
     } else {
       # Add other object to Qbone object
-      # Ensure cells match in value and order
+      # Ensure samples match in value and order
       if (!inherits(x = value, what = c('SeuratCommand', 'NULL', 'SpatialImage', 'Neighbor')) && !all(samples(x = value) == samples(x = x))) {
-        stop("All cells in the object being added must match the cells in this object", call. = FALSE)
+        stop("All samples in the object being added must match the samples in this object", call. = FALSE)
       }
       # Ensure we're not duplicating object names
       duplicate <- !is.null(x = FindObject(object = x, name = i)) &&
@@ -472,15 +596,8 @@ setMethod( # because R doesn't allow S3-style [[<- for S4 classes
 )
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# Functions ----
+# Internal ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-## addMetaData ----
-#' @rdname addMetaData
-#' @export
-#' @method addMetaData Qbone
-#'
-addMetaData.Qbone <- .addMetaData
 
 ## FindObject ----
 #' Find the collection of an object within a Qbone object
@@ -532,7 +649,7 @@ FindObject <- function(object, name) {
 #'
 #' @noRd
 #'
-FilterObjects <- function(object, classes.keep = c('Assay')) {
+FilterObjects <- function(object, classes.keep = c('QboneAssay')) {
   object <- updateSlots(object = object)
   slots <- na.omit(object = Filter(
     f = function(x) {
@@ -562,232 +679,3 @@ FilterObjects <- function(object, classes.keep = c('Assay')) {
   return(names(x = object.classes))
 }
 
-## CheckDots ----
-CheckDots <- function(..., fxns = NULL) {
-  args.names <- names(x = list(...))
-  if (length(x = list(...)) == 0) {
-    return(invisible(x = NULL))
-  }
-  if (is.null(x = args.names)) {
-    stop("No named arguments passed")
-  }
-  if (length(x = fxns) == 1) {
-    fxns <- list(fxns)
-  }
-  for (f in fxns) {
-    if (!(is.character(x = f) || is.function(x = f))) {
-      stop("CheckDots only works on characters or functions, not ", class(x = f))
-    }
-  }
-  fxn.args <- suppressWarnings(expr = sapply(
-    X = fxns,
-    FUN = function(x) {
-      x <- tryCatch(
-        expr = if (isS3stdGeneric(f = x)) {
-          as.character(x = methods(generic.function = x))
-        } else {
-          x
-        },
-        error = function(...) {
-          return(x)
-        }
-      )
-      x <- if (is.character(x = x)) {
-        sapply(X = x, FUN = argsAnywhere, simplify = FALSE, USE.NAMES = TRUE)
-      } else if (length(x = x) <= 1) {
-        list(x)
-      }
-      return(sapply(
-        X = x,
-        FUN = function(f) {
-          return(names(x = formals(fun = f)))
-        },
-        simplify = FALSE,
-        USE.NAMES = TRUE
-      ))
-    },
-    simplify = FALSE,
-    USE.NAMES = TRUE
-  ))
-  fxn.args <- unlist(x = fxn.args, recursive = FALSE)
-  fxn.null <- vapply(
-    X = fxn.args,
-    FUN = is.null,
-    FUN.VALUE = logical(length = 1L)
-  )
-  if (all(fxn.null) && !is.null(x = fxns)) {
-    stop("None of the functions passed could be found", call. = FALSE)
-  } else if (any(fxn.null)) {
-    warning(
-      "The following functions passed could not be found: ",
-      paste(names(x = which(x = fxn.null)), collapse = ', '),
-      call. = FALSE,
-      immediate. = TRUE
-    )
-    fxn.args <- Filter(f = Negate(f = is.null), x = fxn.args)
-  }
-  dfxns <- vector(mode = 'logical', length = length(x = fxn.args))
-  names(x = dfxns) <- names(x = fxn.args)
-  for (i in 1:length(x = fxn.args)) {
-    dfxns[i] <- any(grepl(pattern = '...', x = fxn.args[[i]], fixed = TRUE))
-  }
-  if (any(dfxns)) {
-    dfxns <- names(x = which(x = dfxns))
-    if (any(nchar(x = dfxns) > 0)) {
-      fx <- vapply(
-        X = Filter(f = nchar, x = dfxns),
-        FUN = function(x) {
-          if (isS3method(method = x)) {
-            x <- unlist(x = strsplit(x = x, split = '\\.'))
-            x <- x[length(x = x) - 1L]
-          }
-          return(x)
-        },
-        FUN.VALUE = character(length = 1L)
-      )
-      message(
-        "The following functions and any applicable methods accept the dots: ",
-        paste(unique(x = fx), collapse = ', ')
-      )
-      if (any(nchar(x = dfxns) < 1)) {
-        message(
-          "In addition, there is/are ",
-          length(x = Filter(f = Negate(f = nchar), x = dfxns)),
-          " other function(s) that accept(s) the dots"
-        )
-      }
-    } else {
-      message("There is/are ", length(x = dfxns), 'function(s) that accept(s) the dots')
-    }
-  } else {
-    unused <- Filter(
-      f = function(x) {
-        return(!x %in% unlist(x = fxn.args))
-      },
-      x = args.names
-    )
-    if (length(x = unused) > 0) {
-      msg <- paste0(
-        "The following arguments are not used: ",
-        paste(unused, collapse = ', ')
-      )
-      switch(
-        EXPR = getOption(x = "Qbone.checkdots", default = 'warn'),
-        "warn" = warning(msg, call. = FALSE, immediate. = TRUE),
-        "stop" = stop(msg),
-        "silent" = NULL,
-        stop("Invalid Qbone.checkdots option. Please choose one of warn, stop, silent")
-      )
-      # unused.hints <- sapply(X = unused, FUN = OldParamHints)
-      # names(x = unused.hints) <- unused
-      # unused.hints <- na.omit(object = unused.hints)
-      # if (length(x = unused.hints) > 0) {
-      #   message(
-      #     "Suggested parameter: ",
-      #     paste(unused.hints, "instead of", names(x = unused.hints), collapse = '; '),
-      #     "\n"
-      #   )
-      # }
-    }
-  }
-  return(invisible(x = NULL))
-}
-
-## defaultAssay.Qbone ----
-#' @rdname defaultAssay
-#' @export
-#' @method defaultAssay Qbone
-#'
-defaultAssay.Qbone <- function(object, ...) {
-  CheckDots(...)
-  object <- updateSlots(object = object)
-  return(slot(object = object, name = 'active.assay'))
-}
-
-## defaultAssay<-.Qbone" ----
-#' @rdname defaultAssay
-#' @export
-#' @method defaultAssay<- Qbone
-#'
-"defaultAssay<-.Qbone" <- function(object, ..., value) {
-  CheckDots(...)
-  object <- updateSlots(object = object)
-  if (!value %in% names(x = slot(object = object, name = 'assays'))) {
-    stop("Cannot find assay ", value)
-  }
-  slot(object = object, name = 'active.assay') <- value
-  return(object)
-}
-
-## idents.Qbone ----
-#' @rdname idents
-#' @export
-#' @method idents Qbone
-#'
-idents.Qbone <- function(object, ...) {
-  CheckDots(...)
-  object <- updateSlots(object = object)
-  return(slot(object = object, name = 'active.ident'))
-}
-
-
-## idents<-.Qbone ----
-#' @param cells Set cell identities for specific samples
-#' @param drop Drop unused levels
-#'
-#' @rdname idents
-#' @export
-#' @method idents<- Qbone
-#'
-"idents<-.Qbone" <- function(object, samples = NULL, drop = FALSE, ..., value) {
-  CheckDots(...)
-  object <- updateSlots(object = object)
-  samples <- samples %||% samples(object)
-  if (is.numeric(x = samples)) {
-    samples <- samples(object)[samples]
-  }
-  samples <- intersect(x = samples, y = samples(object))
-  samples <- match(x = samples, table = samples(object))
-  if (length(x = samples) == 0) {
-    warning("Cannot find samples provided")
-    return(object)
-  }
-  idents.new <- if (length(x = value) == 1 && value %in% colnames(x = object[[]])) {
-    unlist(x = object[[value]], use.names = FALSE)[samples]
-  } else {
-    if (is.list(x = value)) {
-      value <- unlist(x = value, use.names = FALSE)
-    }
-    rep_len(x = value, length.out = length(x = samples))
-  }
-  new.levels <- if (is.factor(x = idents.new)) {
-    levels(x = idents.new)
-  } else {
-    unique(x = idents.new)
-  }
-  old.levels <- levels(x = object)
-  levels <- c(new.levels, old.levels)
-  idents.new <- as.vector(x = idents.new)
-  idents <- as.vector(x = idents(object = object))
-  idents[samples] <- idents.new
-  idents[is.na(x = idents)] <- 'NA'
-  levels <- intersect(x = levels, y = unique(x = idents))
-  names(x = idents) <- samples(object)
-  missing.samples <- which(x = is.na(x = names(x = idents)))
-  if (length(x = missing.samples) > 0) {
-    idents <- idents[-missing.samples]
-  }
-  idents <- factor(x = idents, levels = levels)
-  slot(object = object, name = 'active.ident') <- idents
-  if (drop) {
-    object <- droplevels(x = object)
-  }
-  return(object)
-}
-
-## samples.Qbone ----
-samples.Qbone <- function(x) {
-  # names(x@assays[[x@active.assay]])
-  # names(x@assays[[DefaultAssay(x)]])
-  return(names(x@assays[[defaultAssay(x)]][["samples"]]))
-}

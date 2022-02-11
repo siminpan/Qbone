@@ -877,7 +877,7 @@ ExtractField <- function(string, field = 1, delim = "_") {
   ))
 }
 
-ExtractField("abc1")
+ExtractField("abc_1")
 
 # CreateSeuratObject.Assay <- function
 # https://rdrr.io/cran/SeuratObject/src/R/seurat.R
