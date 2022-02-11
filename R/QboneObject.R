@@ -2,7 +2,7 @@
 #' @include generics.R
 #' @include QboneAssay.R
 #' @include utils.R
-#' @importFrom methods setClass new slot slot<- slotNames
+#' @importFrom methods setClass new slot slot<- slotNames setMethod
 #' @importFrom stats na.omit
 #' @importFrom data.table fread
 #' @importFrom utils argsAnywhere isS3method isS3stdGeneric methods
@@ -121,6 +121,7 @@ defaultAssay.Qbone <- function(object, ...) {
 }
 
 ## idents.Qbone ----
+#' @param object An Qbone object
 #' @rdname idents
 #' @export
 #' @method idents Qbone
@@ -133,6 +134,7 @@ idents.Qbone <- function(object, ...) {
 
 
 ## idents<-.Qbone ----
+#' @param object An Qbone object
 #' @param samples Set cell identities for specific samples
 #' @param drop Drop unused levels
 #'
@@ -184,14 +186,6 @@ idents.Qbone <- function(object, ...) {
     object <- droplevels(x = object)
   }
   return(object)
-}
-
-## samples.Qbone ----
-#' @rdname samples
-#' @export
-#'
-samples.Qbone <- function(x) {
-  return(names(x@assays[[defaultAssay(x)]][["samples"]]))
 }
 
 
@@ -283,6 +277,18 @@ NULL
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # S4 methods ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+## samples.Qbone ----
+#' @rdname samples
+#' @export
+#'
+setMethod("samples", "Qbone", function(x) {
+  return(names(x@assays[[defaultAssay(x)]][["samples"]]))
+})
+# samples.Qbone <- function(x) {
+#   return(names(x@assays[[defaultAssay(x)]][["samples"]]))
+# }
+
 
 ## [[<- Qbone ----
 #' @describeIn Qbone-methods Metadata and associated object accessor

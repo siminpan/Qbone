@@ -16,6 +16,8 @@ idents(object, ...) <- value
 \method{idents}{Qbone}(object, samples = NULL, drop = FALSE, ...) <- value
 }
 \arguments{
+\item{object}{An Qbone object}
+
 \item{...}{Arguments passed to other methods}
 
 \item{value}{The name of the identities to pull from object metadata or the
@@ -24,8 +26,6 @@ identities themselves}
 \item{samples}{Set cell identities for specific samples}
 
 \item{drop}{Drop unused levels}
-
-\item{x, object}{An object}
 }
 \value{
 \code{idents<-}: \code{object} with the cell identities changed

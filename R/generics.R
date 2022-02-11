@@ -1,4 +1,5 @@
 #' @include zzz.R
+#' @importFrom methods setGeneric
 #'
 NULL
 
@@ -15,9 +16,8 @@ NULL
 #' @rdname samples
 #' @export samples
 #'
-samples <- function(x) {
-  UseMethod(generic = 'samples', object = x)
-}
+setGeneric("samples", function(x) standardGeneric("samples"))
+# samples <- function(x) UseMethod(generic = 'samples', object = x)
 
 # setGeneric("samples", function(x) standardGeneric("samples"))
 
@@ -54,7 +54,8 @@ defaultAssay <- function(object, ...) {
 
 # setGeneric("defaultAssay", function(x) standardGeneric("defaultAssay"))
 
-
+#' @param object An object
+#' @param ... Arguments passed to other methods
 #' @param value Name of assay to set as default
 #'
 #' @return \code{defaultAssay<-}: An object with the default assay updated
@@ -90,7 +91,7 @@ addMetaData <- function(object, metadata, col.name = NULL) {
 ## Idents ----
 #' Get, set, and manipulate an object's identity classes
 #'
-#' @param x,object An object
+#' @param object An object
 #' @param ... Arguments passed to other methods
 #'
 #' @rdname idents
@@ -102,7 +103,8 @@ idents <- function(object, ... ) {
 
 # setGeneric("idents", function(x) standardGeneric("idents"))
 
-
+#' @param object An object
+#' @param ... Arguments passed to other methods
 #' @param value The name of the identities to pull from object metadata or the
 #' identities themselves
 #'
