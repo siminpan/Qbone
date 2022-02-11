@@ -1,6 +1,6 @@
 #' @include zzz.R
 #' @include generics.R
-#' @include qboneassay.R
+#' @include QboneAssay.R
 #' @include utils.R
 #' @importFrom methods setClass new slot slot<- slotNames
 #' @importFrom stats na.omit
