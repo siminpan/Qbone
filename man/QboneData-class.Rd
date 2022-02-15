@@ -19,11 +19,10 @@ The QboneData object is the basic unit of Qbone.
 
 \item{\code{key}}{Key for the Assay                                                || double check}
 
+\item{\code{assay.name}}{name of assay}
+
 \item{\code{assay.orig}}{Original assay that this assay is based off of. Used to
 track assay provenance}
-
-\item{\code{var.features}}{Vector of features exhibiting high variance across      || double check
-single cells}
 
 \item{\code{meta.features}}{Feature-level metadata}
 

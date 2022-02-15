@@ -17,10 +17,9 @@ NULL
 #' @slot data Normalized expression data
 #' @slot scale.data Scaled expression data
 #' @slot key Key for the Assay                                                || double check
+#' @slot assay.name name of assay
 #' @slot assay.orig Original assay that this assay is based off of. Used to
 #' track assay provenance
-#' @slot var.features Vector of features exhibiting high variance across      || double check
-#' single cells
 #' @slot meta.features Feature-level metadata
 #' @slot misc Utility slot for storing additional data associated with the assay   || double check
 #'
