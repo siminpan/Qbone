@@ -81,7 +81,44 @@ Qbone <- setClass(
 # Functions ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-# Assays(
+## createQboneObject ----
+#' @param row.names When \code{counts} is a \code{data.frame} or
+#' \code{data.frame}-derived object: an optional vector of feature names to be
+#' used
+#'
+#' @rdname createQboneObject
+#' @method createQboneObject default
+#' @export
+#'
+createQboneObject.default <- function(
+  data = data,
+  project = 'QboneProject',
+  assay = "Bone",
+  names.field = 1,
+  names.delim = '_',
+  meta.data = NULL,
+  sampleid = 1,
+  ...
+){
+
+}
+
+#' @rdname createQboneObject
+#' @method createQboneObject QboneData
+#' @export
+#'
+createQboneObject.QboneData <- function(
+  data = data,
+  project = 'QboneProject',
+  assay = "Bone",
+  names.field = 1,
+  names.delim = '_',
+  meta.data = NULL,
+  sampleid = 1,
+  ...
+){
+
+}
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Qbone-defined generics ----
@@ -611,6 +648,7 @@ setMethod( # because R doesn't allow S3-style [[<- for S4 classes
 
 ## FindObject ----
 #' Find the collection of an object within a Qbone object
+#' Adopted from Seurateobject package
 #'
 #' @param object A \code{\link{Qbone}} object
 #' @param name Name of object to find
@@ -648,6 +686,7 @@ FindObject <- function(object, name) {
 #'
 #' Get the names of objects within a \code{Qbone} object that are of a
 #' certain class
+#' Adopted from Seurateobject package
 #'
 #' @param object A \code{\link{Qbone}} object
 #' @param classes.keep A vector of names of classes to get

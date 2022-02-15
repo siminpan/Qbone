@@ -883,6 +883,20 @@ ExtractField("abc_1")
 # https://rdrr.io/cran/SeuratObject/src/R/seurat.R
 # Assay <- setClass( https://rdrr.io/cran/SeuratObject/src/R/assay.R
 
+new.meta.data = data.frame((row.names = c("a_2", "b_2")))
+
+meta.data = data.frame(names = c("a_1","a_1", "b_1"), names3 = c("a_2","a_3", "b_3"))
+rownames(x = meta.data) = c("a_4", "b_4")
+
+for (ii in 1:ncol(x = meta.data)) {
+  new.meta.data[rownames(x = meta.data), colnames(x = meta.data)[ii]] <- meta.data[, ii, drop = FALSE]
+}
+meta.data <- new.meta.data
+
+meta.data <- meta.data[intersect(x = rownames(x = meta.data), y = c("a_2", "b_2")), , drop = FALSE]
+
+colnames(cqo2)
+
 CreateQboneObject <- function(
   data = data,
   project = 'QboneProject',

@@ -22,19 +22,36 @@ samples <- function(x) UseMethod(generic = 'samples', object = x)
 # as S4 method
 # setGeneric("samples", function(x) standardGeneric("samples"))
 
-## CreateQboneObject ----
+## createQboneObject ----
 
-# createQboneObject <- function(
-#   data,
-#   project = 'createQboneObject',
-#   assay = 'Bone',
-#   names.field = 1,
-#   names.delim = '_',
-#   meta.data = NULL,
-#   ...
-# ) {
-#   UseMethod(generic = 'createQboneObject', object = data)
-# }
+#' Create a \code{Qbone} object
+#'
+#' @inheritParams createQboneData
+#'
+#' @param data data
+#' @param project \link{Project} name for the \code{Qbone} object
+#' @param assay Name of the initial assay
+#' @param names.field || double check
+#' @param names.delim || double check
+#' @param meta.data Include cells where at least this many features are
+#' detected.
+#' @param sampleid Column number of sample name in meta.data
+#'
+#' @rdname createQboneObject
+#' @export
+#'
+createQboneObject <- function(
+  data,
+  project = 'createQboneObject',
+  assay = 'Bone',
+  names.field = 1,
+  names.delim = '_',
+  meta.data = NULL,
+  sampleid = 1,
+  ...
+) {
+  UseMethod(generic = 'createQboneObject', object = data)
+}
 
 # setGeneric("createQboneObject", function(x) standardGeneric("createQboneObject"))
 
