@@ -62,7 +62,7 @@ QboneData <- setClass(
 #' @param data data
 #' @param meta.assays Include cells where at least this many features are
 #' detected.
-#' @param sampleid Column number of sample name in meta.assays
+#' @param sampleid column number of sample name in meta.assay
 #' @param assay.name assay name for the data.
 #' @param assay.orig Original assay that this assay is based off of. Used to
 #' track assay provenance
@@ -111,7 +111,8 @@ createQboneData <- function(
   } else {
     stop("Input data expected to be a list. Other class is not supported yet.")
   }
-  names(data) <- meta.assays[,sampleid]
+  rownames(meta.assays) = meta.assays[,sampleid]
+  names(data) <- rownames(meta.assays)
   qbonedata <- new(
     Class = 'QboneData',
     data = data,

@@ -52,7 +52,7 @@ NULL
 
 ## UpdateSlots ----
 #' Update slots in an object
-#'
+#' Adopted from Seurateobject package
 #' @param object An object to update
 #'
 #' @return \code{object} with the latest slot definitions
@@ -92,7 +92,7 @@ updateSlots <- function(object) {
 
 ## ExtractField ----
 #' Extract delimiter information from a string.
-#'
+#' Adopted from Seurateobject package
 #' Parses a string and extracts fields based
 #'  on a delimiter
 #'
@@ -122,7 +122,7 @@ ExtractField <- function(string, field = 1, delim = "_") {
 
 ## CheckDots ----
 #' Check the Use of Dots
-#'
+#' Adopted from Seurateobject package
 #' @param ... Arguments passed to a function that fall under \code{...}
 #' @param fxns A list/vector of functions or function names
 #'

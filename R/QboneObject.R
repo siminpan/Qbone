@@ -81,7 +81,7 @@ Qbone <- setClass(
 # Functions ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-## createQboneObject ----
+## createQboneObject.default ----
 #' @param row.names When \code{counts} is a \code{data.frame} or
 #' \code{data.frame}-derived object: an optional vector of feature names to be
 #' used
@@ -97,12 +97,12 @@ createQboneObject.default <- function(
   names.field = 1,
   names.delim = '_',
   meta.data = NULL,
-  sampleid = 1,
   ...
 ){
 
 }
 
+## createQboneObject.QboneData ----
 #' @rdname createQboneObject
 #' @method createQboneObject QboneData
 #' @export
@@ -114,10 +114,64 @@ createQboneObject.QboneData <- function(
   names.field = 1,
   names.delim = '_',
   meta.data = NULL,
-  sampleid = 1,
   ...
 ){
+  if (!is.null(x = meta.data)) {
+    if (is.null(x = rownames(x = meta.data))) {
+      stop("Row names not set in metadata. Please ensure that rownames of metadata match sample names of data")
+    }
+    if (length(x = setdiff(x = rownames(x = meta.data), y = rownames(data@meta.assays)))) {
+      warning("Some samples in meta.data not present in provided data.")
+      meta.data <- meta.data[intersect(x = rownames(x = meta.data), y = rownames(data@meta.assays)), , drop = FALSE]
+    }
+    if (is.data.frame(x = meta.data)) {
+      new.meta.data <- data.frame(row.names = rownames(data@meta.assays))
+      for (ii in 1:ncol(x = meta.data)) {
+        new.meta.data[rownames(x = meta.data), colnames(x = meta.data)[ii]] <- meta.data[, ii, drop = FALSE]
+      }
+      meta.data <- new.meta.data
+    }
+  }
+  samples <- list(data@data)
+  names(x = samples) <- "samples"
+  assay.list <- list(samples)
+  names(x = assay.list) <- assay
+  # Set idents
+  idents <- factor(x = unlist(x = lapply(
+    # X = colnames(x = meta.data),
+    X = names(data@data),
+    FUN = ExtractField,
+    field = names.field,
+    delim = names.delim
+  )))
+  if (any(is.na(x = idents))) {
+    warning(
+      "Input parameters result in NA values for initial cell identities. Setting all initial idents to the project name",
+      call. = FALSE,
+      immediate. = TRUE
+    )
+  }
+  # if there are more than 100 idents, set all idents to ... name
+  ident.levels <- length(x = unique(x = idents))
+  if (ident.levels > 100 || ident.levels == 0 || ident.levels == length(x = idents)) {
+    idents <- rep.int(x = factor(x = project), times = length(data@data))
+  }
+  names(x = idents) <- names(data@data)
 
+  object <- new(
+    Class = 'Qbone',
+    assays = assay.list,
+    meta.data =  meta.data, # data.frame(row.names = names(data@data)),
+    active.assay = assay,
+    active.ident = idents,
+    project.name = project,
+    version = packageVersion(pkg = 'Qbone'),
+    ...
+  )
+  # if (!is.null(x = meta.data)) {
+  #   object <- addMetaData(object = object, metadata = meta.data)
+  # }
+  return(object)
 }
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -501,7 +555,7 @@ setMethod( # because R doesn't allow S3-style [[<- for S4 classes
         } else if (length(x = value) %in% c(nrow(x = meta.data), 1) || is.null(x = value)) {
           meta.data[, i] <- value
         } else {
-          stop("Cannot add more or fewer cell meta.data information without values being named with cell names", call. = FALSE)
+          stop("Cannot add more or fewer sample meta.data information without values being named with sample names", call. = FALSE)
         }
       }
       # Check to ensure that we aren't adding duplicate names

@@ -3,6 +3,7 @@
 \name{createQboneObject}
 \alias{createQboneObject}
 \alias{createQboneObject.default}
+\alias{createQboneObject.QboneData}
 \title{Create a \code{Qbone} object}
 \usage{
 createQboneObject(
@@ -12,6 +13,7 @@ createQboneObject(
   names.field = 1,
   names.delim = "_",
   meta.data = NULL,
+  sampleid = 1,
   ...
 )
 
@@ -24,9 +26,32 @@ createQboneObject(
   meta.data = NULL,
   ...
 )
+
+\method{createQboneObject}{QboneData}(
+  data = data,
+  project = "QboneProject",
+  assay = "Bone",
+  names.field = 1,
+  names.delim = "_",
+  meta.data = NULL,
+  ...
+)
 }
 \arguments{
 \item{data}{data}
+
+\item{project}{\link{Project} name for the \code{Qbone} object}
+
+\item{assay}{Name of the initial assay}
+
+\item{names.field}{|| double check}
+
+\item{names.delim}{|| double check}
+
+\item{meta.data}{Include cells where at least this many features are
+detected.}
+
+\item{sampleid}{column number of sample name in meta.assay}
 
 \item{...}{|| double check}
 

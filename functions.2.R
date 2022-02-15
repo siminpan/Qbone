@@ -1136,6 +1136,12 @@ microbenchmark(rlang::is_null(NULL),
 microbenchmark(rlang::is_null(numeric()),
                is.null(numeric()))
 
+microbenchmark(rownames(data@meta.assays),
+               rownames(slot(object = data, name = 'meta.assays')))
+
+microbenchmark(data@data,
+               slot(object = data, name = 'data'))
+
 data.dir = "/home/span/Documents/MOSJ-3DCT/data/csv.test"
 
 nopeek <- function(

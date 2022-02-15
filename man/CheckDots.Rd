@@ -2,7 +2,8 @@
 % Please edit documentation in R/utils.R
 \name{CheckDots}
 \alias{CheckDots}
-\title{Check the Use of Dots}
+\title{Check the Use of Dots
+Adopted from Seurateobject package}
 \usage{
 CheckDots(..., fxns = NULL)
 }
@@ -17,5 +18,6 @@ invisibly returns \code{NULL}
 }
 \description{
 Check the Use of Dots
+Adopted from Seurateobject package
 }
 \keyword{internal}
