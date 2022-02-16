@@ -150,14 +150,14 @@ getQboneData.QboneData <- function(
 # 4. R-defined generics ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-#' 4.1 QboneData Methods
+#'  4.1 QboneData Methods
 #' \code{QboneData} Methods
 #'
 #' Methods for \code{\link{QboneData}} objects for generics defined in
 #' other packages
 #'
 #' @param x,object An \code{\link{QboneData}} object
-#' @param i,features For \code{[[}: metadata names; for all other methods,
+#' @param i,features For \item{\code{[[}}: metadata names; for all other methods,
 #' feature names or indices
 #' @param j,samples sample names or indices
 #' @param ... Arguments passed to other methods

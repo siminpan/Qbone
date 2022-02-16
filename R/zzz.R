@@ -25,7 +25,7 @@ setOldClass(Classes = 'package_version')
 # 6. Internal ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-## Add Object Metadata ----
+## 6.1 Add Object Metadata ----
 #' Add Object Metadata
 #' Internal \code{\link{addMetaData}} definition
 #'
