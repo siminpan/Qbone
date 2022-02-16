@@ -7,10 +7,10 @@
 NULL
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# Class definitions ----
+# 1. Class definitions ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-## The QboneData Class ----
+## 1.1 The QboneData Class ----
 #' The QboneData Class
 #' The QboneData object is the basic unit of Qbone.
 #'
@@ -53,14 +53,14 @@ QboneData <- setClass(
 )
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# Functions ----
+# 2. Functions ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+## 2.1 create an QboneData object ----
 #' create an QboneData object
 #'
 #' @param data data
-#' @param meta.assays Include cells where at least this many features are
-#' detected.
+#' @param meta.assays metadata for the assay
 #' @param sampleid column number of sample name in meta.assay
 #' @param assay.name assay name for the data.
 #' @param assay.orig Original assay that this assay is based off of. Used to
@@ -125,17 +125,34 @@ createQboneData <- function(
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# Qbone-defined generics ----
+# 3. Qbone-defined generics ----
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+## 3.1 getQboneData.QboneData ----
+#' @rdname assayData
+#' @export
+#' @method getQboneData QboneData
+#'
+#'
+getQboneData.QboneData <- function(
+  object,
+  slot = c('data'), # , 'scale.data', 'counts'            || Double check
+  ...
+) {
+  CheckDots(...)
+  slot <- slot[1]
+  slot <- match.arg(arg = slot)
+  return(slot(object = object, name = slot))
+}
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# 4. R-defined generics ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# R-defined generics ----
+# 5. S4 methods ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# S4 methods ----
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# Internal ----
+# 6. Internal ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

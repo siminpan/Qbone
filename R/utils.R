@@ -4,14 +4,14 @@
 NULL
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# Generics ----
+# 1. Generics ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# Functions ----
+# 2. Functions ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-## %||% ----
+## 2.1 %||% ----
 #' Set a default value depending on if an object is \code{NULL}
 #' From rlang package.
 #' @param x An object to test
@@ -34,23 +34,23 @@ NULL
 }
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# Qbone-defined generics ----
+# 3. Qbone-defined generics ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# R-defined generics ----
+# 4. R-defined generics ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# S4 methods ----
+# 5. S4 methods ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# Internal ----
+# 6. Internal ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-## UpdateSlots ----
+## 6.1 UpdateSlots ----
 #' Update slots in an object
 #' Adopted from Seurateobject package
 #' @param object An object to update
@@ -90,7 +90,7 @@ updateSlots <- function(object) {
 }
 
 
-## ExtractField ----
+## 6.2 ExtractField ----
 #' Extract delimiter information from a string.
 #' Adopted from Seurateobject package
 #' Parses a string and extracts fields based
@@ -120,7 +120,7 @@ ExtractField <- function(string, field = 1, delim = "_") {
   ))
 }
 
-## CheckDots ----
+## 6.3 CheckDots ----
 #' Check the Use of Dots
 #' Adopted from Seurateobject package
 #' @param ... Arguments passed to a function that fall under \code{...}

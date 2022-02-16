@@ -10,10 +10,10 @@
 NULL
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# Class definitions ----
+# 1. Class definitions ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-## The Qbone Class ----
+## 1.1 The Qbone Class ----
 #' The Qbone Class
 #'
 #' The Qbone object is a representation of data analysis using Quantile
@@ -78,10 +78,10 @@ Qbone <- setClass(
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# Functions ----
+# 2. Functions ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-## createQboneObject.default ----
+## 2.1.1 createQboneObject.default ----
 #' @param row.names When \code{counts} is a \code{data.frame} or
 #' \code{data.frame}-derived object: an optional vector of feature names to be
 #' used
@@ -102,7 +102,7 @@ createQboneObject.default <- function(
 
 }
 
-## createQboneObject.QboneData ----
+## 2.1.2 createQboneObject.QboneData ----
 #' @rdname createQboneObject
 #' @method createQboneObject QboneData
 #' @export
@@ -132,9 +132,10 @@ createQboneObject.QboneData <- function(
       meta.data <- new.meta.data
     }
   }
-  samples <- list(data@data)
-  names(x = samples) <- "samples"
-  assay.list <- list(samples)
+  # samples <- list(data@data)
+  # names(x = samples) <- "samples"
+  # assay.list <- list(samples)
+  assay.list <- list(data)
   names(x = assay.list) <- assay
   # Set idents
   idents <- factor(x = unlist(x = lapply(
@@ -161,31 +162,67 @@ createQboneObject.QboneData <- function(
   object <- new(
     Class = 'Qbone',
     assays = assay.list,
-    meta.data =  meta.data, # data.frame(row.names = names(data@data)),
+    meta.data =  data.frame(row.names = names(data@data)), # meta.data,
     active.assay = assay,
     active.ident = idents,
     project.name = project,
     version = packageVersion(pkg = 'Qbone'),
     ...
   )
-  # if (!is.null(x = meta.data)) {
-  #   object <- addMetaData(object = object, metadata = meta.data)
-  # }
+  if (!is.null(x = meta.data)) {
+    object <- addMetaData(object = object, metadata = meta.data)
+  }
   return(object)
 }
 
+## 2.2 assays ----
+#' Query Specific Object Types
+#'
+#' Adopted from Seurateobject package
+#' List the names of \code{\link{assay}}, \code{\link{Image}},
+#' \code{\link{Graph}} objects              || double check
+#'
+#' @param object A \code{\link{Qbone}} object
+#' @param slot Name of component object to return
+#'
+#' @return If \code{slot} is \code{NULL}, the names of all component objects
+#' in this \code{Qbone} object. Otherwise, the specific object specified
+#'
+#' @rdname ObjectAccess
+#'
+#' @export
+#'
+#' @concept data-access
+#'
+assays <- function(object, slot = NULL) {
+  assays <- FilterObjects(object = object, classes.keep = 'QboneData')
+  if (is.null(x = slot)) {
+    return(assays)
+  }
+  if (!slot %in% assays) {
+    warning(
+      "Cannot find an assay of name ",
+      slot,
+      " in this Seurat object",
+      call. = FALSE,
+      immediate. = TRUE
+    )
+  }
+  return(slot(object = object, name = 'assays')[[slot]])
+}
+
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# Qbone-defined generics ----
+# 3. Qbone-defined generics ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-## addMetaData ----
+## 3.1 addMetaData ----
 #' @rdname addMetaData
 #' @export
 #' @method addMetaData Qbone
 #'
 addMetaData.Qbone <- .addMetaData
 
-## defaultAssay.Qbone ----
+## 3.2.1 defaultAssay.Qbone ----
 #' @rdname defaultAssay
 #' @export
 #' @method defaultAssay Qbone
@@ -196,7 +233,7 @@ defaultAssay.Qbone <- function(object, ...) {
   return(slot(object = object, name = 'active.assay'))
 }
 
-## defaultAssay<-.Qbone" ----
+## 3.2.2 defaultAssay<-.Qbone" ----
 #' @rdname defaultAssay
 #' @export
 #' @method defaultAssay<- Qbone
@@ -211,7 +248,7 @@ defaultAssay.Qbone <- function(object, ...) {
   return(object)
 }
 
-## idents.Qbone ----
+## 3.3.1 idents.Qbone ----
 #' @param object An Qbone object
 #' @rdname idents
 #' @export
@@ -224,7 +261,7 @@ idents.Qbone <- function(object, ...) {
 }
 
 
-## idents<-.Qbone ----
+## 3.3.2 idents<-.Qbone ----
 #' @param object An Qbone object
 #' @param samples Set cell identities for specific samples
 #' @param drop Drop unused levels
@@ -280,7 +317,7 @@ idents.Qbone <- function(object, ...) {
 }
 
 
-## samples.Qbone ----
+## 3.4 samples.Qbone ----
 #' @rdname samples
 #' @export
 #'
@@ -296,11 +333,36 @@ samples.Qbone <- function(x) {
 #   return(names(x@assays[[defaultAssay(x)]][["samples"]]))
 # })
 
+## 3.5 getQboneData.Qbone ----
+#' @param assay Specific assay to get data from or set data for; defaults to
+#' the \link[QboneObject:defaultAssay]{default assay}
+#'
+#' @rdname assayData
+#' @export
+#' @method getQboneData Qbone
+#'
+#' @order 3
+#'
+#' @concept data-access
+#'
+getQboneData.Qbone <- function(object, slot = 'data', assay = NULL, ...) {
+  CheckDots(...)
+  object <- updateSlots(object = object)
+  assay <- assay %||% defaultAssay(object = object)
+  if (!assay %in% assays(object = object)) {
+    stop("'", assay, "' is not an assay", call. = FALSE)
+  }
+  return(getQboneData(
+    object = object[[assay]],
+    slot = slot
+  ))
+}
+
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# R-defined generics ----
+# 4. R-defined generics ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-#' Qbone Methods
+#' 4.1 Qbone Methods
 #'
 #' Methods for \code{\link{Qbone}} objects for generics defined in other
 #' packages
@@ -328,7 +390,7 @@ samples.Qbone <- function(x) {
 NULL
 
 
-## [[.Qbone ----
+## 4.2.1 [[.Qbone ----
 #' @describeIn Qbone-methods Metadata and associated object accessor
 #'
 #' @param drop See \code{\link[base]{drop}}
@@ -346,7 +408,7 @@ NULL
     i <- colnames(x = slot(object = x, name = 'meta.data'))
   }
   if (length(x = i) == 0) {
-    return(data.frame(row.names = colnames(x = x)))
+    return(data.frame(row.names = names(getQboneData(x))))
   } else if (length(x = i) > 1 || any(i %in% colnames(x = slot(object = x, name = 'meta.data')))) {
     if (any(!i %in% colnames(x = slot(object = x, name = 'meta.data')))) {
       warning(
@@ -382,10 +444,10 @@ NULL
 }
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# S4 methods ----
+# 5. S4 methods ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-## [[<- Qbone ----
+## 5.1 [[<- Qbone ----
 #' @describeIn Qbone-methods Metadata and associated object accessor
 #'
 #' @param value Additional metadata or associated objects to add; \strong{note}:
@@ -697,10 +759,10 @@ setMethod( # because R doesn't allow S3-style [[<- for S4 classes
 )
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# Internal ----
+# 6. Internal ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-## FindObject ----
+## 6.1 FindObject ----
 #' Find the collection of an object within a Qbone object
 #' Adopted from Seurateobject package
 #'
@@ -736,7 +798,7 @@ FindObject <- function(object, name) {
   return(NULL)
 }
 
-## FilterObjects ----
+## 6.2 FilterObjects ----
 #'
 #' Get the names of objects within a \code{Qbone} object that are of a
 #' certain class

@@ -4,7 +4,7 @@
 \alias{Qbone-methods}
 \alias{[[.Qbone}
 \alias{[[<-,Qbone-method}
-\title{Qbone Methods}
+\title{4.1 Qbone Methods}
 \usage{
 \method{[[}{Qbone}(x, i, ..., drop = FALSE)
 

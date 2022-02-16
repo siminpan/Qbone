@@ -16,8 +16,7 @@ createQboneData(
 \arguments{
 \item{data}{data}
 
-\item{meta.assays}{Include cells where at least this many features are
-detected.}
+\item{meta.assays}{metadata for the assay}
 
 \item{sampleid}{column number of sample name in meta.assay}
 

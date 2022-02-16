@@ -4,10 +4,10 @@
 NULL
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# Generics ----
+# 1. Generics ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-## Samples ----
+## 1.1 Samples ----
 #' Get samples present in an object
 #' @param x An object
 #'
@@ -22,7 +22,7 @@ samples <- function(x) UseMethod(generic = 'samples', object = x)
 # as S4 method
 # setGeneric("samples", function(x) standardGeneric("samples"))
 
-## createQboneObject ----
+## 1.2 createQboneObject ----
 
 #' Create a \code{Qbone} object
 #'
@@ -54,7 +54,7 @@ createQboneObject <- function(
 
 # setGeneric("createQboneObject", function(x) standardGeneric("createQboneObject"))
 
-## DefaultAssay ----
+## 1.3 DefaultAssay ----
 
 #' Get and set the default assay
 #' @param object An object
@@ -86,7 +86,7 @@ defaultAssay <- function(object, ...) {
 
 # setGeneric("defaultAssay<-", function(x) standardGeneric("defaultAssay<-"))
 
-## addMetaData ----
+## 1.4 addMetaData ----
 #' Add in metadata associated
 #' @param object An object
 #' @param metadata A vector, list, or data.frame with metadata to add
@@ -105,7 +105,7 @@ addMetaData <- function(object, metadata, col.name = NULL) {
 # setGeneric("addMetaData", function(x) standardGeneric("addMetaData"))
 
 
-## Idents ----
+## 1.5 Idents ----
 #' Get, set, and manipulate an object's identity classes
 #'
 #' @param object An object
@@ -135,3 +135,30 @@ idents <- function(object, ... ) {
 }
 
 # setGeneric("idents<-", function(x) standardGeneric("idents<-"))
+
+## 1.6 getQboneData ----
+#' Get and Set Assay Data
+#'
+#' General accessor and setter functions for \code{\link{assay}} objects.
+#' \code{getQboneData} can be used to pull information from any of the
+#' expression matrices (eg. \dQuote{counts}, \dQuote{data}, or
+#' \dQuote{scale.data}). \code{SetAssayData} can be used to replace one of these
+#' expression matrices                                              || double check
+#'
+#' @param object An object
+#' @param slot Specific assay data to get or set
+#' @param ... Arguments passed to other methods
+#'
+#' @return \code{getQboneData}: returns the specified assay data
+#'
+#' @name assayData
+#' @rdname assayData
+#' @export getQboneData
+#'
+#' @order 1
+#'
+#' @concept data-access
+#'
+getQboneData <- function(object, slot, ...) {
+  UseMethod(generic = 'getQboneData', object = object)
+}

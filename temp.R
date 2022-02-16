@@ -18,6 +18,12 @@ qbonedata = createQboneData(list1, meta.data)
 
 qbone = createQboneObject(qbonedata, meta.data = meta.data)
 
+qbone <- addMetaData(object = qbone, metadata = meta.data)
+qbone[["name"]] <- meta.data
+
+cqo2 = addMetaData(qbone, c("c", "d", "e"), col.name = "names")
+
+data.frame(row.names = qbonedata@data)
 # sloop::ftype(packageVersion(x = "0.0.0.9000"))
 class(package_version(x = '2.99.0'))
 idents(cqo2) <- c("a1", "b1")
@@ -44,3 +50,6 @@ object <- new(
 mate = c("c", "d")
 names(mate) = c("a_1", "b_1")
 cqo2 = addMetaData(qbone, mate, col.name = "names")
+assays(qbonedata)
+assays <- FilterObjects(object = qbone, classes.keep = 'QboneData')
+names(getQboneData(qbonedata))
