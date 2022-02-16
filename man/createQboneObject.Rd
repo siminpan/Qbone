@@ -40,7 +40,7 @@ createQboneObject(
 \arguments{
 \item{data}{data}
 
-\item{project}{\link{Project} name for the \code{Qbone} object}
+\item{project}{\link{project} name for the \code{Qbone} object}
 
 \item{assay}{Name of the initial assay}
 

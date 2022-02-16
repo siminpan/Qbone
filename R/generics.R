@@ -29,7 +29,7 @@ samples <- function(x) UseMethod(generic = 'samples', object = x)
 #' @inheritParams createQboneData
 #'
 #' @param data data
-#' @param project \link{Project} name for the \code{Qbone} object
+#' @param project \link{project} name for the \code{Qbone} object
 #' @param assay Name of the initial assay
 #' @param names.field || double check
 #' @param names.delim || double check
@@ -139,7 +139,7 @@ idents <- function(object, ... ) {
 ## 1.6 getQboneData ----
 #' Get and Set Assay Data
 #'
-#' General accessor and setter functions for \code{\link{assay}} objects.
+#' General accessor and setter functions for \code{\link{QboneData}} objects.
 #' \code{getQboneData} can be used to pull information from any of the
 #' expression matrices (eg. \dQuote{counts}, \dQuote{data}, or
 #' \dQuote{scale.data}). \code{SetAssayData} can be used to replace one of these
