@@ -6,9 +6,20 @@
 \alias{_PACKAGE}
 \title{Qbone: What the Package Does (One Line, Title Case)}
 \description{
-What the package does (one paragraph).
+A R package using quantlets in quantile functional regression to analyze distributional data.
 }
 \author{
 \strong{Maintainer}: Simin Pan \email{simonpan@tamu.edu} (\href{https://orcid.org/0000-0003-3472-8940}{ORCID})
+
+Authors:
+\itemize{
+  \item Linying Zhang \email{zly.rebecca@tamu.edu} (\href{https://orcid.org/0000-0001-9658-9427}{ORCID})
+}
+
+Other contributors:
+\itemize{
+  \item Alan Dabney \email{adabney@stat.tamu} (\href{https://orcid.org/0000-0002-1240-4171}{ORCID}) [thesis advisor]
+  \item Carl Gregory \email{cgregory@tamu.edu} (\href{https://orcid.org/0000-0001-6444-5541}{ORCID}) [thesis advisor]
+}
 
 }

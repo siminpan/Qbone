@@ -6,6 +6,7 @@ using Eigen::VectorXd;                  // variable size vector, double precisio
 using Eigen::SelfAdjointEigenSolver;    // one of the eigenvalue solvers
 
 // references  https://stackoverflow.com/questions/35923787/fast-large-matrix-multiplication-in-r
+// penppml 	MIT + file LICENSE
 
 // [[Rcpp::export]]
 SEXP eigenMatMult(Eigen::MatrixXd A, Eigen::MatrixXd B){
