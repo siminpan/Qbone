@@ -54,10 +54,6 @@ detected.}
 \item{sampleid}{column number of sample name in meta.assay}
 
 \item{...}{|| double check}
-
-\item{row.names}{When \code{counts} is a \code{data.frame} or
-\code{data.frame}-derived object: an optional vector of feature names to be
-used}
 }
 \description{
 Create a \code{Qbone} object

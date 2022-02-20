@@ -24,7 +24,7 @@ The QboneData object is the basic unit of Qbone.
 \item{\code{assay.orig}}{Original assay that this assay is based off of. Used to
 track assay provenance}
 
-\item{\code{meta.features}}{Feature-level metadata}
+\item{\code{meta.assays}}{Feature-level metadata}
 
 \item{\code{misc}}{Utility slot for storing additional data associated with the assay   || double check}
 }}

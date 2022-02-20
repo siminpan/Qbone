@@ -82,9 +82,6 @@ Qbone <- setClass(
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 ## 2.1.1 createQboneObject.default ----
-#' @param row.names When \code{counts} is a \code{data.frame} or
-#' \code{data.frame}-derived object: an optional vector of feature names to be
-#' used
 #'
 #' @rdname createQboneObject
 #' @method createQboneObject default

@@ -6,6 +6,9 @@ load_all()
 
 check()
 
+tinytex::tlmgr_install("makeindex")
+devtools::build_manual(pkg = "/home/span/Documents/Qbone")
+
 q0 = new("Qbone")
 q0 = new("Qbone", version = packageVersion(pkg = "Qbone"))
 ?dorem

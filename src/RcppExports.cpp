@@ -11,73 +11,84 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// eigenMatMult
-SEXP eigenMatMult(Eigen::MatrixXd A, Eigen::MatrixXd B);
-RcppExport SEXP _Qbone_eigenMatMult(SEXP ASEXP, SEXP BSEXP) {
+// eigenmm
+SEXP eigenmm(Eigen::MatrixXd A, Eigen::MatrixXd B);
+RcppExport SEXP _Qbone_eigenmm(SEXP ASEXP, SEXP BSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Eigen::MatrixXd >::type A(ASEXP);
     Rcpp::traits::input_parameter< Eigen::MatrixXd >::type B(BSEXP);
-    rcpp_result_gen = Rcpp::wrap(eigenMatMult(A, B));
+    rcpp_result_gen = Rcpp::wrap(eigenmm(A, B));
     return rcpp_result_gen;
 END_RCPP
 }
-// eigenMatMulttrans
-SEXP eigenMatMulttrans(Eigen::MatrixXd A, Eigen::MatrixXd B);
-RcppExport SEXP _Qbone_eigenMatMulttrans(SEXP ASEXP, SEXP BSEXP) {
+// eigenmt
+SEXP eigenmt(Eigen::MatrixXd A);
+RcppExport SEXP _Qbone_eigenmt(SEXP ASEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Eigen::MatrixXd >::type A(ASEXP);
-    Rcpp::traits::input_parameter< Eigen::MatrixXd >::type B(BSEXP);
-    rcpp_result_gen = Rcpp::wrap(eigenMatMulttrans(A, B));
+    rcpp_result_gen = Rcpp::wrap(eigenmt(A));
     return rcpp_result_gen;
 END_RCPP
 }
-// eigenMapMatMult
-SEXP eigenMapMatMult(const Eigen::Map<Eigen::MatrixXd> A, Eigen::Map<Eigen::MatrixXd> B);
-RcppExport SEXP _Qbone_eigenMapMatMult(SEXP ASEXP, SEXP BSEXP) {
+// eigenmapmt
+SEXP eigenmapmt(Eigen::Map<Eigen::MatrixXd> A);
+RcppExport SEXP _Qbone_eigenmapmt(SEXP ASEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Eigen::Map<Eigen::MatrixXd> >::type A(ASEXP);
+    rcpp_result_gen = Rcpp::wrap(eigenmapmt(A));
+    return rcpp_result_gen;
+END_RCPP
+}
+// eigenmapmm
+SEXP eigenmapmm(const Eigen::Map<Eigen::MatrixXd> A, Eigen::Map<Eigen::MatrixXd> B);
+RcppExport SEXP _Qbone_eigenmapmm(SEXP ASEXP, SEXP BSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const Eigen::Map<Eigen::MatrixXd> >::type A(ASEXP);
     Rcpp::traits::input_parameter< Eigen::Map<Eigen::MatrixXd> >::type B(BSEXP);
-    rcpp_result_gen = Rcpp::wrap(eigenMapMatMult(A, B));
+    rcpp_result_gen = Rcpp::wrap(eigenmapmm(A, B));
     return rcpp_result_gen;
 END_RCPP
 }
-// eigenMapMatMulttrans
-SEXP eigenMapMatMulttrans(const Eigen::Map<Eigen::MatrixXd> A, Eigen::Map<Eigen::MatrixXd> B);
-RcppExport SEXP _Qbone_eigenMapMatMulttrans(SEXP ASEXP, SEXP BSEXP) {
+// eigenmapmmt
+SEXP eigenmapmmt(const Eigen::Map<Eigen::MatrixXd> A, Eigen::Map<Eigen::MatrixXd> B);
+RcppExport SEXP _Qbone_eigenmapmmt(SEXP ASEXP, SEXP BSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const Eigen::Map<Eigen::MatrixXd> >::type A(ASEXP);
     Rcpp::traits::input_parameter< Eigen::Map<Eigen::MatrixXd> >::type B(BSEXP);
-    rcpp_result_gen = Rcpp::wrap(eigenMapMatMulttrans(A, B));
+    rcpp_result_gen = Rcpp::wrap(eigenmapmmt(A, B));
     return rcpp_result_gen;
 END_RCPP
 }
-// eigentransMapMatMult
-SEXP eigentransMapMatMult(const Eigen::Map<Eigen::MatrixXd> A, Eigen::Map<Eigen::MatrixXd> B);
-RcppExport SEXP _Qbone_eigentransMapMatMult(SEXP ASEXP, SEXP BSEXP) {
+// eigenmapmtm
+SEXP eigenmapmtm(const Eigen::Map<Eigen::MatrixXd> A, Eigen::Map<Eigen::MatrixXd> B);
+RcppExport SEXP _Qbone_eigenmapmtm(SEXP ASEXP, SEXP BSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const Eigen::Map<Eigen::MatrixXd> >::type A(ASEXP);
     Rcpp::traits::input_parameter< Eigen::Map<Eigen::MatrixXd> >::type B(BSEXP);
-    rcpp_result_gen = Rcpp::wrap(eigentransMapMatMult(A, B));
+    rcpp_result_gen = Rcpp::wrap(eigenmapmtm(A, B));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_Qbone_eigenMatMult", (DL_FUNC) &_Qbone_eigenMatMult, 2},
-    {"_Qbone_eigenMatMulttrans", (DL_FUNC) &_Qbone_eigenMatMulttrans, 2},
-    {"_Qbone_eigenMapMatMult", (DL_FUNC) &_Qbone_eigenMapMatMult, 2},
-    {"_Qbone_eigenMapMatMulttrans", (DL_FUNC) &_Qbone_eigenMapMatMulttrans, 2},
-    {"_Qbone_eigentransMapMatMult", (DL_FUNC) &_Qbone_eigentransMapMatMult, 2},
+    {"_Qbone_eigenmm", (DL_FUNC) &_Qbone_eigenmm, 2},
+    {"_Qbone_eigenmt", (DL_FUNC) &_Qbone_eigenmt, 1},
+    {"_Qbone_eigenmapmt", (DL_FUNC) &_Qbone_eigenmapmt, 1},
+    {"_Qbone_eigenmapmm", (DL_FUNC) &_Qbone_eigenmapmm, 2},
+    {"_Qbone_eigenmapmmt", (DL_FUNC) &_Qbone_eigenmapmmt, 2},
+    {"_Qbone_eigenmapmtm", (DL_FUNC) &_Qbone_eigenmapmtm, 2},
     {NULL, NULL, 0}
 };
 

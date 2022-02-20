@@ -25,8 +25,8 @@ getwd()
 
 
 # matrix ----
-A <- matrix(rnorm(10000), 100, 100)
-B <- matrix(rnorm(10000), 100, 100)
+A <- matrix(rnorm(1000000), 1000, 1000)
+B <- matrix(rnorm(1000000), 1000, 1000)
 
 sourceCpp("example.cpp")
 sourceCpp("example2.cpp")
@@ -53,6 +53,9 @@ max(abs(o1 - e2))
 
 # test running time ----
 library("microbenchmark")
+
+microbenchmark(t(A), eigenmt(A), eigenmapmt(A))
+microbenchmark(t(A)%*%B, eigenmapmtm(A, B))
 
 microbenchmark(A%*%B, armaMatMult(A, B), eigenMatMult(A, B), eigenMapMatMult(A, B))
 microbenchmark(A%*%B, eigenMatMult(A, B), eigenMapMatMult(A, B))

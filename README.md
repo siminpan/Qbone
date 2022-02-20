@@ -2,6 +2,7 @@
 
 The `Qbone` package is a set of tools that enables efficient
 estimation of quantlets in quantile functional regression to analyze distributional data.
+This package can be used to analyze distributional data in broader applications such as climate change analysis, image recognition analysis, and personalized health data analysis, etc. 
 
 
 ## Installation

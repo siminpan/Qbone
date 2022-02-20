@@ -9,35 +9,40 @@ using Eigen::SelfAdjointEigenSolver;    // one of the eigenvalue solvers
 // penppml 	MIT + file LICENSE
 
 // [[Rcpp::export]]
-SEXP eigenMatMult(Eigen::MatrixXd A, Eigen::MatrixXd B){
+SEXP eigenmm(Eigen::MatrixXd A, Eigen::MatrixXd B){
     Eigen::MatrixXd C = A * B;
 
     return Rcpp::wrap(C);
 }
 
 // [[Rcpp::export]]
-SEXP eigenMatMulttrans(Eigen::MatrixXd A, Eigen::MatrixXd B){
-    Eigen::MatrixXd C = A * B.transpose();
+SEXP eigenmt(Eigen::MatrixXd A){
 
-    return Rcpp::wrap(C);
+    return Rcpp::wrap(A.transpose());
 }
 
 // [[Rcpp::export]]
-SEXP eigenMapMatMult(const Eigen::Map<Eigen::MatrixXd> A, Eigen::Map<Eigen::MatrixXd> B){
+SEXP eigenmapmt(Eigen::Map<Eigen::MatrixXd> A){
+
+    return Rcpp::wrap(A.transpose());
+}
+
+// [[Rcpp::export]]
+SEXP eigenmapmm(const Eigen::Map<Eigen::MatrixXd> A, Eigen::Map<Eigen::MatrixXd> B){
     Eigen::MatrixXd C = A * B;
 
     return Rcpp::wrap(C);
 }
 
 // [[Rcpp::export]]
-SEXP eigenMapMatMulttrans(const Eigen::Map<Eigen::MatrixXd> A, Eigen::Map<Eigen::MatrixXd> B){
+SEXP eigenmapmmt(const Eigen::Map<Eigen::MatrixXd> A, Eigen::Map<Eigen::MatrixXd> B){
     Eigen::MatrixXd C = A * B.transpose();
 
     return Rcpp::wrap(C);
 }
 
 // [[Rcpp::export]]
-SEXP eigentransMapMatMult(const Eigen::Map<Eigen::MatrixXd> A, Eigen::Map<Eigen::MatrixXd> B){
+SEXP eigenmapmtm(const Eigen::Map<Eigen::MatrixXd> A, Eigen::Map<Eigen::MatrixXd> B){
     Eigen::MatrixXd C = A.transpose() * B;
 
     return Rcpp::wrap(C);
