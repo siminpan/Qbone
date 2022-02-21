@@ -23,6 +23,16 @@ thisFile()
 setwd(thisFile())
 getwd()
 
+.onUnload1 <- function (libpath) {
+  library.dynam.unload("regexcite", libpath)
+}
+
+.onUnload2 <- function (libpath) {
+  library.dynam.unload("Qbone", libpath)
+}
+
+.onUnload1("/home/span/Documents/rpackage/regexcite")
+.onUnload2("/home/span/Documents/Qbone")
 
 # matrix ----
 A <- matrix(rnorm(1000000), 1000, 1000)
@@ -33,7 +43,7 @@ sourceCpp("example2.cpp")
 
 # // references  https://stackoverflow.com/questions/35923787/fast-large-matrix-multiplication-in-r
 
-sourceCpp("cmatrix.cpp")
+sourceCpp("~/Documents/rpackage/bonedeform/src/cmatrix.cpp")
 
 o1 = A%*%B
 a1 = armaMatMult(A, B)
@@ -54,11 +64,22 @@ max(abs(o1 - e2))
 # test running time ----
 library("microbenchmark")
 
-microbenchmark(t(A), eigenmt(A), eigenmapmt(A))
-microbenchmark(t(A)%*%B, eigenmapmtm(A, B))
+microbenchmark(t(A), eigenmt(A), eigenmapmt(A), times = 10L)
+microbenchmark(t(A)%*%B,  eigenmapmm(t(A), B), eigenmapmtm(A, B), times = 10L)
+microbenchmark(A%*%B, eigenmm(A, B), eigenmapmm(A, B), times = 10L)
 
 microbenchmark(A%*%B, armaMatMult(A, B), eigenMatMult(A, B), eigenMapMatMult(A, B))
-microbenchmark(A%*%B, eigenMatMult(A, B), eigenMapMatMult(A, B))
+
+microbenchmark(eigenMapMatMult(A, B), eigenmapmm(A, B), times = 10L)
+
+eigenMapMatMult(A, B)
+eigenmapmm(A, B)
+
+microbenchmark(A%*%B, eigenMapMatMult(A, B), .Call('_Qbone_eigenmapmm', PACKAGE = 'Qbone', A, B), times = 10L)
+
+
+microbenchmark(A%*%B, eigenMatMult(A, B), eigenMapMatMult(A, B), eigenmm(A, B), eigenmapmm(A, B), times = 10L)
+
 microbenchmark(t(A)%*%B, crossprod(A, B))
 microbenchmark(A%*%t(B), eigenMatMulttrans(A,B), eigenMapMatMulttrans(A, B))
 # Unit: milliseconds

@@ -22,6 +22,7 @@ LinkingTo:
 Imports: 
     Rcpp, methods, data.table, stats, utils
 Collate: 
+    'Qbone-package.R'
     'utils.R'
     'zzz.R'
     'generics.R'
