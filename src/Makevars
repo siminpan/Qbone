@@ -1,3 +1,10 @@
-CXX = g++
-CXXSTD = -std=c++11
-CXXFLAGS = -O2 -fopenmp -Wno-ignored-attributes -march=native
+CXX_STD = CXX11
+PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS) -O2 -fopenmp -Wno-ignored-attributes -march=native
+PKG_LIBS = $(SHLIB_OPENMP_CXXFLAGS) $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)
+
+# CXX = g++
+# CXXSTD = -std=c++11
+# CXXFLAGS = -O2 -fopenmp -Wno-ignored-attributes -march=native
+# CXX_STD = CXX11
+# PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS) -O2 -fopenmp -Wno-ignored-attributes -march=native
+# PKG_LIBS = $(SHLIB_OPENMP_CXXFLAGS) $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)

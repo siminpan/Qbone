@@ -4,6 +4,8 @@ document()
 
 load_all()
 
+load_all(recompile = T)
+
 check()
 
 tinytex::tlmgr_install("makeindex")

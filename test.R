@@ -38,6 +38,9 @@ getwd()
 A <- matrix(rnorm(1000000), 1000, 1000)
 B <- matrix(rnorm(1000000), 1000, 1000)
 
+A <- matrix(rnorm(10000), 100, 100)
+B <- matrix(rnorm(10000), 100, 100)
+
 sourceCpp("example.cpp")
 sourceCpp("example2.cpp")
 
@@ -72,10 +75,12 @@ microbenchmark(A%*%B, armaMatMult(A, B), eigenMatMult(A, B), eigenMapMatMult(A, 
 
 microbenchmark(eigenMapMatMult(A, B), eigenmapmm(A, B), times = 10L)
 
+microbenchmark(eigenmapmm(A, B), times = 10L)
+
 eigenMapMatMult(A, B)
 eigenmapmm(A, B)
 
-microbenchmark(A%*%B, eigenmapmm(A, B))
+microbenchmark(A%*%B, eigenmapmm(A, B), times = 10L)
 
 
 microbenchmark(A%*%B, eigenMatMult(A, B), eigenMapMatMult(A, B), eigenmm(A, B), eigenmapmm(A, B), times = 10L)
