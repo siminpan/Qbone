@@ -75,7 +75,7 @@ microbenchmark(eigenMapMatMult(A, B), eigenmapmm(A, B), times = 10L)
 eigenMapMatMult(A, B)
 eigenmapmm(A, B)
 
-microbenchmark(A%*%B, eigenMapMatMult(A, B), .Call('_Qbone_eigenmapmm', PACKAGE = 'Qbone', A, B), times = 10L)
+microbenchmark(A%*%B, eigenmapmm(A, B))
 
 
 microbenchmark(A%*%B, eigenMatMult(A, B), eigenMapMatMult(A, B), eigenmm(A, B), eigenmapmm(A, B), times = 10L)

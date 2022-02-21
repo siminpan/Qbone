@@ -1,0 +1,3 @@
+CXX = g++
+CXXSTD = -std=c++11
+CXXFLAGS = -O2 -fopenmp -Wno-ignored-attributes -march=native
