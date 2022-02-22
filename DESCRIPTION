@@ -18,9 +18,14 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
 LinkingTo: 
-    Rcpp, RcppEigen
+    Rcpp, 
+    RcppEigen
 Imports: 
-    Rcpp, methods, data.table, stats, utils
+    Rcpp, 
+    methods, 
+    data.table, 
+    stats, 
+    utils
 Collate: 
     'Qbone-package.R'
     'utils.R'
@@ -29,3 +34,4 @@ Collate:
     'QboneData.R'
     'QboneObject.R'
     'RcppExports.R'
+    'preprocessing.R'

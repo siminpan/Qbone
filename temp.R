@@ -9,19 +9,24 @@ load_all(recompile = T)
 check()
 
 tinytex::tlmgr_install("makeindex")
-devtools::build_manual(pkg = "/home/span/Documents/Qbone")
+tinytex::tlmgr_update()
+tinytex::reinstall_tinytex()
+library("tinytex")
+devtools::build_manual(pkg = ".")
 
 q0 = new("Qbone")
 q0 = new("Qbone", version = packageVersion(pkg = "Qbone"))
 ?dorem
 
 list1 = list(c("123", "345"), "234")
-meta.data = data.frame(name = c("a_1", "b_1"))
+meta.data = data.frame(name = c("a_1", "b_1"), names = c("c", "b"))
 rownames(meta.data) = meta.data[,1]
 
-qbonedata = createQboneData(list1, meta.data)
+qbonedata = createQboneData(list1, meta.data, sampleid = 2)
 
-qbone = createQboneObject(qbonedata, meta.data = meta.data)
+qbone1 = createQboneObject(qbonedata, meta.data = meta.data)
+
+qbone2 = createQboneObject(list1, meta.data = meta.data, sampleid = 2)
 
 qbone <- addMetaData(object = qbone, metadata = meta.data)
 qbone[["name"]] <- meta.data
@@ -29,6 +34,10 @@ qbone[["name"]] <- meta.data
 cqo2 = addMetaData(qbone, c("c", "d", "e"), col.name = "names")
 
 data.frame(row.names = qbonedata@data)
+
+
+data.dir = "/home/span/Documents/MOSJ-3DCT/data/csv.test"
+q1 = readQbone(data.dir, groupbyfolder = T)
 # sloop::ftype(packageVersion(x = "0.0.0.9000"))
 class(package_version(x = '2.99.0'))
 idents(cqo2) <- c("a1", "b1")

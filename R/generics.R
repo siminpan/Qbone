@@ -35,6 +35,7 @@ samples <- function(x) UseMethod(generic = 'samples', object = x)
 #' @param names.delim || double check
 #' @param meta.data Include cells where at least this many features are
 #' detected.
+#' @param sampleid column number of sample name in mate.data
 #'
 #' @rdname createQboneObject
 #' @export

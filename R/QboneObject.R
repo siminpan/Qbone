@@ -1,10 +1,9 @@
 #' @include zzz.R
 #' @include generics.R
-#' @include QboneData.R
 #' @include utils.R
+#' @include QboneData.R
 #' @importFrom methods setClass new slot slot<- slotNames setMethod
 #' @importFrom stats na.omit
-#' @importFrom data.table fread
 #' @importFrom utils argsAnywhere isS3method isS3stdGeneric methods
 #'
 NULL
@@ -94,9 +93,33 @@ createQboneObject.default <- function(
   names.field = 1,
   names.delim = '_',
   meta.data = NULL,
+  sampleid = 1,
   ...
 ){
-
+  if (!is.null(x = meta.data)) {
+    if (nrow(x = meta.data) != length(data)) {
+      stop("There is a mismatch between the number of Metadata and the number of input data.")
+    }
+  }
+  data.Qbone <- createQboneData(
+    data,
+    meta.assays = meta.data,
+    sampleid.assays = sampleid,
+    assay.name = assay,
+    assay.orig = NULL
+    )
+    return(
+      createQboneObject(
+        data = data.Qbone,
+        project = 'QboneProject',
+        assay = assay,
+        names.field = names.field,
+        names.delim = names.delim,
+        meta.data = meta.data,
+        sampleid = sampleid,
+        ...
+        )
+      )
 }
 
 ## 2.1.2 createQboneObject.QboneData ----
@@ -111,23 +134,30 @@ createQboneObject.QboneData <- function(
   names.field = 1,
   names.delim = '_',
   meta.data = NULL,
+  sampleid = 1,
   ...
 ){
   if (!is.null(x = meta.data)) {
-    if (is.null(x = rownames(x = meta.data))) {
-      stop("Row names not set in metadata. Please ensure that rownames of metadata match sample names of data")
-    }
-    if (length(x = setdiff(x = rownames(x = meta.data), y = rownames(data@meta.assays)))) {
+    # if (is.null(x = rownames(x = meta.data))) {
+    #   stop("Row names not set in metadata. Please ensure that rownames of metadata match sample names of data")
+    # }
+    # if (length(x = setdiff(x = rownames(x = meta.data), y = rownames(data@meta.assays)))) {
+    #   warning("Some samples in meta.data not present in provided data.")
+    #   meta.data <- meta.data[intersect(x = rownames(x = meta.data), y = rownames(data@meta.assays)), , drop = FALSE]
+    # }
+    if (length(x = setdiff(x = meta.data[,sampleid], y = rownames(data@meta.assays)))) {
       warning("Some samples in meta.data not present in provided data.")
-      meta.data <- meta.data[intersect(x = rownames(x = meta.data), y = rownames(data@meta.assays)), , drop = FALSE]
+      meta.data <- meta.data[intersect(x = meta.data[,sampleid], y = rownames(data@meta.assays)), , drop = FALSE]
     }
     if (is.data.frame(x = meta.data)) {
       new.meta.data <- data.frame(row.names = rownames(data@meta.assays))
       for (ii in 1:ncol(x = meta.data)) {
-        new.meta.data[rownames(x = meta.data), colnames(x = meta.data)[ii]] <- meta.data[, ii, drop = FALSE]
+        new.meta.data[meta.data[,sampleid], colnames(x = meta.data)[ii]] <- meta.data[, ii, drop = FALSE]
       }
       meta.data <- new.meta.data
     }
+  } else {
+    meta.data <- data@meta.assays
   }
   # samples <- list(data@data)
   # names(x = samples) <- "samples"

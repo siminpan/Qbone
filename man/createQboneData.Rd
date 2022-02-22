@@ -7,7 +7,7 @@
 createQboneData(
   data,
   meta.assays = NULL,
-  sampleid = 1,
+  sampleid.assays = 1,
   assay.name = "Bone",
   assay.orig = NULL,
   ...
@@ -18,7 +18,7 @@ createQboneData(
 
 \item{meta.assays}{metadata for the assay}
 
-\item{sampleid}{column number of sample name in meta.assay}
+\item{sampleid.assays}{column number of sample name in meta.assay}
 
 \item{assay.name}{assay name for the data.}
 

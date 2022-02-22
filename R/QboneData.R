@@ -61,7 +61,7 @@ QboneData <- setClass(
 #'
 #' @param data data
 #' @param meta.assays metadata for the assay
-#' @param sampleid column number of sample name in meta.assay
+#' @param sampleid.assays column number of sample name in meta.assay
 #' @param assay.name assay name for the data.
 #' @param assay.orig Original assay that this assay is based off of. Used to
 #' track assay provenance
@@ -76,7 +76,7 @@ QboneData <- setClass(
 createQboneData <- function(
   data,
   meta.assays = NULL,
-  sampleid = 1,
+  sampleid.assays = 1,
   assay.name = "Bone",
   assay.orig = NULL,
   ...
@@ -84,13 +84,13 @@ createQboneData <- function(
   if (missing(x = data)) {
     stop("Must provide either 'data'")
   }
-  if (anyDuplicated(x = meta.assays[,sampleid])) {
+  if (anyDuplicated(x = meta.assays[,sampleid.assays])) {
     warning(
-      "Non-unique sample names (meta.assays[,sampleid]) present in the input meta.assays, making unique",
+      "Non-unique sample names (meta.assays[,sampleid.assays]) present in the input meta.assays, making unique",
       call. = FALSE,
       immediate. = TRUE
     )
-    meta.assays[,sampleid] <- make.unique(names = meta.assays[,sampleid])
+    meta.assays[,sampleid.assays] <- make.unique(names = meta.assays[,sampleid.assays])
   }
   if (is.list(data)){
     if (!is.null(x = meta.assays)) {
@@ -110,7 +110,7 @@ createQboneData <- function(
   } else {
     stop("Input data expected to be a list. Other class is not supported yet.")
   }
-  rownames(meta.assays) = meta.assays[,sampleid]
+  rownames(meta.assays) = meta.assays[,sampleid.assays]
   names(data) <- rownames(meta.assays)
   qbonedata <- new(
     Class = 'QboneData',
@@ -150,7 +150,8 @@ getQboneData.QboneData <- function(
 # 4. R-defined generics ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-#'  4.1 QboneData Methods
+## 4.1 QboneData Methods ----
+#'  QboneData Methods
 #' \code{QboneData} Methods
 #'
 #' Methods for \code{\link{QboneData}} objects for generics defined in

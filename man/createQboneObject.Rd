@@ -24,6 +24,7 @@ createQboneObject(
   names.field = 1,
   names.delim = "_",
   meta.data = NULL,
+  sampleid = 1,
   ...
 )
 
@@ -34,6 +35,7 @@ createQboneObject(
   names.field = 1,
   names.delim = "_",
   meta.data = NULL,
+  sampleid = 1,
   ...
 )
 }
@@ -51,7 +53,7 @@ createQboneObject(
 \item{meta.data}{Include cells where at least this many features are
 detected.}
 
-\item{sampleid}{column number of sample name in meta.assay}
+\item{sampleid}{column number of sample name in mate.data}
 
 \item{...}{|| double check}
 }
