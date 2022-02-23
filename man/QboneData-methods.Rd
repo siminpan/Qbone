@@ -2,20 +2,36 @@
 % Please edit documentation in R/QboneData.R
 \name{QboneData-methods}
 \alias{QboneData-methods}
+\alias{[[.QboneData}
 \title{QboneData Methods
 \code{QboneData} Methods}
+\usage{
+\method{[[}{QboneData}(x, i, ..., drop = FALSE)
+}
 \arguments{
 \item{x, object}{An \code{\link{QboneData}} object}
 
 \item{i, features}{For \item{\code{[[}}: metadata names; for all other methods,
 feature names or indices}
 
-\item{j, samples}{sample names or indices}
-
 \item{...}{Arguments passed to other methods}
+
+\item{drop}{See \code{\link[base]{drop}}}
+
+\item{j, samples}{sample names or indices}
+}
+\value{
+\code{[[}: If \code{i} is missing, the metadata data frame; if
+\code{i} is a vector of metadata names, a data frame with the requested
+metadata, otherwise, the requested associated object
 }
 \description{
 Methods for \code{\link{QboneData}} objects for generics defined in
 other packages
 }
+\section{Functions}{
+\itemize{
+\item \code{[[.QboneData}: Metadata and associated object accessor
+}}
+
 \concept{QboneData}

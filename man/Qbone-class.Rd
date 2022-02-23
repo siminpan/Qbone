@@ -13,14 +13,7 @@ for R.
 \section{Slots}{
 
 \describe{
-\item{\code{assays}}{A list of assays data for this project.
-structure like assay name
-├── sample list
-│        ├── sample 1
-│        ├── sample 2
-...      ...
-│        └── sample x
-└── assay information}
+\item{\code{assays}}{A list of QboneData Object for this project.}
 
 \item{\code{meta.data}}{Meta information regarding each sample.}
 

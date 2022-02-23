@@ -82,7 +82,7 @@ defaultAssay <- function(object, ...) {
 #' @export defaultAssay<-
 #'
 "defaultAssay<-" <- function(object, ..., value) {
-  UseMethod(generic = 'sefaultAssay<-', object = object)
+  UseMethod(generic = 'defaultAssay<-', object = object)
 }
 
 # setGeneric("defaultAssay<-", function(x) standardGeneric("defaultAssay<-"))

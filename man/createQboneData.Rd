@@ -10,13 +10,14 @@ createQboneData(
   sampleid.assays = 1,
   assay.name = "Bone",
   assay.orig = NULL,
+  sort = F,
   ...
 )
 }
 \arguments{
-\item{data}{data}
+\item{data}{Sample data}
 
-\item{meta.assays}{metadata for the assay}
+\item{meta.assays}{metadata for the assay with sample names}
 
 \item{sampleid.assays}{column number of sample name in meta.assay}
 
@@ -24,6 +25,8 @@ createQboneData(
 
 \item{assay.orig}{Original assay that this assay is based off of. Used to
 track assay provenance}
+
+\item{sort}{sort the data before put into data slot if T, default is F.}
 
 \item{...}{|| double check}
 }

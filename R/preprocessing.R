@@ -68,14 +68,49 @@ readQbone <- function(
   return(object)
 }
 
-## 2.2 trainingData ----
+## 2.2 thinData ----
+#' Thin the data
+#' If the data set is too big and the calculation is too heavy for your computer you may use this function to thin the data to make the calculation faster.
+#' Here we use thin the data proportionally on the sorted data. The new data set should reserve the same quantile feature as it was sequentially subsetted from ordered data set.
 #'
+#' @param object An Qboneobject.
+#' @param new.assay.name new assay name assigned to the thined data
+#' @param prop proportion to keep from the original data.
+#'
+#' @concept  Data thin
 #' @export
 #'
-trainingData <- function(
-
+thinData <- function(
+  object,
+  new.assay.name = "Thin",
+  prop = NULL
 ){
-
+  if (is.null(prop)){
+    stop("Proportion(prop) must be provided")
+  } else if (prop <= 0 | prop >= 1){
+    stop("Proportion(prop) must be between 0 and 1.")
+  }
+  orig.data = getQboneData(object, slot = 'data', assay = defaultAssay(object))
+  new.data = vector("list", length(orig.data))
+  names(new.data) <- names(orig.data)
+  if (object@assays[[defaultAssay(object)]]@scale.data[["sort"]] == F){
+    for (i in 1:length(orig.data)) {
+      new.data[[i]] = orig.data[[i]][order(unlist(orig.data[[i]]))[seq(1, length(orig.data[[i]]), round(1/prop))]]
+    }
+  }else {
+    for (i in 1:length(orig.data)) {
+      new.data[[i]] = unlist(orig.data[[i]])[seq(1, length(orig.data[[i]]), round(1/prop))]
+    }
+  }
+  new.qbonedata <- createQboneData(new.data,
+                                   meta.assays = data.frame(id = names(orig.data)),
+                                   sampleid.assays = 1,
+                                   assay.name = new.assay.name,
+                                   assay.orig = defaultAssay(object))
+  new.qbonedata@scale.data <- append(new.qbonedata@scale.data,list(thin = c(T, prop)))
+  object[[new.assay.name]] <- new.qbonedata
+  defaultAssay(object) <- new.assay.name
+  return(object)
 }
 
 

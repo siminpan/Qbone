@@ -6,7 +6,14 @@
 \alias{_PACKAGE}
 \title{Qbone: What the Package Does (One Line, Title Case)}
 \description{
-A R package using quantlets in quantile functional regression to analyze distributional data.
+The `Qbone` package is a set of tools that enables efficient estimation of quantlets used in quantile functional regression to analyze distributional data. This package can be used to analyze distributional data in broader applications such as climate change analysis, image recognition analysis, and personalized health data analysis, etc.
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/siminpan/Qbone}
+}
+
 }
 \author{
 \strong{Maintainer}: Simin Pan \email{simonpan@tamu.edu} (\href{https://orcid.org/0000-0003-3472-8940}{ORCID})

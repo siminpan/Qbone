@@ -14,13 +14,13 @@ NULL
 #' The QboneData Class
 #' The QboneData object is the basic unit of Qbone.
 #'
-#' @slot data Normalized expression data
-#' @slot scale.data Scaled expression data
+#' @slot data Sample data
+#' @slot scale.data Parameter of data processing
 #' @slot key Key for the Assay                                                || double check
 #' @slot assay.name name of assay
 #' @slot assay.orig Original assay that this assay is based off of. Used to
 #' track assay provenance
-#' @slot meta.assays Feature-level metadata
+#' @slot meta.assays Metadata for the data processing
 #' @slot misc Utility slot for storing additional data associated with the assay   || double check
 #'
 #' @name QboneData-class
@@ -59,12 +59,13 @@ QboneData <- setClass(
 ## 2.1 create an QboneData object ----
 #' create an QboneData object
 #'
-#' @param data data
-#' @param meta.assays metadata for the assay
+#' @param data Sample data
+#' @param meta.assays metadata for the assay with sample names
 #' @param sampleid.assays column number of sample name in meta.assay
 #' @param assay.name assay name for the data.
 #' @param assay.orig Original assay that this assay is based off of. Used to
 #' track assay provenance
+#' @param sort sort the data before put into data slot if T, default is F.
 #' @param ... || double check
 #'
 #' @return A \code{\link{QboneData}} object
@@ -79,6 +80,7 @@ createQboneData <- function(
   sampleid.assays = 1,
   assay.name = "Bone",
   assay.orig = NULL,
+  sort = F,
   ...
 ) {
   if (missing(x = data)) {
@@ -102,7 +104,11 @@ createQboneData <- function(
     }
     for (i in 1:length(data)){
       if (is.atomic(data[[i]])){
-        data[[i]] <- sort(data[[i]])
+        if (sort == T) {
+          data[[i]] <- sort(data[[i]])
+        } else {
+          data[[i]] <- data[[i]]
+          }
       } else {
         stop(paste0("Input data data[[",i,"]] is not atomic, please confirm data structure."))
       }
@@ -117,9 +123,17 @@ createQboneData <- function(
     data = data,
     assay.name = assay.name,
     assay.orig = NULL,
-    meta.assays = meta.assays,
+    meta.assays = data.frame(id = meta.assays[,sampleid.assays],
+                             row.names = meta.assays[,sampleid.assays]),
     misc = NULL
   )
+  # qbonedata@scale.data <- append(qbonedata@scale.data,
+  #                                list(id = meta.assays[,sampleid.assays]))
+  if (sort == T) {
+    qbonedata@scale.data <- append(qbonedata@scale.data, list(sort = T))
+  } else {
+    qbonedata@scale.data <- append(qbonedata@scale.data, list(sort = F))
+  }
   return(qbonedata)
 }
 
@@ -137,13 +151,21 @@ createQboneData <- function(
 #'
 getQboneData.QboneData <- function(
   object,
-  slot = c('data'), # , 'scale.data', 'counts'            || Double check
+  slot = c('data', 'scale.data'), # , 'scale.data', 'counts'            || Double check
   ...
 ) {
   CheckDots(...)
   slot <- slot[1]
   slot <- match.arg(arg = slot)
   return(slot(object = object, name = slot))
+}
+
+## 3.4 samples.QboneData ----
+#' @rdname samples
+#' @export
+#'
+samples.QboneData <- function(x) {
+  return(names(x@data))
 }
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -170,6 +192,29 @@ getQboneData.QboneData <- function(
 #'
 NULL
 
+## 4.1.1 [[.QboneData ----
+#' @describeIn QboneData-methods Metadata and associated object accessor
+#'
+#' @param drop See \code{\link[base]{drop}}
+#'
+#' @return \code{[[}: If \code{i} is missing, the metadata data frame; if
+#' \code{i} is a vector of metadata names, a data frame with the requested
+#' metadata, otherwise, the requested associated object
+#'
+#' @export
+#' @method [[ QboneData
+#'
+"[[.QboneData" <- function(x, i, ..., drop = FALSE) {
+  if (missing(x = i)) {
+    i <- colnames(x = slot(object = x, name = 'meta.assay'))
+  }
+  data.return <- slot(object = x, name = 'meta.assay')[, i, drop = FALSE, ...]
+  if (drop) {
+    data.return <- unlist(x = data.return, use.names = FALSE)
+    names(x = data.return) <- rep.int(x = rownames(x = x), times = length(x = i))
+  }
+  return(data.return)
+}
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # 5. S4 methods ----

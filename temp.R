@@ -8,6 +8,9 @@ load_all(recompile = T)
 
 check()
 
+devtools::check(manual=TRUE)
+
+tinytex::install_tinytex()
 tinytex::tlmgr_install("makeindex")
 tinytex::tlmgr_update()
 tinytex::reinstall_tinytex()
@@ -38,6 +41,12 @@ data.frame(row.names = qbonedata@data)
 
 data.dir = "/home/span/Documents/MOSJ-3DCT/data/csv.test"
 q1 = readQbone(data.dir, groupbyfolder = T)
+
+qa1 = getQboneData(q1, slot = 'data', assay = defaultAssay(q1))
+
+getQboneData(object, slot = defaultAssay(object))
+
+q2 = thinData(q1,prop=0.1)
 # sloop::ftype(packageVersion(x = "0.0.0.9000"))
 class(package_version(x = '2.99.0'))
 idents(cqo2) <- c("a1", "b1")

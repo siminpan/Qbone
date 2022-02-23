@@ -19,14 +19,7 @@ NULL
 #' Functional Regression using Quantlets (doi: 10.1080/01621459.2019.1609969)
 #' for R.
 #'
-#' @slot assays A list of assays data for this project.
-#' structure like assay name
-#'                  ├── sample list
-#'                  │        ├── sample 1
-#'                  │        ├── sample 2
-#'                  ...      ...
-#'                  │        └── sample x
-#'                  └── assay information
+#' @slot assays A list of QboneData Object for this project.
 #' @slot meta.data Meta information regarding each sample.
 #' @slot active.assay Name of the active, or default, assay; settable using
 #' \code{\link{defaultAssay}}
@@ -106,7 +99,8 @@ createQboneObject.default <- function(
     meta.assays = meta.data,
     sampleid.assays = sampleid,
     assay.name = assay,
-    assay.orig = NULL
+    assay.orig = NULL,
+    sort = T
     )
     return(
       createQboneObject(
@@ -145,12 +139,15 @@ createQboneObject.QboneData <- function(
     #   warning("Some samples in meta.data not present in provided data.")
     #   meta.data <- meta.data[intersect(x = rownames(x = meta.data), y = rownames(data@meta.assays)), , drop = FALSE]
     # }
-    if (length(x = setdiff(x = meta.data[,sampleid], y = rownames(data@meta.assays)))) {
+    if (length(x = setdiff(x = meta.data[,sampleid], y = rownames(data@meta.assays
+)))) {
       warning("Some samples in meta.data not present in provided data.")
-      meta.data <- meta.data[intersect(x = meta.data[,sampleid], y = rownames(data@meta.assays)), , drop = FALSE]
+      meta.data <- meta.data[intersect(x = meta.data[,sampleid], y = rownames(data@meta.assays
+      )), , drop = FALSE]
     }
     if (is.data.frame(x = meta.data)) {
-      new.meta.data <- data.frame(row.names = rownames(data@meta.assays))
+      new.meta.data <- data.frame(row.names = rownames(data@meta.assays
+      ))
       for (ii in 1:ncol(x = meta.data)) {
         new.meta.data[meta.data[,sampleid], colnames(x = meta.data)[ii]] <- meta.data[, ii, drop = FALSE]
       }
@@ -349,7 +346,7 @@ idents.Qbone <- function(object, ...) {
 #' @export
 #'
 samples.Qbone <- function(x) {
-  return(names(x@assays[[defaultAssay(x)]][["samples"]]))
+  return(names(x@assays[[defaultAssay(x)]]@data))
 }
 # as S3 method
 # samples.Qbone <- function(x) {
@@ -389,13 +386,14 @@ getQboneData.Qbone <- function(object, slot = 'data', assay = NULL, ...) {
 # 4. R-defined generics ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-#' 4.1 Qbone Methods
+## 4.1 Qbone Methods ----
+#' Qbone Methods
 #'
 #' Methods for \code{\link{Qbone}} objects for generics defined in other
 #' packages
 #'
 #' @param x,object A \code{\link{Qbone}} object
-#' @param i,features Depends on the method
+#' @param i Depends on the method
 #' \describe{
 #'  \item{\code{[}, \code{subset}}{Feature names or indices}
 #'  \item{\code{$}, \code{$<-}}{Name of a single metadata column}
@@ -417,7 +415,7 @@ getQboneData.Qbone <- function(object, slot = 'data', assay = NULL, ...) {
 NULL
 
 
-## 4.2.1 [[.Qbone ----
+## 4.1.1 [[.Qbone ----
 #' @describeIn Qbone-methods Metadata and associated object accessor
 #'
 #' @param drop See \code{\link[base]{drop}}
@@ -528,7 +526,7 @@ setMethod( # because R doesn't allow S3-style [[<- for S4 classes
     # Figure out where to store data
     slot.use <- if (inherits(x = value, what = 'QboneData')) {
       # Ensure we have the same number of samples
-      if (ncol(x = value) != ncol(x = x)) {
+      if (length(value@data) != nrow(x = x@meta.data)) {
         stop(
           "Cannot add a different number of samples than already present",
           call. = FALSE
@@ -536,87 +534,87 @@ setMethod( # because R doesn't allow S3-style [[<- for S4 classes
       }
       # Ensure cell order stays the same
       if (all(samples(x = value) %in% samples(x = x)) && !all(samples(x = value) == samples(x = x))) {
-        for (slot in c('counts', 'data', 'scale.data')) {
-          assay.data <- GetAssayData(object = value, slot = slot)
-          if (!IsMatrixEmpty(x = assay.data)) {
-            assay.data <- assay.data[, samples(x = x), drop = FALSE]
+        for (slot in c('data', 'scale.data')) {
+          assay.data <- getQboneData(object = value, slot = slot)
+          if (length(assay.data!=0)) {
+            assay.data <- assay.data[samples(x = x), drop = FALSE]
           }
           # Use slot because SetAssayData is being weird
           slot(object = value, name = slot) <- assay.data
         }
       }
       'assays'
-    } else if (inherits(x = value, what = 'SpatialImage')) {
-      # Ensure that all samples for this image are present
-      if (!all(samples(x = value) %in% samples(x = x))) {
-        stop("", call. = FALSE)
-      }
-      # Ensure Assay that SpatialImage is associated with is present in Seurat object
-      if (!defaultAssay(object = value) %in% Assays(object = x)) {
-        warning(
-          "Adding image data that isn't associated with any assay present",
-          call. = FALSE,
-          immediate. = TRUE
-        )
-      }
-      'images'
-    } else if (inherits(x = value, what = 'Graph')) {
-      # Ensure Assay that Graph is associated with is present in the Seurat object
-      if (is.null(x = defaultAssay(object = value))) {
-        warning(
-          "Adding a Graph without an assay associated with it",
-          call. = FALSE,
-          immediate. = TRUE
-        )
-      } else if (!any(defaultAssay(object = value) %in% Assays(object = x))) {
-        stop("Cannot find assay '", defaultAssay(object = value), "' in this Qbone object", call. = FALSE)
-      }
-      # Ensure Graph object is in order
-      if (all(samples(x = value) %in% samples(x = x)) && !all(samples(x = value) == samples(x = x))) {
-        value <- value[samples(x = x), samples(x = x)]
-      }
-      'graphs'
-    } else if (inherits(x = value, what = 'DimReduc')) {
-      # All DimReducs must be associated with an Assay
-      if (is.null(x = defaultAssay(object = value))) {
-        stop("Cannot add a DimReduc without an assay associated with it", call. = FALSE)
-      }
-      # Ensure Assay that DimReduc is associated with is present in the Qbone object
-      if (!IsGlobal(object = value) && !any(defaultAssay(object = value) %in% Assays(object = x))) {
-        stop("Cannot find assay '", defaultAssay(object = value), "' in this Qbone object", call. = FALSE)
-      }
-      # Ensure DimReduc object is in order
-      if (all(samples(x = value) %in% samples(x = x)) && !all(samples(x = value) == samples(x = x))) {
-        slot(object = value, name = 'cell.embeddings') <- value[[samples(x = x), ]]
-      }
-      'reductions'
-    } else if (inherits(x = value, what = "Neighbor")) {
-      # Ensure all samples are present in the Qbone object
-      if (length(x = samples(x = value)) > length(x = samples(x = x))) {
-        stop(
-          "Cannot have more samples in the Neighbor object than are present in the Qbone object.",
-          call. = FALSE
-        )
-      }
-      if (!all(samples(x = value) %in% samples(x = x))) {
-        stop(
-          "Cannot add samples in the Neighbor object that aren't present in the Qbone object.",
-          call. = FALSE
-        )
-      }
-      'neighbors'
-    } else if (inherits(x = value, what = 'SeuratCommand')) {
-      # Ensure Assay that SeuratCommand is associated with is present in the Qbone object
-      if (is.null(x = defaultAssay(object = value))) {
-        warning(
-          "Adding a command log without an assay associated with it",
-          call. = FALSE,
-          immediate. = TRUE
-        )
-      } else if (!any(defaultAssay(object = value) %in% Assays(object = x))) {
-        stop("Cannot find assay '", defaultAssay(object = value), "' in this Qbone object", call. = FALSE)
-      }
-      'commands'
+    # } else if (inherits(x = value, what = 'SpatialImage')) {
+    #   # Ensure that all samples for this image are present
+    #   if (!all(samples(x = value) %in% samples(x = x))) {
+    #     stop("", call. = FALSE)
+    #   }
+    #   # Ensure Assay that SpatialImage is associated with is present in Seurat object
+    #   if (!defaultAssay(object = value) %in% Assays(object = x)) {
+    #     warning(
+    #       "Adding image data that isn't associated with any assay present",
+    #       call. = FALSE,
+    #       immediate. = TRUE
+    #     )
+    #   }
+    #   'images'
+    # } else if (inherits(x = value, what = 'Graph')) {
+    #   # Ensure Assay that Graph is associated with is present in the Seurat object
+    #   if (is.null(x = defaultAssay(object = value))) {
+    #     warning(
+    #       "Adding a Graph without an assay associated with it",
+    #       call. = FALSE,
+    #       immediate. = TRUE
+    #     )
+    #   } else if (!any(defaultAssay(object = value) %in% Assays(object = x))) {
+    #     stop("Cannot find assay '", defaultAssay(object = value), "' in this Qbone object", call. = FALSE)
+    #   }
+    #   # Ensure Graph object is in order
+    #   if (all(samples(x = value) %in% samples(x = x)) && !all(samples(x = value) == samples(x = x))) {
+    #     value <- value[samples(x = x), samples(x = x)]
+    #   }
+    #   'graphs'
+    # } else if (inherits(x = value, what = 'DimReduc')) {
+    #   # All DimReducs must be associated with an Assay
+    #   if (is.null(x = defaultAssay(object = value))) {
+    #     stop("Cannot add a DimReduc without an assay associated with it", call. = FALSE)
+    #   }
+    #   # Ensure Assay that DimReduc is associated with is present in the Qbone object
+    #   if (!IsGlobal(object = value) && !any(defaultAssay(object = value) %in% Assays(object = x))) {
+    #     stop("Cannot find assay '", defaultAssay(object = value), "' in this Qbone object", call. = FALSE)
+    #   }
+    #   # Ensure DimReduc object is in order
+    #   if (all(samples(x = value) %in% samples(x = x)) && !all(samples(x = value) == samples(x = x))) {
+    #     slot(object = value, name = 'cell.embeddings') <- value[[samples(x = x), ]]
+    #   }
+    #   'reductions'
+    # } else if (inherits(x = value, what = "Neighbor")) {
+    #   # Ensure all samples are present in the Qbone object
+    #   if (length(x = samples(x = value)) > length(x = samples(x = x))) {
+    #     stop(
+    #       "Cannot have more samples in the Neighbor object than are present in the Qbone object.",
+    #       call. = FALSE
+    #     )
+    #   }
+    #   if (!all(samples(x = value) %in% samples(x = x))) {
+    #     stop(
+    #       "Cannot add samples in the Neighbor object that aren't present in the Qbone object.",
+    #       call. = FALSE
+    #     )
+    #   }
+    #   'neighbors'
+    # } else if (inherits(x = value, what = 'SeuratCommand')) {
+    #   # Ensure Assay that SeuratCommand is associated with is present in the Qbone object
+    #   if (is.null(x = defaultAssay(object = value))) {
+    #     warning(
+    #       "Adding a command log without an assay associated with it",
+    #       call. = FALSE,
+    #       immediate. = TRUE
+    #     )
+    #   } else if (!any(defaultAssay(object = value) %in% Assays(object = x))) {
+    #     stop("Cannot find assay '", defaultAssay(object = value), "' in this Qbone object", call. = FALSE)
+    #   }
+    #   'commands'
     } else if (is.null(x = value)) {
       slot.use
     } else {
@@ -735,49 +733,51 @@ setMethod( # because R doesn't allow S3-style [[<- for S4 classes
       #       Key(object = value) <- new.key
       #     }
       #   }
-      #   # For Assays, run CalcN
-      #   if (inherits(x = value, what = 'Assay')) {
-      #     if ((!i %in% Assays(object = x)) |
-      #         (i %in% Assays(object = x) && !identical(
-      #           x = GetAssayData(object = x, assay = i, slot = "counts"),
-      #           y = GetAssayData(object = value, slot = "counts"))
-      #         )) {
-      #       n.calc <- CalcN(object = value)
-      #       if (!is.null(x = n.calc)) {
-      #         names(x = n.calc) <- paste(names(x = n.calc), i, sep = '_')
-      #         x[[names(x = n.calc)]] <- n.calc
-      #       }
-      #     }
-      #   }
-      #   # When removing an Assay, clear out associated DimReducs, Graphs, and SeuratCommands
-      #   if (is.null(x = value) && inherits(x = x[[i]], what = 'Assay')) {
-      #     objs.assay <- FilterObjects(
-      #       object = x,
-      #       classes.keep = c('DimReduc', 'SeuratCommand', 'Graph')
-      #     )
-      #     objs.assay <- Filter(
-      #       f = function(o) {
-      #         return(all(defaultAssay(object = x[[o]]) == i) && !IsGlobal(object = x[[o]]))
-      #       },
-      #       x = objs.assay
-      #     )
-      #     for (o in objs.assay) {
-      #       x[[o]] <- NULL
-      #     }
-      #   }
-      #   # If adding a command, ensure it gets put at the end of the command list
-      #   if (inherits(x = value, what = 'SeuratCommand')) {
-      #     slot(object = x, name = slot.use)[[i]] <- NULL
-      #     slot(object = x, name = slot.use) <- Filter(
-      #       f = Negate(f = is.null),
-      #       x = slot(object = x, name = slot.use)
-      #     )
-      #   }
-      #   slot(object = x, name = slot.use)[[i]] <- value
-      #   slot(object = x, name = slot.use) <- Filter(
-      #     f = Negate(f = is.null),
-      #     x = slot(object = x, name = slot.use)
-      #   )
+
+        # # For Assays, run CalcN
+        # if (inherits(x = value, what = 'QboneData')) {
+        #   if ((!i %in% assays(object = x)) |
+        #       (i %in% assays(object = x) && !identical(
+        #         x = getQboneData(object = x, assay = i, slot = "data"),
+        #         y = getQboneData(object = value, slot = "data"))
+        #       )) {
+        #     n.calc <- CalcN(object = value)
+        #     if (!is.null(x = n.calc)) {
+        #       names(x = n.calc) <- paste(names(x = n.calc), i, sep = '_')
+        #       x[[names(x = n.calc)]] <- n.calc
+        #     }
+        #   }
+        # }
+
+        # When removing an Assay, clear out associated DimReducs, Graphs, and SeuratCommands
+        if (is.null(x = value) && inherits(x = x[[i]], what = 'Assay')) {
+          objs.assay <- FilterObjects(
+            object = x,
+            classes.keep = c('DimReduc', 'SeuratCommand', 'Graph')
+          )
+          objs.assay <- Filter(
+            f = function(o) {
+              return(all(defaultAssay(object = x[[o]]) == i) && !IsGlobal(object = x[[o]]))
+            },
+            x = objs.assay
+          )
+          for (o in objs.assay) {
+            x[[o]] <- NULL
+          }
+        }
+        # If adding a command, ensure it gets put at the end of the command list
+        if (inherits(x = value, what = 'SeuratCommand')) {
+          slot(object = x, name = slot.use)[[i]] <- NULL
+          slot(object = x, name = slot.use) <- Filter(
+            f = Negate(f = is.null),
+            x = slot(object = x, name = slot.use)
+          )
+        }
+        slot(object = x, name = slot.use)[[i]] <- value
+        slot(object = x, name = slot.use) <- Filter(
+          f = Negate(f = is.null),
+          x = slot(object = x, name = slot.use)
+        )
     }
     # CheckGC()
     gc(verbose = FALSE)

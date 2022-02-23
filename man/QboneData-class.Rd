@@ -13,9 +13,9 @@ The QboneData object is the basic unit of Qbone.
 \section{Slots}{
 
 \describe{
-\item{\code{data}}{Normalized expression data}
+\item{\code{data}}{Sample data}
 
-\item{\code{scale.data}}{Scaled expression data}
+\item{\code{scale.data}}{Parameter of data processing}
 
 \item{\code{key}}{Key for the Assay                                                || double check}
 
@@ -24,7 +24,7 @@ The QboneData object is the basic unit of Qbone.
 \item{\code{assay.orig}}{Original assay that this assay is based off of. Used to
 track assay provenance}
 
-\item{\code{meta.assays}}{Feature-level metadata}
+\item{\code{meta.assays}}{Metadata for the data processing}
 
 \item{\code{misc}}{Utility slot for storing additional data associated with the assay   || double check}
 }}

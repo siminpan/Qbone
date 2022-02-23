@@ -67,6 +67,8 @@ max(abs(o1 - e2))
 # test running time ----
 library("microbenchmark")
 
+microbenchmark(object@meta.data, slot(object = object, name = "meta.data"))
+
 microbenchmark(t(A), eigenmt(A), eigenmapmt(A), times = 10L)
 microbenchmark(t(A)%*%B,  eigenmapmm(t(A), B), eigenmapmtm(A, B), times = 10L)
 microbenchmark(A%*%B, eigenmm(A, B), eigenmapmm(A, B), times = 10L)

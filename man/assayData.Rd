@@ -11,7 +11,7 @@ getQboneData(object, slot, ...)
 
 \method{getQboneData}{Qbone}(object, slot = "data", assay = NULL, ...)
 
-\method{getQboneData}{QboneData}(object, slot = c("data"), ...)
+\method{getQboneData}{QboneData}(object, slot = c("data", "scale.data"), ...)
 }
 \arguments{
 \item{object}{An object}

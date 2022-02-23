@@ -4,7 +4,7 @@
 \alias{Qbone-methods}
 \alias{[[.Qbone}
 \alias{[[<-,Qbone-method}
-\title{4.1 Qbone Methods}
+\title{Qbone Methods}
 \usage{
 \method{[[}{Qbone}(x, i, ..., drop = FALSE)
 
@@ -13,7 +13,7 @@
 \arguments{
 \item{x, object}{A \code{\link{Qbone}} object}
 
-\item{i, features}{Depends on the method
+\item{i}{Depends on the method
 \describe{
 \item{\code{[}, \code{subset}}{Feature names or indices}
 \item{\code{$}, \code{$<-}}{Name of a single metadata column}
