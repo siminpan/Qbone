@@ -399,7 +399,7 @@ getQboneData.Qbone <- function(object, slot = 'data', assay = NULL, ...) {
 #  \item{\code{$}, \code{$<-}}{Name of a single metadata column}
 #'  \item{\code{[[}, \code{[[<-}}{
 #'   Name of one or more metadata columns or an associated object; associated
-#'   objects include \code{\link{Assay}}, \code{\link{DimReduc}},                  || double check
+#'   objects include \code{\link{QboneData}}                  || double check
 #   \code{\link{Graph}}, \code{\link{SeuratCommand}}, or
 #   \code{\link{SpatialImage}} objects
 #'  }

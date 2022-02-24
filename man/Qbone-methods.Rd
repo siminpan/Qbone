@@ -17,7 +17,7 @@
 \describe{
 \item{\code{[[}, \code{[[<-}}{
 Name of one or more metadata columns or an associated object; associated
-objects include \code{\link{Assay}}, \code{\link{DimReduc}},                  || double check
+objects include \code{\link{QboneData}}                  || double check
 }
 }}
 
