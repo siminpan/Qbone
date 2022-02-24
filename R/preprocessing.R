@@ -107,7 +107,7 @@ thinData <- function(
                                    sampleid.assays = 1,
                                    assay.name = new.assay.name,
                                    assay.orig = defaultAssay(object))
-  new.qbonedata@scale.data <- append(new.qbonedata@scale.data,list(thin = c(T, prop)))
+  new.qbonedata@scale.data <- append(object@assays[[defaultAssay(object)]]@scale.data,list(thin = c(T, prop)))
   object[[new.assay.name]] <- new.qbonedata
   defaultAssay(object) <- new.assay.name
   return(object)
