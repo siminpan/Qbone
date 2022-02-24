@@ -38,13 +38,14 @@ cqo2 = addMetaData(qbone, c("c", "d", "e"), col.name = "names")
 
 data.frame(row.names = qbonedata@data)
 
+idents(q2) <- c("c", "d")
+idents(q2)
 
 data.dir = "/home/span/Documents/MOSJ-3DCT/data/csv.test"
 q1 = readQbone(data.dir, groupbyfolder = T)
 
 qa1 = getQboneData(q1, slot = 'data', assay = defaultAssay(q1))
 
-getQboneData(object, slot = defaultAssay(object))
 
 q2 = thinData(q1,prop=0.1)
 # sloop::ftype(packageVersion(x = "0.0.0.9000"))

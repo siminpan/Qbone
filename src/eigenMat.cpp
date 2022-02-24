@@ -16,7 +16,7 @@ using namespace Rcpp;
 //' A * B
 //'
 //' @param A,B Matrices.
-//' @rdname eigenmm
+//' @rdname eigenmatrix
 //' @export
 // [[Rcpp::export]]
 SEXP eigenmm(Eigen::MatrixXd A, Eigen::MatrixXd B){
@@ -31,7 +31,8 @@ SEXP eigenmm(Eigen::MatrixXd A, Eigen::MatrixXd B){
 //' t(A)
 //'
 //' @param A Matrices.
-//' @rdname eigenmt
+//' @rdname eigenmatrix
+//' @export
 // [[Rcpp::export]]
 SEXP eigenmt(Eigen::MatrixXd A){
 
@@ -44,7 +45,8 @@ SEXP eigenmt(Eigen::MatrixXd A){
 //' t(A)
 //'
 //' @param A Matrices.
-//' @rdname eigenmapmt
+//' @rdname eigenmatrix
+//' @export
 // [[Rcpp::export]]
 SEXP eigenmapmt(Eigen::Map<Eigen::MatrixXd> A){
 
@@ -57,7 +59,7 @@ SEXP eigenmapmt(Eigen::Map<Eigen::MatrixXd> A){
 //' A * B
 //'
 //' @param A,B Matrices.
-//' @rdname eigenmapmm
+//' @rdname eigenmatrix
 //' @export
 // [[Rcpp::export]]
 SEXP eigenmapmm(const Eigen::Map<Eigen::MatrixXd> A, Eigen::Map<Eigen::MatrixXd> B){
@@ -72,7 +74,8 @@ SEXP eigenmapmm(const Eigen::Map<Eigen::MatrixXd> A, Eigen::Map<Eigen::MatrixXd>
 //' A * t(B)
 //'
 //' @param A,B Matrices.
-//' @rdname eigenmapmmt
+//' @rdname eigenmatrix
+//' @export
 // [[Rcpp::export]]
 SEXP eigenmapmmt(const Eigen::Map<Eigen::MatrixXd> A, Eigen::Map<Eigen::MatrixXd> B){
     Eigen::MatrixXd C = A * B.transpose();
@@ -86,7 +89,8 @@ SEXP eigenmapmmt(const Eigen::Map<Eigen::MatrixXd> A, Eigen::Map<Eigen::MatrixXd
 //' t(A) * B
 //'
 //' @param A,B Matrices.
-//' @rdname eigenmapmtm
+//' @rdname eigenmatrix
+//' @export
 // [[Rcpp::export]]
 SEXP eigenmapmtm(const Eigen::Map<Eigen::MatrixXd> A, Eigen::Map<Eigen::MatrixXd> B){
     Eigen::MatrixXd C = A.transpose() * B;

@@ -104,6 +104,7 @@ updateSlots <- function(object) {
 #' @keywords internal
 #'
 #' @noRd
+#'
 ExtractField <- function(string, field = 1, delim = "_") {
   fields <- as.numeric(x = unlist(x = strsplit(
     x = as.character(x = field),

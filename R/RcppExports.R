@@ -7,7 +7,7 @@
 #' A * B
 #'
 #' @param A,B Matrices.
-#' @rdname eigenmm
+#' @rdname eigenmatrix
 #' @export
 eigenmm <- function(A, B) {
     .Call(`_Qbone_eigenmm`, A, B)
@@ -19,7 +19,8 @@ eigenmm <- function(A, B) {
 #' t(A)
 #'
 #' @param A Matrices.
-#' @rdname eigenmt
+#' @rdname eigenmatrix
+#' @export
 eigenmt <- function(A) {
     .Call(`_Qbone_eigenmt`, A)
 }
@@ -30,7 +31,8 @@ eigenmt <- function(A) {
 #' t(A)
 #'
 #' @param A Matrices.
-#' @rdname eigenmapmt
+#' @rdname eigenmatrix
+#' @export
 eigenmapmt <- function(A) {
     .Call(`_Qbone_eigenmapmt`, A)
 }
@@ -41,7 +43,7 @@ eigenmapmt <- function(A) {
 #' A * B
 #'
 #' @param A,B Matrices.
-#' @rdname eigenmapmm
+#' @rdname eigenmatrix
 #' @export
 eigenmapmm <- function(A, B) {
     .Call(`_Qbone_eigenmapmm`, A, B)
@@ -53,7 +55,8 @@ eigenmapmm <- function(A, B) {
 #' A * t(B)
 #'
 #' @param A,B Matrices.
-#' @rdname eigenmapmmt
+#' @rdname eigenmatrix
+#' @export
 eigenmapmmt <- function(A, B) {
     .Call(`_Qbone_eigenmapmmt`, A, B)
 }
@@ -64,7 +67,8 @@ eigenmapmmt <- function(A, B) {
 #' t(A) * B
 #'
 #' @param A,B Matrices.
-#' @rdname eigenmapmtm
+#' @rdname eigenmatrix
+#' @export
 eigenmapmtm <- function(A, B) {
     .Call(`_Qbone_eigenmapmtm`, A, B)
 }

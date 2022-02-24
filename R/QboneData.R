@@ -122,7 +122,7 @@ createQboneData <- function(
     Class = 'QboneData',
     data = data,
     assay.name = assay.name,
-    assay.orig = NULL,
+    assay.orig = assay.orig,
     meta.assays = data.frame(id = meta.assays[,sampleid.assays],
                              row.names = meta.assays[,sampleid.assays]),
     misc = NULL
