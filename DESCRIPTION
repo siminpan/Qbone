@@ -1,5 +1,5 @@
 Package: Qbone
-Title: What the Package Does (One Line, Title Case)
+Title: Tools for Quantile Functional Regression with Quantlets 
 Version: 0.0.0.9000
 Authors@R: c(
     person("Simin", "Pan", , "simonpan@tamu.edu", role = c("aut", "cre"),
