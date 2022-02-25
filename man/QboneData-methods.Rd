@@ -11,7 +11,7 @@
 \arguments{
 \item{x, object}{An \code{\link{QboneData}} object}
 
-\item{i, features}{For \item{\code{[[}}: metadata names; for all other methods,
+\item{i, features}{For \code{[[}: metadata names; for all other methods,
 feature names or indices}
 
 \item{...}{Arguments passed to other methods}

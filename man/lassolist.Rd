@@ -21,11 +21,13 @@ lassolist(
 
 \item{new.assay.name}{new assay name assigned to the lassolist data}
 
-\item{a1}{vector containing sequence of beta parameter for internal function \code{\link{generateBetaCDF}}}
+\item{a1}{vector containing sequence of beta parameter for internal function \code{generateBetaCDF()}}
 
-\item{a2}{vector containing sequence of beta parameter for internal function \code{\link{generateBetaCDF}}}
+\item{a2}{vector containing sequence of beta parameter for internal function \code{generateBetaCDF()}}
 
 \item{assay.seed}{assay information to add into the QboneData object scale.data. The default of \code{lassolist()} will save the random seed for the run. \code{.Random.seed <- boject@assays[["Lasso"]]@scale.data[["lassolist"]] } to reset the seed for the same results.}
+
+\item{...}{Arguments passed to other methods}
 }
 \description{
 Run lasso list to build basis function

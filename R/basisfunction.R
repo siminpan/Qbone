@@ -22,9 +22,10 @@ NULL
 #' @param object A Qboneobject
 #' @param verbose Print a progress bar
 #' @param new.assay.name new assay name assigned to the lassolist data
-#' @param a1 vector containing sequence of beta parameter for internal function \code{\link{generateBetaCDF}}
-#' @param a2  vector containing sequence of beta parameter for internal function \code{\link{generateBetaCDF}}
+#' @param a1 vector containing sequence of beta parameter for internal function \code{generateBetaCDF()}
+#' @param a2  vector containing sequence of beta parameter for internal function \code{generateBetaCDF()}
 #' @param assay.seed assay information to add into the QboneData object scale.data. The default of \code{lassolist()} will save the random seed for the run. \code{.Random.seed <- boject@assays[["Lasso"]]@scale.data[["lassolist"]] } to reset the seed for the same results.
+#' @param ... Arguments passed to other methods
 #'
 #' @importFrom glmnet glmnet cv.glmnet
 #' @importFrom pbapply pblapply
