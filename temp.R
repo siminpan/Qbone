@@ -47,7 +47,52 @@ q1 = readQbone(data.dir, groupbyfolder = T)
 qa1 = getQboneData(q1, slot = 'data', assay = defaultAssay(q1))
 
 
-q2 = thinData(q1,prop=0.1)
+q2 = thinData(q1,prop=0.001)
+q3 = lassolist2(q2)
+q4 = lassolist2(q2)
+q5 = lassolist2(q2)
+
+document()
+q6 = lassolist2(q2)
+all.equal(q6,q4)
+
+
+q7 = lassolist(q2)
+
+# For this example, set the random seed
+set.seed(423)
+runif(3)
+#> [1] 0.1089715 0.5973455 0.9726307
+
+# Save the seed
+set.seed(423)
+oldseed <- .Random.seed
+oldseed1 <- .Random.seed
+.Random.seed <- oldseed1
+oldseed2 <- .Random.seed
+
+all.equal(oldseed,oldseed1)
+all.equal(oldseed2,oldseed1)
+
+runif(3)
+.Random.seed <- q7@assays[["Lasso"]]@scale.data[["lassolist"]]
+q8 = lassolist(q2)
+# Get the same random numbers as before, after saving the seed
+runif(3)
+
+
+all.equal(q6,q4)
+
+one <- rep(1, x.n)
+one1 = matrix(rep(1, x.n), ncol = x.n)
+
+x3 = one %*% object.x
+x4 = eigenmapmm(one1, object.x)
+
+raw.dataset <- getQboneData(q2, slot = 'data', assay = defaultAssay(q2))
+a1 = c(seq(0.1, 1, by = 0.1), seq(2, 100, by = 1))
+a2 = c(seq(0.1, 1, by = 0.1), seq(2, 100, by = 1))
+list1 = runlassolist(raw.dataset[[1]])
 # sloop::ftype(packageVersion(x = "0.0.0.9000"))
 class(package_version(x = '2.99.0'))
 idents(cqo2) <- c("a1", "b1")
@@ -77,3 +122,18 @@ cqo2 = addMetaData(qbone, mate, col.name = "names")
 assays(qbonedata)
 assays <- FilterObjects(object = qbone, classes.keep = 'QboneData')
 names(getQboneData(qbonedata))
+
+foo1 <- function(verbose =T ){
+  for (i in 1:100){
+    if (verbose) {
+      message("Calculating cluster ", i)
+    }
+    Sys.sleep(1)
+  }
+
+}
+for (i in 1:100){
+    message("Calculating cluster ", i)
+  }
+
+call1 = function(x,y){print(x)}

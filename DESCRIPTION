@@ -26,7 +26,9 @@ Imports:
     methods, 
     data.table, 
     stats, 
-    utils
+    utils, 
+    pbapply,
+    glmnet
 Collate: 
     'Qbone-package.R'
     'utils.R'
@@ -35,4 +37,5 @@ Collate:
     'QboneData.R'
     'QboneObject.R'
     'RcppExports.R'
+    'basisfunction.R'
     'preprocessing.R'

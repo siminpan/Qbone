@@ -73,9 +73,10 @@ readQbone <- function(
 #' If the data set is too big and the calculation is too heavy for your computer you may use this function to thin the data to make the calculation faster.
 #' Here we use thin the data proportionally on the sorted data. The new data set should reserve the same quantile feature as it was sequentially subsetted from ordered data set.
 #'
+#'
 #' @param object An Qboneobject.
 #' @param new.assay.name new assay name assigned to the thined data
-#' @param prop proportion to keep from the original data.
+#' @param prop proportion to keep from the original data. By default the scale.data of \code{thinData()} will save the prop of thinning
 #'
 #' @concept  Data thin
 #' @export
@@ -107,7 +108,7 @@ thinData <- function(
                                    sampleid.assays = 1,
                                    assay.name = new.assay.name,
                                    assay.orig = defaultAssay(object))
-  new.qbonedata@scale.data <- append(object@assays[[defaultAssay(object)]]@scale.data,list(thin = c(T, prop)))
+  new.qbonedata@scale.data <- append(object@assays[[defaultAssay(object)]]@scale.data,list(thin = c(prop)))
   object[[new.assay.name]] <- new.qbonedata
   defaultAssay(object) <- new.assay.name
   return(object)

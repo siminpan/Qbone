@@ -13,7 +13,7 @@ thinData(object, new.assay.name = "Thin", prop = NULL)
 
 \item{new.assay.name}{new assay name assigned to the thined data}
 
-\item{prop}{proportion to keep from the original data.}
+\item{prop}{proportion to keep from the original data. By default the scale.data of \code{thinData()} will save the prop of thinning}
 }
 \description{
 Thin the data
