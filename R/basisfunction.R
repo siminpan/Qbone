@@ -24,7 +24,7 @@ NULL
 #' @param new.assay.name new assay name assigned to the lassolist data
 #' @param a1 vector containing sequence of beta parameter for internal function \code{generateBetaCDF()}
 #' @param a2  vector containing sequence of beta parameter for internal function \code{generateBetaCDF()}
-#' @param assay.seed assay information to add into the QboneData object scale.data. The default of \code{lassolist()} will save the random seed for the run. \code{.Random.seed <- boject@assays[["Lasso"]]@scale.data[["lassolist"]] } to reset the seed for the same results.
+#' @param assay.seed assay information to add into the QboneData object scale.data. The default of \code{lassolist()} will save the random seed for the run. \code{assay.seed = object@assays[["Lasso"]]@scale.data[["lassolist"]]} to run \code{lassolist()} for the same results.
 #' @param ... Arguments passed to other methods
 #'
 #' @importFrom glmnet glmnet cv.glmnet
@@ -41,6 +41,7 @@ lassolist <- function(
   assay.seed = .Random.seed,
   ...
 ){
+  .Random.seed <- assay.seed
   orig.dataset <- getQboneData(object, slot = 'data', assay = defaultAssay(object))
   iterate.fxn <- ifelse(test = verbose, yes = pblapply, no = lapply)
   new.data <- iterate.fxn(
@@ -178,3 +179,160 @@ runlassolist <- function(x, ...){
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # 7. TESTING ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+## 7.1 lassolist2 ----
+#' Run lasso list to build basis function
+#'
+#'
+#'
+#' @param object A Qboneobject
+#' @param verbose Print a progress bar
+#' @param new.assay.name new assay name assigned to the lassolist data
+#' @param a1 vector containing sequence of beta parameter for internal function \code{generateBetaCDF()}
+#' @param a2  vector containing sequence of beta parameter for internal function \code{generateBetaCDF()}
+#' @param assay.seed assay information to add into the QboneData object scale.data. The default of \code{lassolist()} will save the random seed for the run. \code{assay.seed = object@assays[["Lasso"]]@scale.data[["lassolist"]]} to run \code{lassolist()} for the same results.
+#' @param ... Arguments passed to other methods
+#'
+#' @importFrom glmnet glmnet cv.glmnet
+#' @importFrom pbapply pblapply
+#' @importFrom parallel parLapply makeCluster detectCores
+#'
+#' @export
+#'
+lassolist2 <- function(
+  object,
+  verbose = TRUE,
+  new.assay.name = "Lasso",
+  a1 = c(seq(0.1, 1, by = 0.1), seq(2, 100, by = 1)),
+  a2 = c(seq(0.1, 1, by = 0.1), seq(2, 100, by = 1)),
+  assay.seed = .Random.seed,
+  ...
+){
+  .Random.seed <- assay.seed
+  orig.dataset <- getQboneData(object, slot = 'data', assay = defaultAssay(object))
+  # iterate.fxn <- ifelse(test = verbose, yes = parLapply, no = lapply)
+  if (verbose) {
+    cl <- makeCluster(detectCores()-2)
+    new.data <- parLapply(
+      cl,
+      orig.dataset,
+      runlassolist2,
+      alpha = a1,
+      beta = a2
+    )
+    stopCluster(cl)
+  } else {
+    new.data <- lapply(
+      X = orig.dataset,
+      FUN = runlassolist2,
+      alpha = a1,
+      beta = a2
+    )
+    }
+  new.qbonedata <- createQboneData(new.data,
+                                   meta.assays = data.frame(id = names(orig.dataset)),
+                                   sampleid.assays = 1,
+                                   assay.name = new.assay.name,
+                                   assay.orig = defaultAssay(object))
+  new.qbonedata@scale.data <- append(object@assays[[defaultAssay(object)]]@scale.data,list(lassolist = c(assay.seed)))
+  object[[new.assay.name]] <- new.qbonedata
+  defaultAssay(object) <- new.assay.name
+  return(object)
+}
+
+## 7.2 runlasso2 ----
+#' Run lasso for list of data
+#'
+#' @param x any list of data
+#'
+#' @return a list of lasso parameter
+#'
+#' @keywords internal
+#'
+#' @noRd
+#'
+runlassolist2 <- function(x, ...){
+  y <- x
+  y.long <- length(y)
+  grid.p <- seq(1 / (y.long + 1), y.long / (y.long + 1), 1 / (y.long + 1))
+  CDFBETA <- GENERATE_BETA_CDF(
+    # alpha = a1, beta = a2,
+    index.p = grid.p, ...)
+  NQ <- qnorm(grid.p, 0, 1)
+  BNQ <- (NQ - mean(NQ)) / sqrt(sum((NQ - mean(NQ))^2))
+  BETA_BASE_TOTAL_2 <- cbind(BNQ, t(CDFBETA))
+  # set.seed(12345)                                                     # || double check
+  lasso_fit <- glmnet(BETA_BASE_TOTAL_2, y, intercept = TRUE)
+  cvfit.lasso <- cv.glmnet(BETA_BASE_TOTAL_2, y, intercept = TRUE, nfolds = 3)
+  zeros <- as.vector(coef(lasso_fit, s = cvfit.lasso$lambda.1se) == 0)
+  selects <- seq(0, dim(BETA_BASE_TOTAL_2)[2], 1)[  zeros == FALSE ]
+  # gc(verbose = FALSE)
+  return(selects)
+}
+
+## 7.3 generateBetaCDF ----
+#' creates beta basis functions
+#'
+#'
+#' @param alpha vector containing sequence of beta parameter
+#' @param beta  vector containing sequence of beta parameter
+#' @param index.p probability grids on (0,1)
+#'
+#' @return matrix containing # of beta parameters times the length of index.p
+#'
+#' @keywords internal
+#'
+#' @noRd
+#'
+GENERATE_BETA_CDF <- function(alpha, beta, index.p, ...) {
+  n1 <- as.character(alpha)
+  n2 <- as.character(beta)
+  BETASCDF0 <- matrix(NA, ncol = length(index.p), nrow = length(n2) * length(n1))
+  for (i in 1:length(n1)) { ##   i=1;   j=12;   a1[i]    a2[j]
+    for (j in 1:length(n2)) {
+      rowth <- (j - 1) * length(n2) + i
+      BETASCDF0[ rowth, ] <- pbeta(index.p, alpha[i], beta[j])
+      BETASCDF0[ rowth, ] <- round(centering.function(BETASCDF0[ rowth, ], scale = TRUE), 7)
+    }
+  }
+  ## name.mat = outer( paste0( "(", n1 , se="") ,paste0(",", n2, ")" , se="")  ,  FUN=paste ,sep="")
+  ## matrix.rownames = as.vector(  name.mat )
+  ## outputs= list( BETASCDF0 ,  name.mat , matrix.rownames )
+  outputs <- BETASCDF0
+  return(outputs)
+}
+
+## 7.4 centering.function ----
+#' computes centering and scaling column by column
+#'
+#' @param raw.x any matrix with n times p
+#' @param scale FALSE or TRUE (doing only centering if scale=FALSE )
+#'
+#' @return the matrix centerted or/and scaled
+#'
+#' @keywords internal
+#'
+#' @noRd
+#'
+centering.function <- function(raw.x, scale = FALSE) {
+  object.x <- as.matrix(raw.x)
+  x.n <- dim(object.x)[1]
+  one <- rep(1, x.n)
+  meanx <- drop(one %*% object.x) / x.n
+  mean1 <- as.matrix(meanx)
+  n1 <- dim(mean1)[1]
+  jj <- rep(1, x.n) %*% t(rep(1, dim(object.x)[2]))
+  mean.mat <- diag(meanx, nrow = n1, ncol = n1)
+  cen.x <- object.x - jj %*% mean.mat
+  normx <- sqrt(drop(one %*% (cen.x^2)))
+  normx1 <- as.matrix(normx)
+  s1 <- dim(normx1)[1]
+  scale.mat <- diag(1 / normx, nrow = s1, ncol = s1)
+  cen.scale.x <- cen.x %*% scale.mat
+  if (scale == FALSE) {
+    return(cen.x)
+  }
+  if (scale == TRUE) {
+    return(cen.scale.x)
+  }
+}
