@@ -100,11 +100,22 @@ runif(3)
 
 
 ## performance ----
+library("biglasso")
+library("doParallel")
+library("foreach")
+
 library("microbenchmark")
 document()
 q7 = lassolist(q2)
 q7.2 = lassolist2(q2, verbose=F)
 microbenchmark(lassolist(q2), lassolist2(q2), times = 10L)
+
+
+microbenchmark(eigenmapmt(CDFBETA), t(CDFBETA), times = 10L)
+microbenchmark(generateBetaCDF(alpha = a1, beta = a2, index.p = grid.p), GENERATE_BETA_CDF(alpha = a1, beta = a2, index.p = grid.p), times = 10L)
+microbenchmark(cv.biglasso(as.big.matrix(BETA_BASE_TOTAL_2), y, nfolds = 3),cv.glmnet(BETA_BASE_TOTAL_2, y, intercept = TRUE, nfolds = 3), times = 10L)
+
+microbenchmark(cv.glmnet(BETA_BASE_TOTAL_2, y, intercept = TRUE, nfolds = 3),cv.glmnet(BETA_BASE_TOTAL_2, y, intercept = TRUE, nfolds = 3, parallel = T), times = 10L)
 
 # eigen mm ----
 one <- rep(1, x.n)

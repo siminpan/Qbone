@@ -12,6 +12,7 @@ The `Qbone` package is a set of tools that enables efficient estimation of quant
 Useful links:
 \itemize{
   \item \url{https://github.com/siminpan/Qbone}
+  \item Report bugs at \url{https://github.com/siminpan/Qbone/issues}
 }
 
 }
