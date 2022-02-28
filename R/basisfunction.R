@@ -29,7 +29,6 @@ NULL
 #' @param ... Arguments passed to other methods
 #'
 #' @importFrom glmnet glmnet cv.glmnet
-#' @importFrom pbapply pblapply
 #'
 #' @export
 #'
@@ -40,17 +39,37 @@ lassolist <- function(
   a1 = c(seq(0.1, 1, by = 0.1), seq(2, 100, by = 1)),
   a2 = c(seq(0.1, 1, by = 0.1), seq(2, 100, by = 1)),
   assay.seed = .Random.seed,
+  parallel = T,
   ...
 ){
   .Random.seed <- assay.seed
   orig.dataset <- getQboneData(object, slot = 'data', assay = defaultAssay(object))
-  iterate.fxn <- ifelse(test = verbose, yes = pblapply, no = lapply)
-  new.data <- iterate.fxn(
-    X = orig.dataset,
-    FUN = runlassolist,
-    alpha = a1,
-    beta = a2
-  )
+  # iterate.fxn <- ifelse(test = verbose, yes = pblapply, no = lapply)
+  # new.data <- iterate.fxn(
+  #   X = orig.dataset,
+  #   FUN = runlassolist,
+  #   alpha = a1,
+  #   beta = a2
+  # )
+  if (verbose) {
+    # cl <- makeCluster(detectCores()-2)
+    new.data <- lapply(
+      X = orig.dataset,
+      FUN = runlassolist,
+      alpha = a1,
+      beta = a2,
+      parallel = parallel
+    )
+    # stopCluster(cl)
+  } else {
+    new.data <- lapply(
+      X = orig.dataset,
+      FUN = runlassolist,
+      alpha = a1,
+      beta = a2,
+      parallel = parallel
+    )
+  }
   new.qbonedata <- createQboneData(new.data,
                                    meta.assays = data.frame(id = names(orig.dataset)),
                                    sampleid.assays = 1,
@@ -151,14 +170,16 @@ centeringFunction <- function(raw.x, scale = FALSE) {
 #' Run lasso for list of data
 #'
 #' @param x any list of data
+#' @param parallel If TRUE, use parallel foreach to fit each fold. Must register parallel before hand
 #'
 #' @return a list of lasso parameter
 #'
+#' @importFrom doMC registerDoMC
 #' @keywords internal
 #'
 #' @noRd
 #'
-runlassolist <- function(x, ...){
+runlassolist <- function(x, parallel = T, ...){
   y <- x
   y.long <- length(y)
   grid.p <- seq(1 / (y.long + 1), y.long / (y.long + 1), 1 / (y.long + 1))
@@ -170,7 +191,12 @@ runlassolist <- function(x, ...){
   BETA_BASE_TOTAL_2 <- cbind(BNQ, t(CDFBETA))
   # set.seed(12345)                                                     # || double check
   lasso_fit <- glmnet(BETA_BASE_TOTAL_2, y, intercept = TRUE)
-  cvfit.lasso <- cv.glmnet(BETA_BASE_TOTAL_2, y, intercept = TRUE, nfolds = 3)
+  if (parallel){
+    registerDoMC(3)
+    cvfit.lasso <- cv.glmnet(BETA_BASE_TOTAL_2, y, intercept = TRUE, nfolds = 3, parallel = T)
+  } else {
+    cvfit.lasso <- cv.glmnet(BETA_BASE_TOTAL_2, y, intercept = TRUE, nfolds = 3, parallel = F)
+  }
   zeros <- as.vector(coef(lasso_fit, s = cvfit.lasso$lambda.1se) == 0)
   selects <- seq(0, dim(BETA_BASE_TOTAL_2)[2], 1)[  zeros == FALSE ]
   # gc(verbose = FALSE)
@@ -185,19 +211,17 @@ runlassolist <- function(x, ...){
 #' Run lasso list to build basis function
 #'
 #'
-#'
 #' @param object A Qboneobject
 #' @param verbose Print a progress bar
 #' @param new.assay.name new assay name assigned to the lassolist data
-#' @param a1 vector containing sequence of beta parameter for internal function \code{generateBetaCDF()}
-#' @param a2  vector containing sequence of beta parameter for internal function \code{generateBetaCDF()}
+#' @param alpha vector containing sequence of beta parameter for internal function \code{generateBetaCDF()}
+#' @param beta  vector containing sequence of beta parameter for internal function \code{generateBetaCDF()}
 #' @param assay.seed assay information to add into the QboneData object scale.data. The default of \code{lassolist()} will save the random seed for the run. \code{assay.seed = object@assays[["Lasso"]]@scale.data[["lassolist"]]} to run \code{lassolist()} for the same results.
+#' @param parallel If TRUE, use parallel foreach to fit each fold. Must register parallel before hand
 #' @param ... Arguments passed to other methods
 #'
 #' @importFrom glmnet glmnet cv.glmnet
-#' @importFrom biglasso biglasso cv.biglasso
-#' @importFrom pbapply pblapply
-#' @importFrom parallel parLapply makeCluster detectCores
+#' @importFrom utils txtProgressBar setTxtProgressBar
 #'
 #'
 #' @export
@@ -206,32 +230,37 @@ lassolist2 <- function(
   object,
   verbose = F,
   new.assay.name = "Lasso",
-  a1 = c(seq(0.1, 1, by = 0.1), seq(2, 100, by = 1)),
-  a2 = c(seq(0.1, 1, by = 0.1), seq(2, 100, by = 1)),
+  alpha = c(seq(0.1, 1, by = 0.1), seq(2, 100, by = 1)),
+  beta = c(seq(0.1, 1, by = 0.1), seq(2, 100, by = 1)),
   assay.seed = .Random.seed,
+  parallel = T,
   ...
 ){
   .Random.seed <- assay.seed
   orig.dataset <- getQboneData(object, slot = 'data', assay = defaultAssay(object))
   # iterate.fxn <- ifelse(test = verbose, yes = parLapply, no = lapply)
   if (verbose) {
-    cl <- makeCluster(detectCores()-2)
-    new.data <- parLapply(
-      cl,
-      orig.dataset,
-      runlassolist2,
-      alpha = a1,
-      beta = a2
-    )
-    stopCluster(cl)
+    pb <- txtProgressBar(min = 0, max = length(orig.dataset), style = 3)
+    new.data <- list()
+    for (i in 1:length(orig.dataset)){
+      bar1 <- runlassolist2(orig.dataset[[i]],
+                            alpha = alpha,
+                            beta = beta,
+                            parallel = parallel, ...)
+      new.data <- append(new.data, list(bar1))
+      setTxtProgressBar(pb, i)
+    }
+    close(pb)
+    # stopCluster(cl)
   } else {
     new.data <- lapply(
       X = orig.dataset,
       FUN = runlassolist2,
-      alpha = a1,
-      beta = a2
+      alpha = alpha,
+      beta = beta,
+      parallel = parallel
     )
-    }
+  }
   new.qbonedata <- createQboneData(new.data,
                                    meta.assays = data.frame(id = names(orig.dataset)),
                                    sampleid.assays = 1,
@@ -247,12 +276,11 @@ lassolist2 <- function(
 #' Run lasso for list of data
 #'
 #' @param x any list of data
-#' @param parallel T
+#' @param parallel If TRUE, use parallel foreach to fit each fold. Must register parallel before hand
 #'
 #' @return a list of lasso parameter
 #'
-#' @importFrom parallel parLapply makeCluster detectCores
-#' @importFrom doParallel registerDoParallel
+#' @importFrom doMC registerDoMC
 #'
 #' @keywords internal
 #'
@@ -268,24 +296,25 @@ runlassolist2 <- function(x, parallel = T, ...){
   NQ <- qnorm(grid.p, 0, 1)
   BNQ <- (NQ - mean(NQ)) / sqrt(sum((NQ - mean(NQ))^2))
   BETA_BASE_TOTAL_2 <- cbind(BNQ, t(CDFBETA))
-  set.seed(12345)                                                     # || double check
-  lasso_fit <- biglasso(as.big.matrix(BETA_BASE_TOTAL_2), y, ncores = detectCores()-2) # , intercept = TRUE)
-  set.seed(12345)
-  lasso_fit2 <- glmnet(BETA_BASE_TOTAL_2, y, intercept = TRUE)
-  set.seed(12345)
-  cvfit.lasso <- cv.biglasso(as.big.matrix(BETA_BASE_TOTAL_2), y, nfolds = 3) #, intercept = TRUE, nfolds = 3)
+  # set.seed(12345)                                                     # || double check
+  # lasso_fit <- biglasso(as.big.matrix(BETA_BASE_TOTAL_2), y, ncores = detectCores()-2) # , intercept = TRUE)
+  # set.seed(12345)
+  lasso_fit <- glmnet(BETA_BASE_TOTAL_2, y, intercept = TRUE)
+  # set.seed(12345)
+  # cvfit.lasso <- cv.biglasso(as.big.matrix(BETA_BASE_TOTAL_2), y, nfolds = 3) #, intercept = TRUE, nfolds = 3)
   # summary(cvfit.lasso)
   if (parallel){
-    cores <- detectCores(logical = FALSE)
-    cl <- makeCluster(cores)
-    registerDoParallel(cl, cores=cores)
+    registerDoMC(3)
+    cvfit.lasso <- cv.glmnet(BETA_BASE_TOTAL_2, y, intercept = TRUE, nfolds = 3, parallel = T)
+  } else {
+    cvfit.lasso <- cv.glmnet(BETA_BASE_TOTAL_2, y, intercept = TRUE, nfolds = 3, parallel = F)
   }
-  set.seed(12345)
-  cvfit.lasso2 <- cv.glmnet(BETA_BASE_TOTAL_2, y, intercept = TRUE, nfolds = 3, parallel = T)
+  # set.seed(12345)
+  # cvfit.lasso2 <- cv.glmnet(BETA_BASE_TOTAL_2, y, intercept = TRUE, nfolds = 5, parallel = T)
   zeros <- as.vector(coef(lasso_fit, s = cvfit.lasso$lambda.1se) == 0)
-  zeros2 <- as.vector(coef(lasso_fit2, s = cvfit.lasso2$lambda.1se) == 0)
+  # zeros2 <- as.vector(coef(lasso_fit2, s = cvfit.lasso2$lambda.1se) == 0)
   selects <- seq(0, dim(BETA_BASE_TOTAL_2)[2], 1)[  zeros == FALSE ]
-  selects2 <- seq(0, dim(BETA_BASE_TOTAL_2)[2], 1)[  zeros2 == FALSE ]
+  # selects2 <- seq(0, dim(BETA_BASE_TOTAL_2)[2], 1)[  zeros2 == FALSE ]
   # gc(verbose = FALSE)
   return(selects)
 }

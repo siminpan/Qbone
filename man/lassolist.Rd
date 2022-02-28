@@ -11,6 +11,7 @@ lassolist(
   a1 = c(seq(0.1, 1, by = 0.1), seq(2, 100, by = 1)),
   a2 = c(seq(0.1, 1, by = 0.1), seq(2, 100, by = 1)),
   assay.seed = .Random.seed,
+  parallel = T,
   ...
 )
 }
@@ -27,9 +28,9 @@ lassolist(
 
 \item{assay.seed}{assay information to add into the QboneData object scale.data. The default of \code{lassolist()} will save the random seed for the run. \code{assay.seed = object@assays[["Lasso"]]@scale.data[["lassolist"]]} to run \code{lassolist()} for the same results.}
 
-\item{...}{Arguments passed to other methods}
-
 \item{parallel}{If TRUE, use parallel foreach to fit each fold. Must register parallel before hand}
+
+\item{...}{Arguments passed to other methods}
 }
 \description{
 Run lasso list to build basis function
