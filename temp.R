@@ -50,7 +50,7 @@ qa1 = getQboneData(q1, slot = 'data', assay = defaultAssay(q1))
 
 
 q2 = thinData(q1,prop=0.0001)
-q3 = lassolist2(q2)
+q3 = lassolist(q2)
 q4 = lassolist2(q2, parallel = F)
 q5 = lassolist2(q2)
 
@@ -65,17 +65,37 @@ a2 = c(seq(0.1, 1, by = 0.1), seq(2, 100, by = 1))
 list1 = runlassolist(raw.dataset[[1]])
 
 ## assay.seed ----
-q7 = lassolist(q2)
-q8 = lassolist(q2, assay.seed = q7@assays[["Lasso"]]@scale.data[["lassolist"]])
+set.seed(12345)
+q7 = lassolist(q2,verbose = F, parallel = T)
+q8 = lassolist(q2, assay.seed = q7@assays[["Lasso"]]@scale.data[["lassolist"]], verbose = F, parallel = T)
 all.equal(q8@assays[["Lasso"]]@data,
           q7@assays[["Lasso"]]@data)
 
+all.equal(q7@assays[["Lasso"]]@scale.data[["lassolist"]],
+          q8@assays[["Lasso"]]@scale.data[["lassolist"]])
+
 set.seed(12345)
-q9 = lassolist(q2)
+q9 = lassolist(q2, parallel = T)
 set.seed(12345)
-q10 = lassolist(q2)
+q10 = lassolist2(q2, parallel = T)
 all.equal(q9@assays[["Lasso"]]@data,
           q10@assays[["Lasso"]]@data)
+
+all.equal(q9@assays[["Lasso"]]@scale.data[["lassolist"]],
+          q10@assays[["Lasso"]]@scale.data[["lassolist"]])
+
+.Random.seed <- q7@assays[["Lasso"]]@scale.data[["lassolist"]]
+q9 = lassolist(q2, parallel = T)
+.Random.seed <- q7@assays[["Lasso"]]@scale.data[["lassolist"]]
+q10 = lassolist(q2, parallel = T)
+all.equal(q9@assays[["Lasso"]]@data,
+          q10@assays[["Lasso"]]@data)
+
+all.equal(q9@assays[["Lasso"]]@scale.data[["lassolist"]],
+          q10@assays[["Lasso"]]@scale.data[["lassolist"]])
+
+all.equal(q7@assays[["Lasso"]]@scale.data[["lassolist"]],
+          q10@assays[["Lasso"]]@scale.data[["lassolist"]])
 
 # For this example, set the random seed
 set.seed(423)
@@ -92,6 +112,7 @@ oldseed2 <- .Random.seed
 all.equal(oldseed,oldseed1)
 all.equal(oldseed2,oldseed1)
 
+.Random.seed <- q7@assays[["Lasso"]]@scale.data[["lassolist"]]
 runif(3)
 .Random.seed <- q7@assays[["Lasso"]]@scale.data[["lassolist"]]
 
@@ -101,10 +122,11 @@ runif(3)
 
 
 ## performance ----
-library("biglasso")
+# library("biglasso")
 library("doParallel")
 library("foreach")
 library("doMC")
+library("glmnet")
 registerDoMC(3)
 do1 = cv.glmnet(BETA_BASE_TOTAL_2, y, intercept = TRUE, nfolds = 3, parallel = T)
 
@@ -112,10 +134,11 @@ do2 = cv.glmnet(BETA_BASE_TOTAL_2, y, intercept = TRUE, nfolds = 3)
 
 
 library("microbenchmark")
+# lassolist2 is faster (0.1-0.9 second)
 document()
 q7 = lassolist(q2, parallel = T)
 q7.2 = lassolist2(q2, verbose=T, parallel = T)
-microbenchmark(lassolist(q2, parallel = T), lassolist2(q2, verbose=F, parallel = T), times = 10L)
+microbenchmark(lassolist(q2, verbose=F,  parallel = T), lassolist2(q2, verbose=F, parallel = T), times = 10L)
 microbenchmark(lassolist2(q2, verbose=F), lassolist2(q2, verbose=T), times = 10L)
 
 
@@ -126,6 +149,115 @@ microbenchmark(centeringFunction(BETASCDF0[ rowth, ], scale = TRUE), centering.f
 microbenchmark(cv.biglasso(as.big.matrix(BETA_BASE_TOTAL_2), y, nfolds = 3),cv.glmnet(BETA_BASE_TOTAL_2, y, intercept = TRUE, nfolds = 3), times = 10L)
 
 microbenchmark(cv.glmnet(BETA_BASE_TOTAL_2, y, intercept = TRUE, nfolds = 3),cv.glmnet(BETA_BASE_TOTAL_2, y, intercept = TRUE, nfolds = 3, parallel = T), times = 10L)
+
+microbenchmark(lassolist2(q2, verbose=T, parallel = T),
+               lassolist2(q2, verbose=F, parallel = T),
+               times = 10L)
+
+### for each ----
+library("parallel")
+library("doParallel")
+
+library("foreach")
+library("doMC")
+library("glmnet")
+document()
+load_all()
+#### doParallel ----
+cores = detectCores()
+cl <- makeCluster(cores-1)
+registerDoParallel(cl)
+
+set.seed(12345)
+q7 = lassolist(q2, verbose=T, parallel = T)
+set.seed(12345)
+q7.2 = lassolist2(q2, verbose=F, parallel = T)
+all.equal(q7@assays[["Lasso"]]@data,
+          q7.2@assays[["Lasso"]]@data)
+
+stopCluster(cl)
+
+#### doSNOW ----
+detach("package:Qbone", unload=TRUE)
+document()
+remove.packages("Qbone")
+install()
+
+library("Qbone")
+
+library("doSNOW")
+cores = detectCores()
+cl <- makeCluster(cores-1)
+registerDoSNOW(cl)
+set.seed(12345)
+q7 = lassolist(q2, verbose=T, parallel = T)
+set.seed(12345)
+q7.2 = lassolist2(q2, verbose=T, parallel = T)
+set.seed(12345)
+q7.3 = lassolist2(q2, verbose=F, parallel = T)
+
+
+system.time(q7.0 <- lassolist(q2, verbose=F, parallel = T))
+system.time(q7.1 <- lassolist(q2, verbose=T, parallel = T))
+system.time(q7.2 <- lassolist2(q2, verbose=T, parallel = T))
+system.time(q7.3 <- lassolist2(q2, verbose=F, parallel = T))
+
+### Seeds for parallel----
+# https://www.r-bloggers.com/2018/07/%F0%9F%8C%B1-setting-a-seed-in-r-when-using-parallel-simulation/
+# https://stackoverflow.com/questions/58631433/how-to-set-seeds-when-using-parallel-package-in-r
+
+set.seed(12345)
+q9 = lassolist2(q2, verbose=T, parallel = T)
+set.seed(12345)
+q10 = lassolist2(q2, verbose=T, parallel = T)
+all.equal(q9@assays[["Lasso"]]@data,
+          q10@assays[["Lasso"]]@data)
+
+.Random.seed <- q9@assays[["Lasso"]]@scale.data[["lassolist"]]
+q9 = lassolist2(q2, verbose=T, parallel = T)
+.Random.seed <- q9@assays[["Lasso"]]@scale.data[["lassolist"]]
+q10 = lassolist2(q2, verbose=T, parallel = T)
+all.equal(q9@assays[["Lasso"]]@data,
+          q10@assays[["Lasso"]]@data)
+
+
+stopCluster(cl)
+
+runlassolist2 <- function(x, parallel = T, ...){
+  y <- x
+  y.long <- length(y)
+  grid.p <- seq(1 / (y.long + 1), y.long / (y.long + 1), 1 / (y.long + 1))
+  CDFBETA <- GENERATE_BETA_CDF(
+    # alpha = a1, beta = a2,
+    index.p = grid.p, ...)
+  NQ <- qnorm(grid.p, 0, 1)
+  BNQ <- (NQ - mean(NQ)) / sqrt(sum((NQ - mean(NQ))^2))
+  BETA_BASE_TOTAL_2 <- cbind(BNQ, t(CDFBETA))
+  # set.seed(12345)                                                     # || double check
+  # lasso_fit <- biglasso(as.big.matrix(BETA_BASE_TOTAL_2), y, ncores = detectCores()-2) # , intercept = TRUE)
+  # set.seed(12345)
+  # .Random.seed <- assay.seed
+  lasso_fit <- glmnet(BETA_BASE_TOTAL_2, y, intercept = TRUE)
+  # set.seed(12345)
+  # cvfit.lasso <- cv.biglasso(as.big.matrix(BETA_BASE_TOTAL_2), y, nfolds = 3) #, intercept = TRUE, nfolds = 3)
+  # summary(cvfit.lasso)
+  if (parallel){
+    # message("parallel =", parallel)
+    registerDoMC(3)
+    cvfit.lasso <- cv.glmnet(BETA_BASE_TOTAL_2, y, intercept = TRUE, nfolds = 3, parallel = T)
+  } else {
+    # message("parallel =", parallel)
+    cvfit.lasso <- cv.glmnet(BETA_BASE_TOTAL_2, y, intercept = TRUE, nfolds = 3, parallel = F)
+  }
+  # set.seed(12345)
+  # cvfit.lasso <- cv.glmnet(BETA_BASE_TOTAL_2, y, intercept = TRUE, nfolds = 5, parallel = F)
+  zeros <- as.vector(coef(lasso_fit, s = cvfit.lasso$lambda.1se) == 0)
+  # zeros2 <- as.vector(coef(lasso_fit2, s = cvfit.lasso2$lambda.1se) == 0)
+  selects <- seq(0, dim(BETA_BASE_TOTAL_2)[2], 1)[  zeros == FALSE ]
+  # selects2 <- seq(0, dim(BETA_BASE_TOTAL_2)[2], 1)[  zeros2 == FALSE ]
+  # gc(verbose = FALSE)
+  return(selects)
+}
 
 ## verbose ----
 testit <- function(x = sort(runif(20)), ...)
@@ -161,6 +293,31 @@ for (i in 1:length(orig.dataset)){
   setTxtProgressBar(pb, i)
 }
 close(pb)
+
+# sort ----
+library("parallel")
+library("doParallel")
+# library("foreach")
+library("doMC")
+library("glmnet")
+document()
+load_all()
+#### doParallel ----
+cores = detectCores()
+cl <- makeCluster(cores-1)
+registerDoParallel(cl)
+
+q4 = lassolist(q2, verbose = F, parallel = T)
+q5 = lassolist2(q2, verbose = T, parallel = T)
+stopCluster(cl)
+
+vector = q4@assays[["Lasso"]]@data[[1]]
+
+sort(vector, method = "radix")
+sort(vector, method = "quick")
+
+library("microbenchmark")
+microbenchmark(sort(vector, method = "radix"), sort(vector, method = "quick"))
 
 # eigen mm ----
 one <- rep(1, x.n)
