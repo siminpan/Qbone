@@ -178,13 +178,16 @@ all.equal(q7@assays[["Lasso"]]@data,
 stopCluster(cl)
 
 #### doSNOW ----
-detach("package:Qbone", unload=TRUE)
+
 document()
-remove.packages("Qbone")
-install()
 
+load_all()
+# install()
+# remove.packages("Qbone")
 library("Qbone")
+# detach("package:Qbone", unload=TRUE)
 
+library("parallel")
 library("doSNOW")
 cores = detectCores()
 cl <- makeCluster(cores-1)
@@ -310,6 +313,9 @@ registerDoParallel(cl)
 q4 = lassolist(q2, verbose = F, parallel = T)
 q5 = lassolist2(q2, verbose = T, parallel = T)
 stopCluster(cl)
+
+all.equal(q4@assays[["Lasso"]]@data,
+          q5@assays[["Lasso"]]@data)
 
 vector = q4@assays[["Lasso"]]@data[[1]]
 

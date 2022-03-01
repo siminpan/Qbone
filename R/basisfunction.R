@@ -280,7 +280,7 @@ lassolist2 <- function(
     pb <- txtProgressBar(min = 0, max = length(orig.dataset), style = 3)
     progress <- function(n) setTxtProgressBar(pb, n)
     opts <- list(progress=progress)
-    new.data <- foreach(i = 1:length(orig.dataset), .packages="Qbone", .options.snow=opts) %dopar% { #, .packages=c("glmnet", "doMC")
+    new.data <- foreach(i = 1:length(orig.dataset), .options.snow=opts) %dopar% { # , .packages="Qbone", .packages=c("glmnet", "doMC")
       runlassolist2(orig.dataset[[i]],
                     alpha = alpha,
                     beta = beta,

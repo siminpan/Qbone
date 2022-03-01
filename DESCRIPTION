@@ -29,7 +29,10 @@ Imports:
     stats, 
     utils, 
     pbapply,
-    glmnet
+    glmnet,
+    doMC,
+    Matrix,
+    foreach
 Collate: 
     'Qbone-package.R'
     'utils.R'
