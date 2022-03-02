@@ -348,6 +348,10 @@ idents <- factor(x = unlist(x = lapply(
 
 
 # other ----
+
+Qy2 = matrix( round(unlist( lapply( raw.dataset,  quantiles_p )  ),3) , 1024 )
+
+all.equal(Qy, Qy2)
 object <- new(
   Class = 'Qbone',
   assays = assay.list,

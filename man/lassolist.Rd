@@ -7,6 +7,7 @@
 lassolist(
   object,
   verbose = TRUE,
+  data.assay = defaultAssay(object),
   new.assay.name = "Lasso",
   alpha = c(seq(0.1, 1, by = 0.1), seq(2, 100, by = 1)),
   beta = c(seq(0.1, 1, by = 0.1), seq(2, 100, by = 1)),
@@ -20,11 +21,13 @@ lassolist(
 
 \item{verbose}{Print a progress bar}
 
-\item{new.assay.name}{new assay name assigned to the lassolist data}
+\item{data.assay}{It is the name of the assay whose data will be used to compute the lasso list. Default is the data from the defaultAssay(object).}
 
-\item{alpha}{vector containing sequence of beta parameter for internal function \code{generateBetaCDF()}}
+\item{new.assay.name}{New assay name assigned to the lassolist data}
 
-\item{beta}{vector containing sequence of beta parameter for internal function \code{generateBetaCDF()}}
+\item{alpha}{Vector containing sequence of beta parameter for internal function \code{generateBetaCDF()}}
+
+\item{beta}{Vector containing sequence of beta parameter for internal function \code{generateBetaCDF()}}
 
 \item{assay.seed}{assay information to add into the QboneData object scale.data. The default of \code{lassolist()} will save the random seed for the run. Use \code{.Random.seed <-  object@assays[["Lasso"]]@scale.data[["lassolist"]]} before run \code{lassolist()} for the same results.}
 
