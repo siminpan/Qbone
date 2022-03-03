@@ -25,7 +25,7 @@ NULL
 #' @param alpha Vector containing sequence of beta parameter for internal function \code{generateBetaCDF()}
 #' @param beta  Vector containing sequence of beta parameter for internal function \code{generateBetaCDF()}
 #' @param data.assay It is the name of the assay whose data will be used to compute the lasso list. Default is the data from the defaultAssay(object).
-#' @param assay.seed assay information to add into the QboneData object scale.data. The default of \code{lassolist()} will save the random seed for the run. Use \code{.Random.seed <-  object@assays[["Lasso"]]@scale.data[["lassolist"]]} before run \code{lassolist()} for the same results.
+#' @param assay.seed assay information to add into the QboneData object scale.data. The default of \code{lassolist()} will save the random seed for the run. Use \code{.Random.seed <-  object@assays[["Lasso.list"]]@scale.data[["lassolist"]]} before run \code{lassolist()} for the same results.
 #' @param parallel If TRUE, use parallel foreach to fit each fold in \code{cv.glmnet()}. Default use \code{registerDoMC()} to register parallel.
 #' @param ... Arguments passed to other methods
 #'
@@ -38,15 +38,15 @@ lassolist <- function(
   object,
   verbose = TRUE,
   data.assay = defaultAssay(object),
-  new.assay.name = "Lasso",
+  new.assay.name = "Lasso.list",
   alpha = c(seq(0.1, 1, by = 0.1), seq(2, 100, by = 1)),
   beta = c(seq(0.1, 1, by = 0.1), seq(2, 100, by = 1)),
   assay.seed = .Random.seed,
   parallel = T,
   ...
 ){
-  if (data.assay == "Lasso"){
-    stop('The default assay for this Qbone object is already "Lasso".')
+  if (data.assay == "Lasso.list"){
+    stop('The default assay for this Qbone object is already "Lasso.list".')
   }
   .Random.seed <- assay.seed
   orig.dataset <- getQboneData(object, slot = 'data', assay = data.assay)
@@ -95,24 +95,19 @@ commonBasis <- function(
   new.assay.name = "commonBasis",
   ...
 ){
-  if(defaultAssay(object) != "Lasso"){
-    warning('The default assay is not "Lasso" please double the defaultAssay() of this Qbone object. This step should be run on results of lassolist().')
+  if(defaultAssay(object) != "Lasso.list"){
+    warning('The default assay is not "Lasso.list" please double the defaultAssay() of this Qbone object. This step should be run on results of lassolist().')
   }
-  message('Will compute the common basis based on "', defaultAssay(object), '" results from "', object@assays[["Lasso"]]@assay.orig, '" data.')
-  raw.dataset <- getQboneData(object, slot = 'data', assay = object@assays[[defaultAssay(object)]]@assay.orig
-)
+  message('Will compute the common basis based on "', defaultAssay(object), '" results from "', object@assays[["Lasso.list"]]@assay.orig, '" data.')
+  # raw.dataset <- getQboneData(object, slot = 'data', assay = object@assays[[defaultAssay(object)]]@assay.orig)
   lasso.dataset <- getQboneData(object, slot = 'data', assay = defaultAssay(object))
   lasso.list1 <- lapply(lasso.dataset, catNorm) ## 1 term fix
   lasso.nonzero.obs1 <- lapply(lasso.list1, replist) ## D_i, generate 1 vector
   lasso.counts.fit <- countBasis(lasso.list1, lasso.nonzero.obs1)
-  n <- length(raw.dataset)
-  leaveout.list <- vector("list", n) ### generate leave-one-out
-  for (i in 1:n) {
-    lasso_fitIncd <- incidenceVec(lasso.list1[-i], lasso.nonzero.obs1[-i])
-    leaveout.list[[i]] <- lasso_fitIncd
-  }
-  p1024 <- signif(seq(0.001, 0.999, length = 1024), 4)
-  Qy = matrix(round(unlist(lapply(raw.dataset, quantile, probs=p1024, type=6)), 3), 1024)
+  object@assays[[new.assay.name]] <- object@assays[[defaultAssay(object)]]
+  object@assays[[new.assay.name]]@scale.data <- append(object@assays[[new.assay.name]]@scale.data,list(commonBasis = lasso.counts.fit))
+  defaultAssay(object) <- new.assay.name
+  return(object)
 }
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -293,7 +288,9 @@ replist <- function(
 #' @param nonzero.list sparse set Di
 #' @param nonzero.obs one vectors with the same length to Di
 #'
-#' @return list \code{[[1]]}:the nested subsets of basis, \code{[[2]]}:# basis in each nested subset \code{[[3]]}: each count(# of votes) yielding each nested basis.
+#' @return list \code{[[1]]}: the nested subsets of basis,
+#'              \code{[[2]]}: number of basis in each nested subset
+#'              \code{[[3]]}: each count(number of votes) yielding each nested basis.
 #'
 #' @keywords internal
 #'
@@ -325,7 +322,8 @@ countBasis <- function(
 #' @param setlistofobs basis set(CatNorm)
 #' @param frqlistofobs frequency for each count(rep.list)
 #'
-#' @return list \code{[[1]]}:basis names across subjects, \code{[[2]]}:frequency for each basis across subjects.
+#' @return list \code{[[1]]}:basis names across subjects,
+#'              \code{[[2]]}:frequency for each basis across subjects.
 #'
 #' @keywords internal
 #'
@@ -356,7 +354,7 @@ incidenceVec <- function(
 #' @param new.assay.name new assay name assigned to the lassolist data
 #' @param alpha vector containing sequence of beta parameter for internal function \code{generateBetaCDF()}
 #' @param beta  vector containing sequence of beta parameter for internal function \code{generateBetaCDF()}
-#' @param assay.seed assay information to add into the QboneData object scale.data. The default of \code{lassolist()} will save the random seed for the run. \code{assay.seed = object@assays[["Lasso"]]@scale.data[["lassolist"]]} to run \code{lassolist()} for the same results.
+#' @param assay.seed assay information to add into the QboneData object scale.data. The default of \code{lassolist()} will save the random seed for the run. \code{assay.seed = object@assays[["Lasso.list"]]@scale.data[["lassolist"]]} to run \code{lassolist()} for the same results.
 #' @param parallel If TRUE, use parallel foreach to fit each fold. Must register parallel before hand
 #' @param ... Arguments passed to other methods
 #'
@@ -370,7 +368,7 @@ incidenceVec <- function(
 lassolist2 <- function(
   object,
   verbose = F,
-  new.assay.name = "Lasso",
+  new.assay.name = "Lasso.list",
   alpha = c(seq(0.1, 1, by = 0.1), seq(2, 100, by = 1)),
   beta = c(seq(0.1, 1, by = 0.1), seq(2, 100, by = 1)),
   assay.seed = .Random.seed,

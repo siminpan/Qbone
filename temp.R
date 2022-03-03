@@ -51,7 +51,7 @@ qa1 = getQboneData(q1, slot = 'data', assay = defaultAssay(q1))
 
 q2 = thinData(q1,prop=0.0001)
 q3 = lassolist(q2)
-q4 = lassolist2(q2, parallel = F)
+q4 = commonBasis(q3)
 q5 = lassolist2(q2)
 
 document()
@@ -346,6 +346,42 @@ idents <- factor(x = unlist(x = lapply(
   delim = delim
 )))
 
+# PCA ----
+p1024 <- signif(seq(0.001, 0.999, length = 1024), 4)
+Qy = matrix(round(unlist(lapply(raw.dataset, quantile, probs=p1024, type=6)), 3), 1024)
+
+# Beta ----
+n <- length(raw.dataset)
+leaveout.list <- vector("list", n) ### generate leave-one-out
+for (i in 1:n) {
+  lasso_fitIncd <- incidenceVec(lasso.list1[-i], lasso.nonzero.obs1[-i])
+  leaveout.list[[i]] <- lasso_fitIncd
+}
+
+## agree.cci--  computes concordance correlation index in the version of matrix
+##  input
+## 	input.yhat: fitted values as the matrix
+## 	input.y   : emprical true values as the matrix
+##  output: concordance value for the matrtix
+
+agree.cci <- function(input.yhat, input.y) {
+  k <- dim(input.yhat)[2]
+  values <- rep(NA, k)
+  for (i in 1:k) {
+    values[i] <- concordance(input.y[, i], input.yhat[, i])
+  }
+  return(values)
+}
+
+## concordance --  computes concordance correlation index
+##  input
+## 	yhat: fitted values
+## 	y   : emprical true values
+##  output: concordance value
+
+concordance <- function(yhat, y) {
+  2 * cov(yhat, y, use = "complete.obs") / (cov(yhat, yhat, use = "complete.obs") + cov(y, y, use = "complete.obs") + (mean(y, na.rm = TRUE) - mean(yhat, na.rm = TRUE))^2)
+}
 
 # other ----
 

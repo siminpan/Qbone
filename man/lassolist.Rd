@@ -8,7 +8,7 @@ lassolist(
   object,
   verbose = TRUE,
   data.assay = defaultAssay(object),
-  new.assay.name = "Lasso",
+  new.assay.name = "Lasso.list",
   alpha = c(seq(0.1, 1, by = 0.1), seq(2, 100, by = 1)),
   beta = c(seq(0.1, 1, by = 0.1), seq(2, 100, by = 1)),
   assay.seed = .Random.seed,
@@ -29,7 +29,7 @@ lassolist(
 
 \item{beta}{Vector containing sequence of beta parameter for internal function \code{generateBetaCDF()}}
 
-\item{assay.seed}{assay information to add into the QboneData object scale.data. The default of \code{lassolist()} will save the random seed for the run. Use \code{.Random.seed <-  object@assays[["Lasso"]]@scale.data[["lassolist"]]} before run \code{lassolist()} for the same results.}
+\item{assay.seed}{assay information to add into the QboneData object scale.data. The default of \code{lassolist()} will save the random seed for the run. Use \code{.Random.seed <-  object@assays[["Lasso.list"]]@scale.data[["lassolist"]]} before run \code{lassolist()} for the same results.}
 
 \item{parallel}{If TRUE, use parallel foreach to fit each fold in \code{cv.glmnet()}. Default use \code{registerDoMC()} to register parallel.}
 
