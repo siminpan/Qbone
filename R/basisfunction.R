@@ -419,7 +419,9 @@ locc <- function(
       SET1_i_ <- sort(colum_i_[obs_i_ > remain.counts[active.set][j]])
       smPsi_i_ <- Psi[, (SET1_i_) + 1] ## dim(smPsi_i_)
 
-      # Values[(1:y.long), i, j] <- try(smPsi_i_ %*% ginv(t(smPsi_i_) %*% smPsi_i_, tol = sqrt(.Machine$double.eps)) %*% t(smPsi_i_) %*% y) ## dim(Qy)
+      # Values[(1:y.long), i, j] <- try(smPsi_i_ %*% ginv(t(smPsi_i_) %*% smPsi_i_, tol = sqrt(.Machine$double.eps)) %*% t(smPsi_i_) %*% y)
+      # Values[(1:y.long), i, j] <- try(smPsi_i_ %*% (ginv(t(smPsi_i_) %*% smPsi_i_, tol = sqrt(.Machine$double.eps)) %*% (t(smPsi_i_) %*% y)))
+      ## dim(Qy)
       # gitsmp = ginv(eigenmapmtm(smPsi_i_, smPsi_i_), tol = sqrt(.Machine$double.eps))
       # try1 = try(eigenmapmtm(smPsi_i_,y))
       # try2 = try(eigenmapmm(gitsmp, try1))
