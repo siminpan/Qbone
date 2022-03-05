@@ -154,6 +154,35 @@ microbenchmark(lassolist2(q2, verbose=T, parallel = T),
                lassolist2(q2, verbose=F, parallel = T),
                times = 10L)
 
+microbenchmark(try(smPsi_i_ %*% ginv(t(smPsi_i_) %*% smPsi_i_, tol = sqrt(.Machine$double.eps)) %*% t(smPsi_i_) %*% y),
+               try(eigenmapmm(smPsi_i_, eigenmapmm(ginv(eigenmapmtm(smPsi_i_, smPsi_i_), tol = sqrt(.Machine$double.eps)), eigenmapmtm(smPsi_i_,y)))),
+               times = 10L)
+
+all.equal(try(smPsi_i_ %*% ginv(t(smPsi_i_) %*% smPsi_i_, tol = sqrt(.Machine$double.eps)) %*% t(smPsi_i_) %*% y),
+          try(eigenmapmm(smPsi_i_, eigenmapmm(ginv(eigenmapmtm(smPsi_i_, smPsi_i_), tol = sqrt(.Machine$double.eps)), eigenmapmtm(smPsi_i_,y))))
+          )
+
+
+microbenchmark(
+  locc(
+    leaveout.list = lasso_IncidenceVec_i_,
+    remain.counts = lasso.counts.fit[[3]],
+    remain.basis = lasso.counts.fit[[2]],
+    Y.list = raw.dataset,
+    maxim = length(p),
+    alpha = alpha,
+    beta = beta
+  ),
+  LCCC.FIT_1(
+    leaveout.list = lasso_IncidenceVec_i_,
+    remain.counts = lasso.counts.fit[[3]],
+    remain.basis = lasso.counts.fit[[2]],
+    Y.list = raw.dataset,
+    maxim = length(p),
+    alpha = alpha,
+    beta = beta
+  ),
+               times = 10L)
 ### for each ----
 library("parallel")
 library("doParallel")
@@ -382,6 +411,7 @@ agree.cci <- function(input.yhat, input.y) {
 concordance <- function(yhat, y) {
   2 * cov(yhat, y, use = "complete.obs") / (cov(yhat, yhat, use = "complete.obs") + cov(y, y, use = "complete.obs") + (mean(y, na.rm = TRUE) - mean(yhat, na.rm = TRUE))^2)
 }
+
 
 # other ----
 

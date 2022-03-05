@@ -86,24 +86,47 @@ lassolist <- function(
 #' Compute common basis
 #'
 #' @param object A Qboneobject
-#' @param new.assay.name new assay name assigned to the commonBasis data
+#' @param new.assay.name New assay name assigned to the commonBasis data
+#' @param p Vector of length P  in (0,1)	Probability grids.
+#' @param alpha Vector containing sequence of beta parameter for internal function \code{generateBetaCDF()}
+#' @param beta  Vector containing sequence of beta parameter for internal function \code{generateBetaCDF()}
 #'
 #' @export
 #'
 commonBasis <- function(
   object,
   new.assay.name = "commonBasis",
+  p = signif(seq(0.001, 0.999, length = 1024), 4),
+  alpha = c(seq(0.1, 1, by = 0.1), seq(2, 100, by = 1)),
+  beta = c(seq(0.1, 1, by = 0.1), seq(2, 100, by = 1)),
   ...
 ){
   if(defaultAssay(object) != "Lasso.list"){
     warning('The default assay is not "Lasso.list" please double the defaultAssay() of this Qbone object. This step should be run on results of lassolist().')
   }
   message('Will compute the common basis based on "', defaultAssay(object), '" results from "', object@assays[["Lasso.list"]]@assay.orig, '" data.')
-  # raw.dataset <- getQboneData(object, slot = 'data', assay = object@assays[[defaultAssay(object)]]@assay.orig)
+  raw.dataset <- getQboneData(object, slot = 'data', assay = object@assays[[defaultAssay(object)]]@assay.orig)
   lasso.dataset <- getQboneData(object, slot = 'data', assay = defaultAssay(object))
   lasso.list1 <- lapply(lasso.dataset, catNorm) ## 1 term fix
   lasso.nonzero.obs1 <- lapply(lasso.list1, replist) ## D_i, generate 1 vector
   lasso.counts.fit <- countBasis(lasso.list1, lasso.nonzero.obs1)
+
+  lasso_IncidenceVec_i_ <- vector("list", n)
+  for (i in 1:n) {
+    lasso_fitIncd <- incidenceVec(lasso.list1[-i], lasso.nonzero.obs1[-i])
+    lasso_IncidenceVec_i_[[i]] <- lasso_fitIncd
+  }
+
+  lasso.locc <- locc(
+    leaveout.list = lasso_IncidenceVec_i_,
+    remain.counts = lasso.counts.fit[[3]],
+    remain.basis = lasso.counts.fit[[2]],
+    Y.list = raw.dataset,
+    maxim = length(p),
+    alpha = alpha,
+    beta = beta
+  )
+
   object@assays[[new.assay.name]] <- object@assays[[defaultAssay(object)]]
   object@assays[[new.assay.name]]@scale.data <- append(object@assays[[new.assay.name]]@scale.data,list(commonBasis = lasso.counts.fit))
   defaultAssay(object) <- new.assay.name
@@ -341,6 +364,75 @@ incidenceVec <- function(
   return(outputs)
 }
 
+## 6.8 locc ----
+#' computes the leave-one-out concordance correlation index
+#'
+#' @param leaveout.list leave-one-out list (it may be output of incidenceVec function)
+#' @param remain.counts vector containing c value in paper  (it may be output[[2]] of countBasis)
+#' @param remain.basis vector containing k(c) value in paper  (it may be output[[3]] of countBasis)
+#' @param Y.list raw.dataset
+#' @param maxim scalar value (length of probability grids)
+#'
+#' @return Predicted values ( length(probability grids) times n times length(c)  array output ) based on leaveout.list
+#'
+#' @importFrom MASS ginv
+#'
+#' @keywords internal
+#'
+#' @noRd
+#'
+locc <- function(
+  leaveout.list,
+  remain.counts,
+  remain.basis,
+  Y.list,
+  maxim = 1000,
+  ...
+  ) {
+  n <- length(leaveout.list)
+  active.set <- (remain.basis < maxim)
+  if (tail(remain.counts[active.set], 1) == n - 1) {
+    remain.counts[ length(remain.counts)] <- n - 2
+  }
+  feasible.long <- sum(active.set)
+  max.long <- max(unlist(lapply(Y.list, length), use.names = FALSE))
+  checks <- matrix(NA, nrow = n, ncol = feasible.long)
+  Values <- array(NA, c(max.long, n, feasible.long))
+
+
+  for (i in 1:n) { ### i = 35
+    y <- Y.list[[i]]
+    y.long <- length(y)
+    grid.p <- seq(1 / (y.long + 1), y.long / (y.long + 1), 1 / (y.long + 1))
+    CDFBETA <- generateBetaCDF( # a1, a2,
+                               grid.p, ...)
+    NQ <- qnorm(grid.p, 0, 1)
+    BNQ <- (NQ - mean(NQ)) / sqrt(sum((NQ - mean(NQ))^2))
+    BETA_BASE_TOTAL_2 <- cbind(BNQ, t(CDFBETA))
+    Psi <- cbind(rep(1, length(grid.p)), BETA_BASE_TOTAL_2)
+
+    for (j in 1:feasible.long) { ###  j = 20
+
+      colum_i_ <- leaveout.list[[i]][[1]]
+      obs_i_ <- leaveout.list[[i]][[2]] ## length(IncidenceVec_i_)
+
+      SET1_i_ <- sort(colum_i_[obs_i_ > remain.counts[active.set][j]])
+      smPsi_i_ <- Psi[, (SET1_i_) + 1] ## dim(smPsi_i_)
+
+      # Values[(1:y.long), i, j] <- try(smPsi_i_ %*% ginv(t(smPsi_i_) %*% smPsi_i_, tol = sqrt(.Machine$double.eps)) %*% t(smPsi_i_) %*% y) ## dim(Qy)
+      # gitsmp = ginv(eigenmapmtm(smPsi_i_, smPsi_i_), tol = sqrt(.Machine$double.eps))
+      # try1 = try(eigenmapmtm(smPsi_i_,y))
+      # try2 = try(eigenmapmm(gitsmp, try1))
+      # Values[(1:y.long), i, j] <- try(eigenmapmm(smPsi_i_, try2))
+      Values[(1:y.long), i, j] <- try(eigenmapmm(smPsi_i_, eigenmapmm(ginv(eigenmapmtm(smPsi_i_, smPsi_i_), tol = sqrt(.Machine$double.eps)), eigenmapmtm(smPsi_i_,y))))
+      # checks[i, j] <- length(SET1_i_)
+    }
+  }
+  outputs <- list(Values,
+                  checks
+                  )
+}
+
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # 7. TESTING ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -559,4 +651,50 @@ centering.function <- function(raw.x, scale = FALSE) {
     cen.scale.x <- cen.x %*% scale.mat
     return(cen.scale.x)
   }
+}
+
+### 7.2.1 LCCC.FIT_1 ----
+#' computes the leave-one-out concordance correlation index
+#'
+#' @importFrom MASS ginv
+#' @keywords internal
+#'
+#' @noRd
+#'
+LCCC.FIT_1 <- function(leaveout.list, remain.counts, remain.basis, Y.list, maxim = 1000, ...) {
+  n <- length(leaveout.list)
+  active.set <- (remain.basis < maxim)
+  if (tail(remain.counts[active.set], 1) == n - 1) {
+    remain.counts[ length(remain.counts)] <- n - 2
+  }
+  feasible.long <- sum(active.set)
+  max.long <- max(unlist(lapply(Y.list, length)))
+  checks <- matrix(NA, nrow = n, ncol = feasible.long)
+  Values <- array(NA, c(max.long, n, feasible.long))
+
+
+  for (i in 1:n) { ### i = 35
+    y <- Y.list[[i]]
+    y.long <- length(y)
+    grid.p <- seq(1 / (y.long + 1), y.long / (y.long + 1), 1 / (y.long + 1))
+    CDFBETA <- GENERATE_BETA_CDF( # a1, a2,
+      grid.p, ...)
+    NQ <- qnorm(grid.p, 0, 1)
+    BNQ <- (NQ - mean(NQ)) / sqrt(sum((NQ - mean(NQ))^2))
+    BETA_BASE_TOTAL_2 <- cbind(BNQ, t(CDFBETA))
+    Psi <- cbind(rep(1, length(grid.p)), BETA_BASE_TOTAL_2)
+
+    for (j in 1:feasible.long) { ###  j = 20
+
+      colum_i_ <- leaveout.list[[i]][[1]]
+      obs_i_ <- leaveout.list[[i]][[2]] ## length(IncidenceVec_i_)
+
+      SET1_i_ <- sort(colum_i_[  obs_i_ > remain.counts[active.set ][j]   ])
+      smPsi_i_ <- Psi[, (SET1_i_) + 1 ] ## dim(smPsi_i_)
+
+      Values[(1:y.long), i, j] <- try(smPsi_i_ %*% ginv(t(smPsi_i_) %*% smPsi_i_, tol = sqrt(.Machine$double.eps)) %*% t(smPsi_i_) %*% y) ## dim(Qy)
+      # checks[i, j] <- length(SET1_i_)
+    }
+  }
+  outputs <- list(Values, checks)
 }
