@@ -150,7 +150,10 @@ quantlets <- function(
                                    assay.orig = data.assay)
   new.qbonedata@scale.data <- append(object@assays[[data.assay]]@scale.data,list(betaCDF = c(reduced_BASE),
                                                                                  locc = lasso.locc,
-                                                                                 commonBasis = lasso.counts.fit) #   || double check
+                                                                                 basis.columns = lasso.counts.fit[[1]],
+                                                                                 remain.basis = lasso.counts.fit[[2]],
+                                                                                 remain.counts = lasso.counts.fit[[3]]
+                                                                                 )
                                      )
   object[[new.assay.name]] <- new.qbonedata
   defaultAssay(object) <- new.assay.name
@@ -450,11 +453,11 @@ locc <- function(
       # Values[(1:y.long), i, j] <- try(smPsi_i_ %*% (ginv(t(smPsi_i_) %*% smPsi_i_, tol = sqrt(.Machine$double.eps)) %*% (t(smPsi_i_) %*% y)))
       # Values[(1:y.long), i, j] <- try(smPsi_i_ %*% (ginv(eigenmapmtm(smPsi_i_, smPsi_i_), tol = sqrt(.Machine$double.eps)) %*% eigenmapmtm(smPsi_i_,y)))
       ## dim(Qy)
-      gitsmp = ginv(eigenmapmtm(smPsi_i_, smPsi_i_), tol = sqrt(.Machine$double.eps))
-      try1 = try(eigenmapmtm(smPsi_i_,y))
-      try2 = try(eigenmapmm(gitsmp, try1))
-      Values[(1:y.long), i, j] <- try(eigenmapmm(smPsi_i_, try2))
-      # Values[(1:y.long), i, j] <- try(eigenmapmm(smPsi_i_, eigenmapmm(ginv(eigenmapmtm(smPsi_i_, smPsi_i_), tol = sqrt(.Machine$double.eps)), eigenmapmtm(smPsi_i_,y))))
+      # gitsmp = ginv(eigenmapmtm(smPsi_i_, smPsi_i_), tol = sqrt(.Machine$double.eps))
+      # try1 = try(eigenmapmtm(smPsi_i_,y))
+      # try2 = try(eigenmapmm(gitsmp, try1))
+      # Values[(1:y.long), i, j] <- try(eigenmapmm(smPsi_i_, try2))
+      Values[(1:y.long), i, j] <- try(eigenmapmm(smPsi_i_, eigenmapmm(ginv(eigenmapmtm(smPsi_i_, smPsi_i_), tol = sqrt(.Machine$double.eps)), eigenmapmtm(smPsi_i_,y))))
       # checks[i, j] <- length(SET1_i_)
       # setTxtProgressBar(pbj, i)
     }

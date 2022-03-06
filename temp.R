@@ -155,12 +155,37 @@ microbenchmark(lassolist2(q2, verbose=T, parallel = T),
                times = 10L)
 
 microbenchmark(try(smPsi_i_ %*% ginv(t(smPsi_i_) %*% smPsi_i_, tol = sqrt(.Machine$double.eps)) %*% t(smPsi_i_) %*% y),
-               try(eigenmapmm(smPsi_i_, eigenmapmm(ginv(eigenmapmtm(smPsi_i_, smPsi_i_), tol = sqrt(.Machine$double.eps)), eigenmapmtm(smPsi_i_,y)))),
+               try(eigenmapmm(smPsi_i_, eigenmapmm(ginv(eigenmapmtm(smPsi_i_, smPsi_i_), tol = sqrt(.Machine$double.eps)), eigenmapmtm(smPsi_i_,y)))), # faster in large matrix
                times = 10L)
+# Thin = 0.01
+# Unit: milliseconds
+# expr
+# try(smPsi_i_ %*% ginv(t(smPsi_i_) %*% smPsi_i_, tol = sqrt(.Machine$double.eps)) %*%      t(smPsi_i_) %*% y)
+# try(eigenmapmm(smPsi_i_, eigenmapmm(ginv(eigenmapmtm(smPsi_i_,      smPsi_i_), tol = sqrt(.Machine$double.eps)), eigenmapmtm(smPsi_i_,      y))))
+# min          lq        mean      median         uq        max neval
+# 16106.87076 16250.45060 16388.39732 16281.84498 16430.4827 17075.7220    10
+# 25.95431    26.37465    34.45062    27.17549    35.3364    76.6718    10
 
 all.equal(try(smPsi_i_ %*% ginv(t(smPsi_i_) %*% smPsi_i_, tol = sqrt(.Machine$double.eps)) %*% t(smPsi_i_) %*% y),
           try(eigenmapmm(smPsi_i_, eigenmapmm(ginv(eigenmapmtm(smPsi_i_, smPsi_i_), tol = sqrt(.Machine$double.eps)), eigenmapmtm(smPsi_i_,y))))
           )
+
+
+
+microbenchmark(try(eigenmapmm(eigenmapmmt(eigenmapmm(smPsi_i_, ginv(eigenmapmtm(smPsi_i_, smPsi_i_), tol = sqrt(.Machine$double.eps))), t(smPsi_i_)), y)),
+               try(eigenmapmm(smPsi_i_, eigenmapmm(ginv(eigenmapmtm(smPsi_i_, smPsi_i_), tol = sqrt(.Machine$double.eps)), eigenmapmtm(smPsi_i_,y)))), # faster
+               times = 10L)
+
+assignnew <- function(){
+  gitsmp = ginv(eigenmapmtm(smPsi_i_, smPsi_i_), tol = sqrt(.Machine$double.eps))
+  try1 = try(eigenmapmtm(smPsi_i_,y))
+  try2 = try(eigenmapmm(gitsmp, try1))
+  try(eigenmapmm(smPsi_i_, try2))}
+
+microbenchmark(assignnew(),
+               try(eigenmapmm(smPsi_i_, eigenmapmm(ginv(eigenmapmtm(smPsi_i_, smPsi_i_), tol = sqrt(.Machine$double.eps)), eigenmapmtm(smPsi_i_,y)))), # faster
+               times = 10L)
+
 
 
 microbenchmark(
@@ -264,6 +289,8 @@ system.time(q7.0 <- lassolist(q2, verbose=F, parallel = T))
 system.time(q7.1 <- lassolist(q2, verbose=T, parallel = T))
 system.time(q7.2 <- lassolist2(q2, verbose=T, parallel = T))
 system.time(q7.3 <- lassolist2(q2, verbose=F, parallel = T))
+
+#### generateBetaCDF is slow ----
 
 ### Seeds for parallel----
 # https://www.r-bloggers.com/2018/07/%F0%9F%8C%B1-setting-a-seed-in-r-when-using-parallel-simulation/
