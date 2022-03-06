@@ -51,6 +51,7 @@ lassolist <- function(
   .Random.seed <- assay.seed
   orig.dataset <- getQboneData(object, slot = 'data', assay = data.assay)
   if (verbose) {
+    message("\n Run lasso selection for each sample for building basis function.")
     pb <- txtProgressBar(min = 0, max = length(orig.dataset), style = 3)
     new.data <- list()
     for (i in 1:length(orig.dataset)){
@@ -82,31 +83,33 @@ lassolist <- function(
   return(object)
 }
 
-## 2.2 commonBasis ----
-#' Compute common basis
+## 2.2 quantlets ----
+#' Get the quantlets basis functions
 #'
 #' @param object A Qboneobject
-#' @param new.assay.name New assay name assigned to the commonBasis data
+#' @param new.assay.name New assay name assigned to the quantlets data
 #' @param p Vector of length P  in (0,1)	Probability grids.
 #' @param alpha Vector containing sequence of beta parameter for internal function \code{generateBetaCDF()}
 #' @param beta  Vector containing sequence of beta parameter for internal function \code{generateBetaCDF()}
+#' @param data.assay It is the name of the assay whose data will be used to compute the lasso list. Default is the data from the defaultAssay(object).
 #'
 #' @export
 #'
-commonBasis <- function(
+quantlets <- function(
   object,
-  new.assay.name = "commonBasis",
+  new.assay.name = "Quantiles",
   p = signif(seq(0.001, 0.999, length = 1024), 4),
   alpha = c(seq(0.1, 1, by = 0.1), seq(2, 100, by = 1)),
   beta = c(seq(0.1, 1, by = 0.1), seq(2, 100, by = 1)),
+  data.assay = defaultAssay(object),
   ...
 ){
-  if(defaultAssay(object) != "Lasso.list"){
+  if(data.assay != "Lasso.list"){
     warning('The default assay is not "Lasso.list" please double the defaultAssay() of this Qbone object. This step should be run on results of lassolist().')
   }
-  message('Will compute the common basis based on "', defaultAssay(object), '" results from "', object@assays[["Lasso.list"]]@assay.orig, '" data.')
-  raw.dataset <- getQboneData(object, slot = 'data', assay = object@assays[[defaultAssay(object)]]@assay.orig)
-  lasso.dataset <- getQboneData(object, slot = 'data', assay = defaultAssay(object))
+  message('Will compute the quantlets basis functions based on "', data.assay, '" results from "', object@assays[["Lasso.list"]]@assay.orig, '" data.')
+  raw.dataset <- getQboneData(object, slot = 'data', assay = object@assays[[data.assay]]@assay.orig)
+  lasso.dataset <- getQboneData(object, slot = 'data', assay = data.assay)
   lasso.list1 <- lapply(lasso.dataset, catNorm) ## 1 term fix
   lasso.nonzero.obs1 <- lapply(lasso.list1, replist) ## D_i, generate 1 vector
   lasso.counts.fit <- countBasis(lasso.list1, lasso.nonzero.obs1)
@@ -127,8 +130,29 @@ commonBasis <- function(
     beta = beta
   )
 
-  object@assays[[new.assay.name]] <- object@assays[[defaultAssay(object)]]
-  object@assays[[new.assay.name]]@scale.data <- append(object@assays[[new.assay.name]]@scale.data,list(commonBasis = lasso.counts.fit))
+  betaCDF <- generateBetaCDF(alpha = alpha,
+                             beta = beta,
+                             index.p = p)
+  NQ <- qnorm(p)
+  BNQ <- (NQ - mean(NQ)) / sqrt(sum((NQ - mean(NQ))^2))
+  BETA_BASE_TOTAL_2 <- cbind(BNQ, t(betaCDF))
+  reduced_BASE <- BETA_BASE_TOTAL_2
+
+  q.raw.dataset <- lapply(raw.dataset,
+                          function(x, p) {quantile(x, p, type = 7)},
+                          p = p
+                          )
+
+  new.qbonedata <- createQboneData(q.raw.dataset,
+                                   meta.assays = data.frame(id = names(raw.dataset)),
+                                   sampleid.assays = 1,
+                                   assay.name = new.assay.name,
+                                   assay.orig = data.assay)
+  new.qbonedata@scale.data <- append(object@assays[[data.assay]]@scale.data,list(betaCDF = c(reduced_BASE),
+                                                                                 locc = lasso.locc,
+                                                                                 commonBasis = lasso.counts.fit) #   || double check
+                                     )
+  object[[new.assay.name]] <- new.qbonedata
   defaultAssay(object) <- new.assay.name
   return(object)
 }
@@ -376,6 +400,7 @@ incidenceVec <- function(
 #' @return Predicted values ( length(probability grids) times n times length(c)  array output ) based on leaveout.list
 #'
 #' @importFrom MASS ginv
+#' @importFrom utils txtProgressBar setTxtProgressBar
 #'
 #' @keywords internal
 #'
@@ -396,11 +421,12 @@ locc <- function(
   }
   feasible.long <- sum(active.set)
   max.long <- max(unlist(lapply(Y.list, length), use.names = FALSE))
-  checks <- matrix(NA, nrow = n, ncol = feasible.long)
+  # checks <- matrix(NA, nrow = n, ncol = feasible.long)
   Values <- array(NA, c(max.long, n, feasible.long))
 
-
-  for (i in 1:n) { ### i = 35
+  pb <- txtProgressBar(min = 0, max = length(Y.list), style = 3)
+  for (i in 1:n) {
+    message("\n Computes the leave-one-out concordance correlation index for ", names(Y.list)[i])
     y <- Y.list[[i]]
     y.long <- length(y)
     grid.p <- seq(1 / (y.long + 1), y.long / (y.long + 1), 1 / (y.long + 1))
@@ -411,6 +437,7 @@ locc <- function(
     BETA_BASE_TOTAL_2 <- cbind(BNQ, t(CDFBETA))
     Psi <- cbind(rep(1, length(grid.p)), BETA_BASE_TOTAL_2)
 
+    # pbj <- txtProgressBar(min = 0, max = length(feasible.long), style = 3)
     for (j in 1:feasible.long) { ###  j = 20
 
       colum_i_ <- leaveout.list[[i]][[1]]
@@ -423,16 +450,20 @@ locc <- function(
       # Values[(1:y.long), i, j] <- try(smPsi_i_ %*% (ginv(t(smPsi_i_) %*% smPsi_i_, tol = sqrt(.Machine$double.eps)) %*% (t(smPsi_i_) %*% y)))
       # Values[(1:y.long), i, j] <- try(smPsi_i_ %*% (ginv(eigenmapmtm(smPsi_i_, smPsi_i_), tol = sqrt(.Machine$double.eps)) %*% eigenmapmtm(smPsi_i_,y)))
       ## dim(Qy)
-      # gitsmp = ginv(eigenmapmtm(smPsi_i_, smPsi_i_), tol = sqrt(.Machine$double.eps))
-      # try1 = try(eigenmapmtm(smPsi_i_,y))
-      # try2 = try(eigenmapmm(gitsmp, try1))
-      # Values[(1:y.long), i, j] <- try(eigenmapmm(smPsi_i_, try2))
-      Values[(1:y.long), i, j] <- try(eigenmapmm(smPsi_i_, eigenmapmm(ginv(eigenmapmtm(smPsi_i_, smPsi_i_), tol = sqrt(.Machine$double.eps)), eigenmapmtm(smPsi_i_,y))))
+      gitsmp = ginv(eigenmapmtm(smPsi_i_, smPsi_i_), tol = sqrt(.Machine$double.eps))
+      try1 = try(eigenmapmtm(smPsi_i_,y))
+      try2 = try(eigenmapmm(gitsmp, try1))
+      Values[(1:y.long), i, j] <- try(eigenmapmm(smPsi_i_, try2))
+      # Values[(1:y.long), i, j] <- try(eigenmapmm(smPsi_i_, eigenmapmm(ginv(eigenmapmtm(smPsi_i_, smPsi_i_), tol = sqrt(.Machine$double.eps)), eigenmapmtm(smPsi_i_,y))))
       # checks[i, j] <- length(SET1_i_)
+      # setTxtProgressBar(pbj, i)
     }
+    # close(pbj)
+    setTxtProgressBar(pb, i)
   }
-  outputs <- list(Values,
-                  checks
+  close(pb)
+  outputs <- list(Values
+                  # , checks
                   )
 }
 

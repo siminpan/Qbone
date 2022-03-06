@@ -49,9 +49,9 @@ q1 = readQbone(data.dir, groupbyfolder = T)
 qa1 = getQboneData(q1, slot = 'data', assay = defaultAssay(q1))
 
 
-q2 = thinData(q1,prop=0.0001)
+q2 = thinData(q1,prop=0.01)
 q3 = lassolist(q2)
-q4 = commonBasis(q3)
+q4 = quantlets(q3)
 q5 = lassolist2(q2)
 
 document()
@@ -183,6 +183,37 @@ microbenchmark(
     beta = beta
   ),
                times = 10L)
+
+microbenchmark(
+  locc(
+    leaveout.list = lasso_IncidenceVec_i_,
+    remain.counts = lasso.counts.fit[[3]],
+    remain.basis = lasso.counts.fit[[2]],
+    Y.list = raw.dataset,
+    maxim = length(p),
+    alpha = alpha,
+    beta = beta
+  ),
+  locc2(
+    leaveout.list = lasso_IncidenceVec_i_,
+    remain.counts = lasso.counts.fit[[3]],
+    remain.basis = lasso.counts.fit[[2]],
+    Y.list = raw.dataset,
+    maxim = length(p),
+    alpha = alpha,
+    beta = beta
+  ),
+  times = 10L)
+
+lasso.locc <- locc(
+  leaveout.list = lasso_IncidenceVec_i_,
+  remain.counts = lasso.counts.fit[[3]],
+  remain.basis = lasso.counts.fit[[2]],
+  Y.list = raw.dataset,
+  maxim = length(p),
+  alpha = alpha,
+  beta = beta
+)
 ### for each ----
 library("parallel")
 library("doParallel")
@@ -449,3 +480,64 @@ for (i in 1:100){
   }
 
 call1 = function(x,y){print(x)}
+
+locc2 <- function(
+  leaveout.list,
+  remain.counts,
+  remain.basis,
+  Y.list,
+  maxim = 1000,
+  ...
+) {
+  n <- length(leaveout.list)
+  active.set <- (remain.basis < maxim)
+  if (tail(remain.counts[active.set], 1) == n - 1) {
+    remain.counts[ length(remain.counts)] <- n - 2
+  }
+  feasible.long <- sum(active.set)
+  max.long <- max(unlist(lapply(Y.list, length), use.names = FALSE))
+  # checks <- matrix(NA, nrow = n, ncol = feasible.long)
+  Values <- array(NA, c(max.long, n, feasible.long))
+
+  pb <- txtProgressBar(min = 0, max = length(Y.list), style = 3)
+  for (i in 1:n) {
+    message("\n Computes the leave-one-out concordance correlation index for ", names(Y.list)[i])
+    y <- Y.list[[i]]
+    y.long <- length(y)
+    grid.p <- seq(1 / (y.long + 1), y.long / (y.long + 1), 1 / (y.long + 1))
+    CDFBETA <- generateBetaCDF( # a1, a2,
+      grid.p, ...)
+    NQ <- qnorm(grid.p, 0, 1)
+    BNQ <- (NQ - mean(NQ)) / sqrt(sum((NQ - mean(NQ))^2))
+    BETA_BASE_TOTAL_2 <- cbind(BNQ, t(CDFBETA))
+    Psi <- cbind(rep(1, length(grid.p)), BETA_BASE_TOTAL_2)
+
+    # pbj <- txtProgressBar(min = 0, max = length(feasible.long), style = 3)
+    for (j in 1:feasible.long) { ###  j = 20
+
+      colum_i_ <- leaveout.list[[i]][[1]]
+      obs_i_ <- leaveout.list[[i]][[2]] ## length(IncidenceVec_i_)
+
+      SET1_i_ <- sort(colum_i_[obs_i_ > remain.counts[active.set][j]])
+      smPsi_i_ <- Psi[, (SET1_i_) + 1] ## dim(smPsi_i_)
+
+      # Values[(1:y.long), i, j] <- try(smPsi_i_ %*% ginv(t(smPsi_i_) %*% smPsi_i_, tol = sqrt(.Machine$double.eps)) %*% t(smPsi_i_) %*% y)
+      # Values[(1:y.long), i, j] <- try(smPsi_i_ %*% (ginv(t(smPsi_i_) %*% smPsi_i_, tol = sqrt(.Machine$double.eps)) %*% (t(smPsi_i_) %*% y)))
+      # Values[(1:y.long), i, j] <- try(smPsi_i_ %*% (ginv(eigenmapmtm(smPsi_i_, smPsi_i_), tol = sqrt(.Machine$double.eps)) %*% eigenmapmtm(smPsi_i_,y)))
+      ## dim(Qy)
+      # gitsmp = ginv(eigenmapmtm(smPsi_i_, smPsi_i_), tol = sqrt(.Machine$double.eps))
+      # try1 = try(eigenmapmtm(smPsi_i_,y))
+      # try2 = try(eigenmapmm(gitsmp, try1))
+      # Values[(1:y.long), i, j] <- try(eigenmapmm(smPsi_i_, try2))
+      Values[(1:y.long), i, j] <- try(eigenmapmm(smPsi_i_, eigenmapmm(ginv(eigenmapmtm(smPsi_i_, smPsi_i_), tol = sqrt(.Machine$double.eps)), eigenmapmtm(smPsi_i_,y))))
+      # checks[i, j] <- length(SET1_i_)
+      # setTxtProgressBar(pbj, i)
+    }
+    # close(pbj)
+    setTxtProgressBar(pb, i)
+  }
+  close(pb)
+  outputs <- list(Values
+                  # , checks
+  )
+}
