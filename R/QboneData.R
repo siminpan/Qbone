@@ -105,7 +105,7 @@ createQboneData <- function(
     for (i in 1:length(data)){
       if (is.atomic(data[[i]])){
         if (sort == T) {
-          data[[i]] <- sort(data[[i]])
+          data[[i]] <- sort(data[[i]], method = "quick")
         } else {
           data[[i]] <- data[[i]]
           }

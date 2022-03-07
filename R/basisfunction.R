@@ -15,9 +15,9 @@ NULL
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 ## 2.1 lassolist ----
-#' Run lasso list to build basis function
+#' Use penalized regression (lasso) to find a sparse subset of dictionary elements
 #'
-#'
+#' First construct overcomplete dictionary (Beta CDF). Then uses penalized regression (lasso) to find a sparse subset of dictionary elements.
 #'
 #' @param object A Qboneobject
 #' @param verbose Print a progress bar
@@ -50,6 +50,7 @@ lassolist <- function(
   }
   .Random.seed <- assay.seed
   orig.dataset <- getQboneData(object, slot = 'data', assay = data.assay)
+  message("This step may take a while as it involves k-fold cross-validation.")
   if (verbose) {
     message("\n Run lasso selection for each sample for building basis function.")
     pb <- txtProgressBar(min = 0, max = length(orig.dataset), style = 3)
@@ -86,6 +87,8 @@ lassolist <- function(
 ## 2.2 quantlets ----
 #' Get the quantlets basis functions
 #'
+#' Take union set and find near-lossless subset as confirmed by cross-validated concordance coefficient (CVCC)
+#'
 #' @param object A Qboneobject
 #' @param new.assay.name New assay name assigned to the quantlets data
 #' @param p Vector of length P  in (0,1)	Probability grids.
@@ -107,7 +110,7 @@ quantlets <- function(
   if(data.assay != "Lasso.list"){
     warning('The default assay is not "Lasso.list" please double the defaultAssay() of this Qbone object. This step should be run on results of lassolist().')
   }
-  message('Will compute the quantlets basis functions based on "', data.assay, '" results from "', object@assays[["Lasso.list"]]@assay.orig, '" data.')
+  message('Will compute the quantlets basis functions based on "', data.assay, '" results from "', object@assays[["Lasso.list"]]@assay.orig, '" data.', "\n This step may take a while.")
   raw.dataset <- getQboneData(object, slot = 'data', assay = object@assays[[data.assay]]@assay.orig)
   lasso.dataset <- getQboneData(object, slot = 'data', assay = data.assay)
   lasso.list1 <- lapply(lasso.dataset, catNorm) ## 1 term fix
@@ -141,18 +144,19 @@ quantlets <- function(
   q.raw.dataset <- lapply(raw.dataset,
                           function(x, p) {quantile(x, p, type = 7)},
                           p = p
-                          )
+                          ) # Empirical quantiles for each subject.
 
   new.qbonedata <- createQboneData(q.raw.dataset,
                                    meta.assays = data.frame(id = names(raw.dataset)),
                                    sampleid.assays = 1,
                                    assay.name = new.assay.name,
                                    assay.orig = data.assay)
-  new.qbonedata@scale.data <- append(object@assays[[data.assay]]@scale.data,list(betaCDF = c(reduced_BASE),
-                                                                                 locc = lasso.locc,
-                                                                                 basis.columns = lasso.counts.fit[[1]],
-                                                                                 remain.basis = lasso.counts.fit[[2]],
-                                                                                 remain.counts = lasso.counts.fit[[3]]
+  new.qbonedata@scale.data <- append(object@assays[[data.assay]]@scale.data,list(betaCDF = c(reduced_BASE), # Pre-quantlets basis functions, which implies the selected beta cdf functions. (P by K matrix. P: desired number of probability grids, and K: number of basis).
+
+                                                                                 locc = lasso.locc, # LOCC value for each choice of the basis function (Z: the length of the possible choices for basis).
+                                                                                 basis.columns = lasso.counts.fit[[1]], # Corresponding basis columns for each possible choice.
+                                                                                 remain.basis = lasso.counts.fit[[2]], # Number of the basis for each possible choice.
+                                                                                 remain.counts = lasso.counts.fit[[3]] # Frequency for each possible choice.
                                                                                  )
                                      )
   object[[new.assay.name]] <- new.qbonedata
@@ -272,12 +276,12 @@ runlassolist <- function(
   y <- x
   y.long <- length(y)
   grid.p <- seq(1 / (y.long + 1), y.long / (y.long + 1), 1 / (y.long + 1))
-  CDFBETA <- generateBetaCDF(
+  betaCDF <- generateBetaCDF(
     # alpha = a1, beta = a2,
     index.p = grid.p, ...)
   NQ <- qnorm(grid.p, 0, 1)
   BNQ <- (NQ - mean(NQ)) / sqrt(sum((NQ - mean(NQ))^2))
-  BETA_BASE_TOTAL_2 <- cbind(BNQ, t(CDFBETA))
+  BETA_BASE_TOTAL_2 <- cbind(BNQ, t(betaCDF))
   # set.seed(12345)                                                     # || double check
   lasso_fit <- glmnet(BETA_BASE_TOTAL_2, y, intercept = TRUE)
   if (parallel){
