@@ -257,7 +257,9 @@ centeringFunction <- function(
 }
 
 ## 6.3 runlasso ----
-#' Run lasso for list of data
+#' Penalized regression (lasso)
+#'
+#' First construct overcomplete dictionary (Beta CDF). Then uses penalized regression (lasso) to find a sparse subset of dictionary elements.
 #'
 #' @param x any list of data
 #' @param parallel If TRUE, use parallel foreach to fit each fold in \code{cv.glmnet(..., nfolds = 3)}. Default use \code{registerDoMC(3)} to register parallel.
@@ -337,7 +339,7 @@ replist <- function(
 ## 6.6 countBasis ----
 #' Generate nested subsets of basis
 #'
-#' Number basis in each nested subsets, and  each count(# of votes) yielding each nested basis
+#' Number basis in each nested subsets, and  each count(number of votes) yielding each nested basis
 #'
 #' @param nonzero.list sparse set Di
 #' @param nonzero.obs one vectors with the same length to Di
