@@ -49,7 +49,7 @@ q1 = readQbone(data.dir, groupbyfolder = T)
 qa1 = getQboneData(q1, slot = 'data', assay = defaultAssay(q1))
 
 
-q2 = thinData(q1,prop=0.01)
+q2 = thinData(q1,prop=0.0001)
 q3 = lassolist(q2)
 q4 = quantlets(q3)
 q5 = lassolist2(q2)

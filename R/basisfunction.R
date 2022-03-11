@@ -73,7 +73,7 @@ lassolist <- function(
   # Penalized regression (lasso)
   message("\n This step may take a while as it involves k-fold cross-validation.")
   if (verbose) {
-    message("\n Run lasso selection for each sample for building basis function.")
+    message("\n Using penalized regression (lasso) to find a sparse subset of dictionary elements.")
     pb <- txtProgressBar(min = 0, max = length(orig.dataset), style = 3)
     new.data <- list()
     for (i in 1:length(orig.dataset)){
@@ -140,6 +140,7 @@ quantlets <- function(
   message('Will compute the quantlets basis functions based on "', data.assay, '" results from "', object@assays[["Lasso.list"]]@assay.orig, '" data.', "\n This step may take a while.")
   # Get data
   raw.dataset <- getQboneData(object, slot = 'data', assay = object@assays[[data.assay]]@assay.orig)
+  n <- length(raw.dataset)
   lasso.dataset <- getQboneData(object, slot = 'data', assay = data.assay)
 
   # Generate nested subsets of basis
@@ -545,6 +546,7 @@ locc <- function(
   outputs <- list(Values
                   # , checks
                   )
+  return(outputs)
 }
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
