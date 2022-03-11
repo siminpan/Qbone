@@ -140,15 +140,15 @@ quantlets <- function(
   message('Will compute the quantlets basis functions based on "', data.assay, '" results from "', object@assays[["Lasso.list"]]@assay.orig, '" data.', "\n This step may take a while.")
   # Get data
   raw.dataset <- getQboneData(object, slot = 'data', assay = object@assays[[data.assay]]@assay.orig)
-  n <- length(raw.dataset)
   lasso.dataset <- getQboneData(object, slot = 'data', assay = data.assay)
 
   # Generate nested subsets of basis
-  lasso.list1 <- lapply(lasso.dataset, catNorm) ## 1 term fix
+  lasso.list1 <- lapply(lasso.dataset, catNorm) ## 1st term fix
   lasso.nonzero.obs1 <- lapply(lasso.list1, replist) ## D_i, generate 1 vector
   lasso.counts.fit <- countBasis(lasso.list1, lasso.nonzero.obs1)
 
   # Compute frequency for each selected basis
+  n <- length(raw.dataset)
   lasso_IncidenceVec_i_ <- vector("list", n)
   for (i in 1:n) {
     lasso_fitIncd <- incidenceVec(lasso.list1[-i], lasso.nonzero.obs1[-i])
