@@ -26,7 +26,7 @@ NULL
 #' @param beta  Vector containing sequence of beta parameter for internal function \code{generateBetaCDF()}
 #' @param data.assay It is the name of the assay whose data will be used to compute the lasso list. Default is the data from the defaultAssay(object).
 #' @param assay.seed assay information to add into the QboneData object scale.data. The default of \code{lassolist()} will save the random seed for the run. Use \code{.Random.seed <-  object@assays[["Lasso.list"]]@scale.data[["lassolist"]]} before run \code{lassolist()} for the same results.
-#' @param parallel If TRUE, use parallel foreach to fit each fold in \code{cv.glmnet()}. Default use \code{registerDoMC()} to register parallel.
+#' @param parallel If TRUE, use parallel foreach to fit each fold in \code{cv.glmnet()}. Default use \code{registerDoMC()} to register parallel. There is another function \code{lassolist_parallel()} for overall parallel computing for all sample.
 #' @param ... Arguments passed to other methods
 #'
 #' @importFrom glmnet glmnet cv.glmnet
@@ -48,9 +48,30 @@ lassolist <- function(
   if (data.assay == "Lasso.list"){
     stop('The default assay for this Qbone object is already "Lasso.list".')
   }
+  # Assign random seed
   .Random.seed <- assay.seed
+  # Get data
   orig.dataset <- getQboneData(object, slot = 'data', assay = data.assay)
-  message("This step may take a while as it involves k-fold cross-validation.")
+
+  # build overcomplete dictionary
+  # (The overcomplete dictionary is too big not practical to store)
+  # message("\n Building overcomplete dictionary (Beta CDF)")
+  # betaDictionary <- lapply(
+  #   X = orig.dataset,
+  #   FUN = buildDictionary,
+  #   alpha = alpha,
+  #   beta = beta
+  # )
+  # dictionary.qbonedata <- createQboneData(betaDictionary,
+  #                                  meta.assays = data.frame(id = names(orig.dataset)),
+  #                                  sampleid.assays = 1,
+  #                                  assay.name = "oDictionary",
+  #                                  assay.orig = data.assay)
+  # object[["oDictionary"]] <- dictionary.qbonedata
+  # betaDictionary <- getQboneData(object, slot = 'data', assay = "oDictionary")
+
+  # Penalized regression (lasso)
+  message("\n This step may take a while as it involves k-fold cross-validation.")
   if (verbose) {
     message("\n Run lasso selection for each sample for building basis function.")
     pb <- txtProgressBar(min = 0, max = length(orig.dataset), style = 3)
@@ -73,6 +94,7 @@ lassolist <- function(
       parallel = parallel
     )
   }
+  # Build new Qbone object
   new.qbonedata <- createQboneData(new.data,
                                    meta.assays = data.frame(id = names(orig.dataset)),
                                    sampleid.assays = 1,
@@ -87,14 +109,19 @@ lassolist <- function(
 ## 2.2 quantlets ----
 #' Get the quantlets basis functions
 #'
-#' Take union set and find near-lossless subset as confirmed by cross-validated concordance coefficient (CVCC)
+#' Take union set and find near-lossless subset as confirmed by
+#' cross-validated concordance correlation coefficient (CVCCC)
 #'
 #' @param object A Qboneobject
 #' @param new.assay.name New assay name assigned to the quantlets data
 #' @param p Vector of length P  in (0,1)	Probability grids.
-#' @param alpha Vector containing sequence of beta parameter for internal function \code{generateBetaCDF()}
-#' @param beta  Vector containing sequence of beta parameter for internal function \code{generateBetaCDF()}
-#' @param data.assay It is the name of the assay whose data will be used to compute the lasso list. Default is the data from the defaultAssay(object).
+#' @param alpha Vector containing sequence of beta parameter for internal
+#'  function \code{generateBetaCDF()}
+#' @param beta  Vector containing sequence of beta parameter for internal
+#'  function \code{generateBetaCDF()}
+#' @param data.assay It is the name of the assay whose data will be used
+#'  to compute the lasso list. Default is the data from the
+#'  defaultAssay(object).
 #'
 #' @export
 #'
@@ -111,18 +138,23 @@ quantlets <- function(
     warning('The default assay is not "Lasso.list" please double the defaultAssay() of this Qbone object. This step should be run on results of lassolist().')
   }
   message('Will compute the quantlets basis functions based on "', data.assay, '" results from "', object@assays[["Lasso.list"]]@assay.orig, '" data.', "\n This step may take a while.")
+  # Get data
   raw.dataset <- getQboneData(object, slot = 'data', assay = object@assays[[data.assay]]@assay.orig)
   lasso.dataset <- getQboneData(object, slot = 'data', assay = data.assay)
+
+  # Generate nested subsets of basis
   lasso.list1 <- lapply(lasso.dataset, catNorm) ## 1 term fix
   lasso.nonzero.obs1 <- lapply(lasso.list1, replist) ## D_i, generate 1 vector
   lasso.counts.fit <- countBasis(lasso.list1, lasso.nonzero.obs1)
 
+  # Compute frequency for each selected basis
   lasso_IncidenceVec_i_ <- vector("list", n)
   for (i in 1:n) {
     lasso_fitIncd <- incidenceVec(lasso.list1[-i], lasso.nonzero.obs1[-i])
     lasso_IncidenceVec_i_[[i]] <- lasso_fitIncd
   }
 
+  # Leave-one-out concordance correlation
   lasso.locc <- locc(
     leaveout.list = lasso_IncidenceVec_i_,
     remain.counts = lasso.counts.fit[[3]],
@@ -133,6 +165,7 @@ quantlets <- function(
     beta = beta
   )
 
+  # Pre-quantlets basis functions
   betaCDF <- generateBetaCDF(alpha = alpha,
                              beta = beta,
                              index.p = p)
@@ -146,6 +179,7 @@ quantlets <- function(
                           p = p
                           ) # Empirical quantiles for each subject.
 
+  # Build new Qbone object
   new.qbonedata <- createQboneData(q.raw.dataset,
                                    meta.assays = data.frame(id = names(raw.dataset)),
                                    sampleid.assays = 1,
@@ -157,7 +191,7 @@ quantlets <- function(
                                                                                  basis.columns = lasso.counts.fit[[1]], # Corresponding basis columns for each possible choice.
                                                                                  remain.basis = lasso.counts.fit[[2]], # Number of the basis for each possible choice.
                                                                                  remain.counts = lasso.counts.fit[[3]] # Frequency for each possible choice.
-                                                                                 )
+                                                                                  )
                                      )
   object[[new.assay.name]] <- new.qbonedata
   defaultAssay(object) <- new.assay.name
@@ -188,6 +222,7 @@ quantlets <- function(
 #' @param alpha vector containing sequence of beta parameter
 #' @param beta  vector containing sequence of beta parameter
 #' @param index.p probability grids on (0,1)
+#' @param ... Arguments passed to other methods
 #'
 #' @return matrix containing # of beta parameters times the length of index.p
 #'
@@ -256,13 +291,47 @@ centeringFunction <- function(
   }
 }
 
-## 6.3 runlasso ----
+## 6.3 buildDictionary ----
+#' Build dictionary
+#'
+#' (The overcomplete dictionary is too big not practical to store)
+#' Construct an dictionary that contains bases spanning the space
+#' of Gaussian quantile functions plus a large number of Beta cumulative
+#'density functions.
+#'
+#' @param x any list of data
+#' @param ... Arguments passed to other methods
+#'
+#' @return matrix containing dictionary (Beta CDF)
+#'
+#' @keywords internal
+#'
+#' @noRd
+#'
+buildDictionary <- function(
+  x,
+  ...
+){
+  y <- x
+  y.long <- length(y)
+  grid.p <- seq(1 / (y.long + 1), y.long / (y.long + 1), 1 / (y.long + 1))
+  betaCDF <- generateBetaCDF(
+    # alpha = a1, beta = a2,
+    index.p = grid.p, ...)
+  NQ <- qnorm(grid.p, 0, 1)
+  BNQ <- (NQ - mean(NQ)) / sqrt(sum((NQ - mean(NQ))^2))
+  BETA_BASE_TOTAL_2 <- cbind(BNQ, t(betaCDF))
+  return(BETA_BASE_TOTAL_2)
+}
+
+## 6.4 runlasso ----
 #' Penalized regression (lasso)
 #'
 #' First construct overcomplete dictionary (Beta CDF). Then uses penalized regression (lasso) to find a sparse subset of dictionary elements.
 #'
 #' @param x any list of data
 #' @param parallel If TRUE, use parallel foreach to fit each fold in \code{cv.glmnet(..., nfolds = 3)}. Default use \code{registerDoMC(3)} to register parallel.
+#' @param ... Arguments passed to other methods
 #'
 #' @return a list of lasso parameter
 #'
@@ -300,7 +369,7 @@ runlassolist <- function(
   return(selects)
 }
 
-## 6.4 catNorm ----
+## 6.5 catNorm ----
 #' Add 1 to all individual basis set
 #'
 #' Add Gaussian basis to all individual basis set
@@ -319,7 +388,7 @@ catNorm <- function(
   unique(c(0, 1, sort(vector, method = "quick")))
 }
 
-## 6.5 replist ----
+## 6.6 replist ----
 #' Generate one vectors with the length of each individual basis set
 #'
 #' @param vector basis set
@@ -336,13 +405,14 @@ replist <- function(
   rep(1, length(vector))
 }
 
-## 6.6 countBasis ----
+## 6.7 countBasis ----
 #' Generate nested subsets of basis
 #'
 #' Number basis in each nested subsets, and  each count(number of votes) yielding each nested basis
 #'
 #' @param nonzero.list sparse set Di
 #' @param nonzero.obs one vectors with the same length to Di
+#' @param ... Arguments passed to other methods
 #'
 #' @return list \code{[[1]]}: the nested subsets of basis,
 #'              \code{[[2]]}: number of basis in each nested subset
@@ -372,7 +442,7 @@ countBasis <- function(
   return(outputs)
 }
 
-## 6.7 incidenceVec ----
+## 6.8 incidenceVec ----
 #' Compute frequency for each selected basis
 #'
 #' @param setlistofobs basis set(CatNorm)
@@ -397,8 +467,8 @@ incidenceVec <- function(
   return(outputs)
 }
 
-## 6.8 locc ----
-#' computes the leave-one-out concordance correlation index
+## 6.9 locc ----
+#' Computes the leave-one-out concordance correlation index
 #'
 #' @param leaveout.list leave-one-out list (it may be output of incidenceVec function)
 #' @param remain.counts vector containing c value in paper  (it may be output[[2]] of countBasis)
@@ -410,6 +480,7 @@ incidenceVec <- function(
 #'
 #' @importFrom MASS ginv
 #' @importFrom utils txtProgressBar setTxtProgressBar
+#' @param ... Arguments passed to other methods
 #'
 #' @keywords internal
 #'

@@ -21,12 +21,17 @@ quantlets(
 
 \item{p}{Vector of length P  in (0,1)    Probability grids.}
 
-\item{alpha}{Vector containing sequence of beta parameter for internal function \code{generateBetaCDF()}}
+\item{alpha}{Vector containing sequence of beta parameter for internal
+function \code{generateBetaCDF()}}
 
-\item{beta}{Vector containing sequence of beta parameter for internal function \code{generateBetaCDF()}}
+\item{beta}{Vector containing sequence of beta parameter for internal
+function \code{generateBetaCDF()}}
 
-\item{data.assay}{It is the name of the assay whose data will be used to compute the lasso list. Default is the data from the defaultAssay(object).}
+\item{data.assay}{It is the name of the assay whose data will be used
+to compute the lasso list. Default is the data from the
+defaultAssay(object).}
 }
 \description{
-Get the quantlets basis functions
+Take union set and find near-lossless subset as confirmed by
+cross-validated concordance correlation coefficient (CVCCC)
 }

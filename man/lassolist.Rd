@@ -2,7 +2,7 @@
 % Please edit documentation in R/basisfunction.R
 \name{lassolist}
 \alias{lassolist}
-\title{Run lasso list to build basis function}
+\title{Use penalized regression (lasso) to find a sparse subset of dictionary elements}
 \usage{
 lassolist(
   object,
@@ -31,10 +31,10 @@ lassolist(
 
 \item{assay.seed}{assay information to add into the QboneData object scale.data. The default of \code{lassolist()} will save the random seed for the run. Use \code{.Random.seed <-  object@assays[["Lasso.list"]]@scale.data[["lassolist"]]} before run \code{lassolist()} for the same results.}
 
-\item{parallel}{If TRUE, use parallel foreach to fit each fold in \code{cv.glmnet()}. Default use \code{registerDoMC()} to register parallel.}
+\item{parallel}{If TRUE, use parallel foreach to fit each fold in \code{cv.glmnet()}. Default use \code{registerDoMC()} to register parallel. There is another function \code{lassolist_parallel()} for overall parallel computing for all sample.}
 
 \item{...}{Arguments passed to other methods}
 }
 \description{
-Run lasso list to build basis function
+First construct overcomplete dictionary (Beta CDF). Then uses penalized regression (lasso) to find a sparse subset of dictionary elements.
 }
