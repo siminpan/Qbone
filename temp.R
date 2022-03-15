@@ -486,6 +486,104 @@ quantlet.set <- LCCC.PLOT_1(
   cutoff = 0.990 # Near-lossless values.
   )
 
+
+texts1 <- expression(paste(bar(rho), " vs K"))
+texts2 <- expression(paste(rho^0, " vs K"))
+
+cex.lab <- 0.9 ### -> Size of labels for both x and y axis!
+cex.axis <- 0.65 ### -> Size of coordinates for both x and y axis!
+cex.main <- 0.7 ### -> Size of main topic ( USELESS since we will cut title )
+cex.in <- 0.5 ### -> Size of all in boxplot (Ex: outlier )
+
+yaxis.at <- c(-2, seq(0.85, 1.0, by = 0.05), 1.5)
+yaxis.lab <- c("", "0.85", "0.90", "0.95", "1.00", "")
+ylim <- c(0.84, 1.0)
+
+numbasis <- sort(unique(c(lasso.x)), decreasing = TRUE)
+plotxaxis <- seq(length(numbasis))
+
+xaxis.at <- c(plotxaxis[1] - 15, plotxaxis, tail(plotxaxis, 1) + 15)
+xaxis.lab <- c("", numbasis, "")
+xaxis.lab1 <- c("", lasso.x1, "")
+
+
+## par( mfrow=c(1,1), mar=c(4.5, 2.5, 3,2 ))
+
+plot(0, type = "o", xlab = "", ylab = "", cex.lab = 1.1, cex.axis = 0.7, axes = FALSE, ylim = ylim, xlim = c(0, length(numbasis) + 1))
+points(plotxaxis, lasso.Chary1_i_, col = "red", pch = 19)
+lines(plotxaxis, lasso.Chary1_i_, col = "red")
+
+axis(side = 2, at = yaxis.at, label = yaxis.lab, line = -0.5, tick = FALSE, cex.axis = cex.axis, las = 1)
+axis(side = 2, at = yaxis.at, label = rep("", length(yaxis.at)), line = -0.5, , tick = TRUE, las = 1)
+
+axis(side = 1, at = xaxis.at, label = xaxis.lab1, line = -0.5, tick = FALSE, cex.axis = cex.axis)
+axis(side = 1, at = xaxis.at, label = rep("", length(xaxis.at)), line = -0.5, tick = TRUE)
+axis(side = 1, at = xaxis.at, label = xaxis.lab, line = 0.5, tick = FALSE, cex.axis = cex.axis)
+mtext("C", side = 1, line = 0.5, at = 0.5, col = "blue", cex = 0.9)
+mtext(expression(K[C]), side = 1, line = 1.7, at = 0.5, col = "blue", cex = 0.9)
+title(texts2)
+## title(texts2 )
+
+points(plotxaxis, lasso.Chary_i_, col = "blue", pch = 19)
+lines(plotxaxis, lasso.Chary_i_, col = "blue")
+
+axis(side = 2, at = yaxis.at, label = yaxis.lab, line = -0.5, tick = FALSE, cex.axis = cex.axis, las = 1)
+axis(side = 2, at = yaxis.at, label = rep("", length(yaxis.at)), line = -0.5, , tick = TRUE, las = 1)
+axis(side = 1, at = xaxis.at, label = xaxis.lab1, line = -0.5, tick = FALSE, cex.axis = cex.axis)
+axis(side = 1, at = xaxis.at, label = rep("", length(xaxis.at)), line = -0.5, tick = TRUE)
+axis(side = 1, at = xaxis.at, label = xaxis.lab, line = 0.5, tick = FALSE, cex.axis = cex.axis)
+mtext("C", side = 1, line = 0.5, at = 0.5, col = "blue", cex = 0.9)
+mtext(expression(K[C]), side = 1, line = 1.7, at = 0.5, col = "blue", cex = 0.9)
+title(texts1)
+
+
+numbasis <- sort(unique(c(lasso.x)), decreasing = TRUE)
+plotxaxis <- seq(length(numbasis))
+
+xaxis.at <- c(plotxaxis[1] - 15, plotxaxis, tail(plotxaxis, 1) + 15)
+
+plotdata1 = data.frame(plotxaxis = plotxaxis, lasso.Chary_i_ = lasso.Chary_i_, lasso.Chary1_i_ = lasso.Chary1_i_)
+
+p1 <- ggplot(plotdata1, aes(x=plotxaxis, y=c(lasso.Chary_i_, lasso.Chary1_i_))) +
+  geom_point() +
+  geom_line() +
+  scale_y_continuous(limits = c(0.85, 1))
+
+p1
+
+plotdata2 = data.frame(x = c(plotxaxis, plotxaxis), x2 = c(numbasis, numbasis), y = c(lasso.Chary_i_, lasso.Chary1_i_), group = c(rep("mean", length(lasso.Chary_i_)), rep("min", length(lasso.Chary1_i_))))
+
+scale1 = max(plotxaxis)/max(numbasis)
+
+p1 <- ggplot(plotdata2, aes(x=x, y=y, color= group)) +
+  geom_point() +
+  geom_line() +
+  scale_y_continuous(limits = c(0.85, 1)) +
+  scale_x_continuous(sec.axis=sec_axis(trans=~ . * scale1, name=expression(K[C]))) +
+  scale_color_manual(
+    labels = c(expression(paste(bar(rho))), expression(paste(rho^0))),
+    values = c("blue", "red")
+    ) +
+  labs(title = "Find a sparse yet near-lossless basis set",
+       x = "TY [°C]",
+       y = "Losslessness",
+       color = NULL
+       ) +
+  geom_vline(xintercept = min(plotdata2$x[c(lasso.Chary_i_ - lasso.Chary1_i_) > 0.001]),
+             linetype="dotted",
+             color = "black",
+             size=0.5) +
+  geom_label(aes(min(x[c(lasso.Chary_i_ - lasso.Chary1_i_) > 0.001]),
+                     0.85,
+                     label=min(x[c(lasso.Chary_i_ - lasso.Chary1_i_) > 0.001])
+                 )
+             )
+
+
+p1
+
+min(x[c(lasso.Chary_i_ - lasso.Chary1_i_) > 0.001])
+
 # LCCC ----
 lasso.locc <- locc(
   leaveout.list = lasso_IncidenceVec_i_,
