@@ -49,7 +49,7 @@ q1 = readQbone(data.dir, groupbyfolder = T)
 qa1 = getQboneData(q1, slot = 'data', assay = defaultAssay(q1))
 
 
-q2 = thinData(q1,prop=0.01)
+q2 = thinData(q1,prop=0.0001)
 q3 = lassolist(q2)
 q4 = quantlets(q3)
 object = q4
@@ -605,3 +605,42 @@ locc2 <- function(
                   # , checks
   )
 }
+
+# real bone project results ----
+load("/home/span/Documents/MOSJ-3DCT/data/05.6_3Dpoints/quafunreg_raw.data.RData")
+re1 = createQboneObject(raw.dataset)
+
+names(re1@assays[["Bone"]]@data) <- c(paste0("DkkMo_", seq(10)),
+                                      paste0("DkkMoDRB_", seq(9)),
+                                      paste0("DRB_", seq(10)),
+                                      paste0("NT_", seq(10))
+                                      )
+re1@assays[["Bone"]]@meta.assays <- data.frame(id = names(re1@assays[["Bone"]]@data), row.names = c(1:39))
+
+re1 <- addMetaData(object = re1, metadata = re1@assays[["Bone"]]@meta.assays[["id"]]
+                   , col = "id")
+re1 <- addMetaData(object = re1, metadata = c(rep("DkkMo", c(10)),
+                                              rep("DkkMoDRB", c(9)),
+                                              rep("DRB", c(10)),
+                                              rep("NT", c(10))
+                                              ),
+                   col = "group")
+
+# no name if from list
+re2 = thinData(re1,prop=0.01)
+re3 = lassolist(re2)
+re4 = quantlets(re3)
+object = re4
+save.image(file = "/mnt/md0/zlyrebecca/sp/MOSJ-CT/05.6_3Dpoints/test.Qbone.RData")
+
+
+load("/home/span/Documents/MOSJ-3DCT/data/05.6_3Dpoints/quafunreg_5.RData")
+
+# fit q4 in quafunreg.R ----
+lasso.list = getQboneData(object, slot = 'data', assay = "Lasso.list")
+raw.dataset = getQboneData(object, slot = 'data', assay = "Thin")
+raw.dataset2 = getQboneData(object, slot = 'data', assay = "Thin")
+
+all.equal(Values, locc)
+all.equal(raw.dataset, raw.dataset2)
+all.equal(lasso.locc, lasso.values)

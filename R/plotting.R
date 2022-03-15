@@ -137,7 +137,11 @@ loccplotdata <- function(
   plength = length(p)
   locc <- object@assays[[defaultAssay(object)]]@scale.data[["locc"]][[1]]
   # checking defaultAssay(object):
-  raw.dataset <- getQboneData(object, slot = 'data', assay = object@assays[[defaultAssay(object)]]@assay.orig)
+  raw.dataset <- getQboneData(object, slot = 'data',
+                              assay = object@assays[[
+                                object@assays[[defaultAssay(object)]]@assay.orig
+                                ]]@assay.orig
+                              )
   basis.columns <- object@assays[[defaultAssay(object)]]@scale.data[["basis.columns"]]
   remain.basis <- object@assays[[defaultAssay(object)]]@scale.data[["remain.basis"]]
   remain.counts <- object@assays[[defaultAssay(object)]]@scale.data[["remain.counts"]]
@@ -152,7 +156,7 @@ loccplotdata <- function(
   lasso.locc <- matrix(NA, nrow = n, ncol = lasso.long)
 
   for (j in 1:lasso.long) {
-    message("\n Computing concordance correlation index for sample ", object@assays[[defaultAssay(object)]]@meta.assays[["id"]][[2]], " for plotting.")
+    # message("\n Computing concordance correlation index for sample ", object@assays[[defaultAssay(object)]]@meta.assays[["id"]][[2]], " for plotting.")
     lasso.locc[, j] <- concordCIMX(y.mat, locc[, , j])
   }
 
