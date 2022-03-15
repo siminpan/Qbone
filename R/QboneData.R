@@ -82,11 +82,11 @@ createQboneData <- function(
   assay.orig = NULL,
   sort = F,
   ...
-) {
-  if (missing(x = data)) {
+){
+  if (missing(x = data)){
     stop("Must provide either 'data'")
   }
-  if (anyDuplicated(x = meta.assays[,sampleid.assays])) {
+  if (anyDuplicated(x = meta.assays[,sampleid.assays])){
     warning(
       "Non-unique sample names (meta.assays[,sampleid.assays]) present in the input meta.assays, making unique",
       call. = FALSE,
@@ -95,8 +95,8 @@ createQboneData <- function(
     meta.assays[,sampleid.assays] <- make.unique(names = meta.assays[,sampleid.assays])
   }
   if (is.list(data)){
-    if (!is.null(x = meta.assays)) {
-      if (nrow(x = meta.assays) != length(data)) {
+    if (!is.null(x = meta.assays)){
+      if (nrow(x = meta.assays) != length(data)){
         stop("There is a mismatch between the number of Metadata and the number of input data.")
       }
     } else {
@@ -104,7 +104,7 @@ createQboneData <- function(
     }
     for (i in 1:length(data)){
       if (is.atomic(data[[i]])){
-        if (sort == T) {
+        if (sort == T){
           data[[i]] <- sort(data[[i]], method = "quick")
         } else {
           data[[i]] <- data[[i]]
@@ -129,7 +129,7 @@ createQboneData <- function(
   )
   # qbonedata@scale.data <- append(qbonedata@scale.data,
   #                                list(id = meta.assays[,sampleid.assays]))
-  if (sort == T) {
+  if (sort == T){
     qbonedata@scale.data <- append(qbonedata@scale.data, list(sort = T))
   } else {
     qbonedata@scale.data <- append(qbonedata@scale.data, list(sort = F))
@@ -153,7 +153,7 @@ getQboneData.QboneData <- function(
   object,
   slot = c('data', 'scale.data'), # , 'scale.data', 'counts'            || Double check
   ...
-) {
+){
   CheckDots(...)
   slot <- slot[1]
   slot <- match.arg(arg = slot)
@@ -164,7 +164,7 @@ getQboneData.QboneData <- function(
 #' @rdname samples
 #' @export
 #'
-samples.QboneData <- function(x) {
+samples.QboneData <- function(x){
   return(names(x@data))
 }
 
@@ -204,12 +204,12 @@ NULL
 #' @export
 #' @method [[ QboneData
 #'
-"[[.QboneData" <- function(x, i, ..., drop = FALSE) {
-  if (missing(x = i)) {
+"[[.QboneData" <- function(x, i, ..., drop = FALSE){
+  if (missing(x = i)){
     i <- colnames(x = slot(object = x, name = 'meta.assay'))
   }
   data.return <- slot(object = x, name = 'meta.assay')[, i, drop = FALSE, ...]
-  if (drop) {
+  if (drop){
     data.return <- unlist(x = data.return, use.names = FALSE)
     names(x = data.return) <- rep.int(x = rownames(x = x), times = length(x = i))
   }

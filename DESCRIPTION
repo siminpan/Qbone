@@ -32,7 +32,9 @@ Imports:
     glmnet,
     doMC,
     Matrix,
-    foreach
+    foreach,
+    MASS,
+    ggplot2
 Collate: 
     'Qbone-package.R'
     'utils.R'
@@ -42,4 +44,5 @@ Collate:
     'QboneObject.R'
     'RcppExports.R'
     'basisfunction.R'
+    'plotting.R'
     'preprocessing.R'

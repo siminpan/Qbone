@@ -49,9 +49,10 @@ q1 = readQbone(data.dir, groupbyfolder = T)
 qa1 = getQboneData(q1, slot = 'data', assay = defaultAssay(q1))
 
 
-q2 = thinData(q1,prop=0.0001)
+q2 = thinData(q1,prop=0.01)
 q3 = lassolist(q2)
 q4 = quantlets(q3)
+object = q4
 q5 = lassolist2(q2)
 
 document()
@@ -470,7 +471,43 @@ concordance <- function(yhat, y) {
   2 * cov(yhat, y, use = "complete.obs") / (cov(yhat, yhat, use = "complete.obs") + cov(y, y, use = "complete.obs") + (mean(y, na.rm = TRUE) - mean(yhat, na.rm = TRUE))^2)
 }
 
+# F3A plotting ----
+library("ggplot2")
 
+
+quantlet.set <- LCCC.PLOT_1(
+  plength = length(p), # p = p1024
+  Values = lccc.lasso[[1]], # lasso.locc
+  # checking defaultAssay(object):
+  Y.list = raw.dataset, # raw.dataset <- getQboneData(object, slot = 'data', assay = object@assays[[defaultAssay(object)]]@assay.orig)
+  output1 = lasso.counts.fit[[1]], # object@assays[[defaultAssay(object)]]@scale.data[["basis.columns"]]
+  output2 = lasso.counts.fit[[2]], # object@assays[[defaultAssay(object)]]@scale.data[["remain.basis"]]
+  output3 = lasso.counts.fit[[3]], # object@assays[[defaultAssay(object)]]@scale.data[["remain.counts"]]
+  cutoff = 0.990 # Near-lossless values.
+  )
+
+# LCCC ----
+lasso.locc <- locc(
+  leaveout.list = lasso_IncidenceVec_i_,
+  remain.counts = lasso.counts.fit[[3]],
+  remain.basis = lasso.counts.fit[[2]],
+  Y.list = raw.dataset,
+  maxim = length(p),
+  alpha = alpha,
+  beta = beta
+)
+
+lasso.locc2 <- LCCC.FIT_1(
+  leaveout.list = lasso_IncidenceVec_i_,
+  remain.counts = lasso.counts.fit[[3]],
+  remain.basis = lasso.counts.fit[[2]],
+  Y.list = raw.dataset,
+  maxim = length(p),
+  alpha = alpha,
+  beta = beta
+)
+
+all.equal(lasso.locc[[1]], lasso.locc2[[1]])
 # other ----
 
 Qy2 = matrix( round(unlist( lapply( raw.dataset,  quantiles_p )  ),3) , 1024 )

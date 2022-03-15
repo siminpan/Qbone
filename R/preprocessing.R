@@ -32,9 +32,9 @@ readQbone <- function(
   full.data <- list()
   meta.file <- c()
   meta.group <- c()
-  for (i in seq_along(along.with = data.dir)) {
+  for (i in seq_along(along.with = data.dir)){
     run <- data.dir[i]
-    if (!dir.exists(paths = run)) {
+    if (!dir.exists(paths = run)){
       stop("Directory provided does not exist")
     }
     file.list = list.files(path = paste0(data.dir), pattern = ".csv$", recursive = TRUE)
@@ -95,11 +95,11 @@ thinData <- function(
   new.data = vector("list", length(orig.data))
   names(new.data) <- names(orig.data)
   if (object@assays[[defaultAssay(object)]]@scale.data[["sort"]] == F){
-    for (i in 1:length(orig.data)) {
+    for (i in 1:length(orig.data)){
       new.data[[i]] = orig.data[[i]][order(unlist(orig.data[[i]]))[seq(1, length(orig.data[[i]]), round(1/prop))]]
     }
   }else {
-    for (i in 1:length(orig.data)) {
+    for (i in 1:length(orig.data)){
       new.data[[i]] = unlist(orig.data[[i]])[seq(1, length(orig.data[[i]]), round(1/prop))]
     }
   }

@@ -72,7 +72,7 @@ lassolist <- function(
 
   # Penalized regression (lasso)
   message("\n This step may take a while as it involves k-fold cross-validation.")
-  if (verbose) {
+  if (verbose){
     message("\n Using penalized regression (lasso) to find a sparse subset of dictionary elements.")
     pb <- txtProgressBar(min = 0, max = length(orig.dataset), style = 3)
     new.data <- list()
@@ -150,7 +150,7 @@ quantlets <- function(
   # Compute frequency for each selected basis
   n <- length(raw.dataset)
   lasso_IncidenceVec_i_ <- vector("list", n)
-  for (i in 1:n) {
+  for (i in 1:n){
     lasso_fitIncd <- incidenceVec(lasso.list1[-i], lasso.nonzero.obs1[-i])
     lasso_IncidenceVec_i_[[i]] <- lasso_fitIncd
   }
@@ -166,7 +166,7 @@ quantlets <- function(
     beta = beta
   )
 
-  # Pre-quantlets basis functions
+  # Pre-quantlets basis functions, unify grid set as p1024 to avoid problems like gramshumit, memory error, irregar, empiricalQ.
   betaCDF <- generateBetaCDF(alpha = alpha,
                              beta = beta,
                              index.p = p)
@@ -176,7 +176,7 @@ quantlets <- function(
   reduced_BASE <- BETA_BASE_TOTAL_2
 
   q.raw.dataset <- lapply(raw.dataset,
-                          function(x, p) {quantile(x, p, type = 7)},
+                          function(x, p){quantile(x, p, type = 7)},
                           p = p
                           ) # Empirical quantiles for each subject.
 
@@ -236,12 +236,12 @@ generateBetaCDF <- function(
   beta,
   index.p,
   ...
-  ) {
+  ){
   # n1 <- as.character(alpha)
   # n2 <- as.character(beta)
   BETASCDF0 <- matrix(NA, ncol = length(index.p), nrow = length(beta) * length(alpha))
-  for (i in 1:length(alpha)) { ##   i=1;   j=12;   a1[i]    a2[j]
-    for (j in 1:length(beta)) {
+  for (i in 1:length(alpha)){ ##   i=1;   j=12;   a1[i]    a2[j]
+    for (j in 1:length(beta)){
       rowth <- (j - 1) * length(beta) + i
       BETASCDF0[rowth, ] <- pbeta(index.p, alpha[i], beta[j])
       BETASCDF0[rowth, ] <- round(centeringFunction(BETASCDF0[rowth, ], scale = TRUE), 7)
@@ -269,7 +269,7 @@ generateBetaCDF <- function(
 centeringFunction <- function(
   raw.x,
   scale = FALSE
-  ) {
+  ){
   object.x <- as.matrix(raw.x)
   x.n <- dim(object.x)[1]
   one <- rep(1, x.n) # matrix(rep(1, x.n), ncol = x.n)
@@ -279,10 +279,10 @@ centeringFunction <- function(
   jj <- eigenmapmm(one,t(rep(1, dim(object.x)[2]))) # rep(1, x.n) %*% t(rep(1, dim(object.x)[2])) # one %*% two # eigenmapmm(one, two)
   mean.mat <- diag(meanx, nrow = n1, ncol = n1)
   cen.x <- object.x - eigenmapmm(jj, mean.mat)
-  if (scale == FALSE) {
+  if (scale == FALSE){
     return(cen.x)
   }
-  if (scale == TRUE) {
+  if (scale == TRUE){
     normx <- sqrt(drop(eigenmapmm(matrix(rep(1, x.n), ncol = x.n), (cen.x^2))))
     normx1 <- as.matrix(normx)
     s1 <- dim(normx1)[1]
@@ -385,7 +385,7 @@ runlassolist <- function(
 #'
 catNorm <- function(
   vector
-  ) {
+  ){
   unique(c(0, 1, sort(vector, method = "quick")))
 }
 
@@ -402,7 +402,7 @@ catNorm <- function(
 #'
 replist <- function(
   vector
-  ) {
+  ){
   rep(1, length(vector))
 }
 
@@ -436,7 +436,7 @@ countBasis <- function(
   margin.count <- c(0, sort(unique(unique.count), method = "quick")) ## length(margin.count)
   long.set <- length(margin.count) - 1
   list.set <- vector("list", long.set)
-  for (i in 1:long.set) {
+  for (i in 1:long.set){
     list.set[[i]] <- sort(unique.colum[unique.count > margin.count[i]], method = "quick")
   }
   outputs <- list(list.set, unlist(lapply(list.set, length)), margin.count[-length(margin.count)])
@@ -458,7 +458,7 @@ countBasis <- function(
 incidenceVec <- function(
   setlistofobs,
   frqlistofobs
-  ) {
+  ){
   colum <- unlist(setlistofobs) ## length(colum )
   obs <- unlist(frqlistofobs) ## length( obs)
   mytable_colum0 <- table(colum, obs)
@@ -494,10 +494,10 @@ locc <- function(
   Y.list,
   maxim = 1000,
   ...
-  ) {
+  ){
   n <- length(leaveout.list)
   active.set <- (remain.basis < maxim)
-  if (tail(remain.counts[active.set], 1) == n - 1) {
+  if (tail(remain.counts[active.set], 1) == n - 1){
     remain.counts[ length(remain.counts)] <- n - 2
   }
   feasible.long <- sum(active.set)
@@ -506,8 +506,8 @@ locc <- function(
   Values <- array(NA, c(max.long, n, feasible.long))
 
   pb <- txtProgressBar(min = 0, max = length(Y.list), style = 3)
-  for (i in 1:n) {
-    message("\n Computes the leave-one-out concordance correlation index for ", names(Y.list)[i])
+  for (i in 1:n){
+    # message("\n Computes the leave-one-out concordance correlation index for ", names(Y.list)[i])
     y <- Y.list[[i]]
     y.long <- length(y)
     grid.p <- seq(1 / (y.long + 1), y.long / (y.long + 1), 1 / (y.long + 1))
@@ -519,7 +519,7 @@ locc <- function(
     Psi <- cbind(rep(1, length(grid.p)), BETA_BASE_TOTAL_2)
 
     # pbj <- txtProgressBar(min = 0, max = length(feasible.long), style = 3)
-    for (j in 1:feasible.long) { ###  j = 20
+    for (j in 1:feasible.long){ ###  j = 20
 
       colum_i_ <- leaveout.list[[i]][[1]]
       obs_i_ <- leaveout.list[[i]][[2]] ## length(IncidenceVec_i_)
@@ -592,7 +592,7 @@ lassolist2 <- function(
   #   alpha = a1,
   #   beta = a2
   # )
-  if (parallel & verbose == F) {
+  if (parallel & verbose == F){
     # .Random.seed <- assay.seed
     new.data <- foreach(i = 1:length(orig.dataset)) %dopar% { #, .packages=c("glmnet", "doMC")
       runlassolist2(orig.dataset[[i]],
@@ -602,7 +602,7 @@ lassolist2 <- function(
                             assay.seed = assay.seed, ...)
     }
 
-  } else if ( parallel & verbose) {
+  } else if ( parallel & verbose){
     # .Random.seed <- assay.seed
     pb <- txtProgressBar(min = 0, max = length(orig.dataset), style = 3)
     progress <- function(n) setTxtProgressBar(pb, n)
@@ -616,7 +616,7 @@ lassolist2 <- function(
     }
     close(pb)
   } else {stop()}
-  # if (verbose) {
+  # if (verbose){
   #   # .Random.seed <- assay.seed
   #   pb <- txtProgressBar(min = 0, max = length(orig.dataset), style = 3)
   #   new.data <- list()
@@ -716,12 +716,12 @@ runlassolist2 <- function(x, parallel = parallel, assay.seed = assay.seed, ...){
 #'
 #' @noRd
 #'
-GENERATE_BETA_CDF <- function(alpha, beta, index.p, ...) {
+GENERATE_BETA_CDF <- function(alpha, beta, index.p, ...){
   n1 <- as.character(alpha)
   n2 <- as.character(beta)
   BETASCDF0 <- matrix(NA, ncol = length(index.p), nrow = length(n2) * length(n1))
-  for (i in 1:length(n1)) { ##   i=1;   j=12;   a1[i]    a2[j]
-    for (j in 1:length(n2)) {
+  for (i in 1:length(n1)){ ##   i=1;   j=12;   a1[i]    a2[j]
+    for (j in 1:length(n2)){
       rowth <- (j - 1) * length(n2) + i
       BETASCDF0[rowth, ] <- pbeta(index.p, alpha[i], beta[j])
       BETASCDF0[rowth, ] <- round(centering.function(BETASCDF0[rowth, ], scale = TRUE), 7)
@@ -746,7 +746,7 @@ GENERATE_BETA_CDF <- function(alpha, beta, index.p, ...) {
 #'
 #' @noRd
 #'
-centering.function <- function(raw.x, scale = FALSE) {
+centering.function <- function(raw.x, scale = FALSE){
   object.x <- as.matrix(raw.x)
   x.n <- dim(object.x)[1]
   one <- rep(1, x.n)
@@ -756,10 +756,10 @@ centering.function <- function(raw.x, scale = FALSE) {
   jj <- rep(1, x.n) %*% t(rep(1, dim(object.x)[2]))
   mean.mat <- diag(meanx, nrow = n1, ncol = n1)
   cen.x <- object.x - jj %*% mean.mat
-  if (scale == FALSE) {
+  if (scale == FALSE){
     return(cen.x)
   }
-  if (scale == TRUE) {
+  if (scale == TRUE){
     normx <- sqrt(drop(one %*% (cen.x^2)))
     normx1 <- as.matrix(normx)
     s1 <- dim(normx1)[1]
@@ -777,10 +777,10 @@ centering.function <- function(raw.x, scale = FALSE) {
 #'
 #' @noRd
 #'
-LCCC.FIT_1 <- function(leaveout.list, remain.counts, remain.basis, Y.list, maxim = 1000, ...) {
+LCCC.FIT_1 <- function(leaveout.list, remain.counts, remain.basis, Y.list, maxim = 1000, ...){
   n <- length(leaveout.list)
   active.set <- (remain.basis < maxim)
-  if (tail(remain.counts[active.set], 1) == n - 1) {
+  if (tail(remain.counts[active.set], 1) == n - 1){
     remain.counts[ length(remain.counts)] <- n - 2
   }
   feasible.long <- sum(active.set)
@@ -789,7 +789,7 @@ LCCC.FIT_1 <- function(leaveout.list, remain.counts, remain.basis, Y.list, maxim
   Values <- array(NA, c(max.long, n, feasible.long))
 
 
-  for (i in 1:n) { ### i = 35
+  for (i in 1:n){ ### i = 35
     y <- Y.list[[i]]
     y.long <- length(y)
     grid.p <- seq(1 / (y.long + 1), y.long / (y.long + 1), 1 / (y.long + 1))
@@ -800,7 +800,7 @@ LCCC.FIT_1 <- function(leaveout.list, remain.counts, remain.basis, Y.list, maxim
     BETA_BASE_TOTAL_2 <- cbind(BNQ, t(CDFBETA))
     Psi <- cbind(rep(1, length(grid.p)), BETA_BASE_TOTAL_2)
 
-    for (j in 1:feasible.long) { ###  j = 20
+    for (j in 1:feasible.long){ ###  j = 20
 
       colum_i_ <- leaveout.list[[i]][[1]]
       obs_i_ <- leaveout.list[[i]][[2]] ## length(IncidenceVec_i_)

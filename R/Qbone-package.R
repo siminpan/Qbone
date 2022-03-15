@@ -7,6 +7,8 @@
 ## usethis namespace: start
 #' @useDynLib Qbone, .registration = TRUE
 #' @importFrom Rcpp sourceCpp
+#' @importFrom stats coef pbeta qnorm quantile
+#' @importFrom utils packageVersion tail
 ## usethis namespace: end
 NULL
 #> NULL

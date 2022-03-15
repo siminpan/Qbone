@@ -49,7 +49,7 @@ createQboneObject <- function(
   meta.data = NULL,
   sampleid = 1,
   ...
-) {
+){
   UseMethod(generic = 'createQboneObject', object = data)
 }
 
@@ -66,7 +66,7 @@ createQboneObject <- function(
 #' @rdname defaultAssay
 #' @export defaultAssay
 #'
-defaultAssay <- function(object, ...) {
+defaultAssay <- function(object, ...){
   UseMethod(generic = 'defaultAssay', object = object)
 }
 
@@ -81,7 +81,7 @@ defaultAssay <- function(object, ...) {
 #' @rdname defaultAssay
 #' @export defaultAssay<-
 #'
-"defaultAssay<-" <- function(object, ..., value) {
+"defaultAssay<-" <- function(object, ..., value){
   UseMethod(generic = 'defaultAssay<-', object = object)
 }
 
@@ -99,7 +99,7 @@ defaultAssay <- function(object, ...) {
 #' @export addMetaData
 #'
 #'
-addMetaData <- function(object, metadata, col.name = NULL) {
+addMetaData <- function(object, metadata, col.name = NULL){
   UseMethod(generic = 'addMetaData', object = object)
 }
 
@@ -115,7 +115,7 @@ addMetaData <- function(object, metadata, col.name = NULL) {
 #' @rdname idents
 #' @export idents
 #'
-idents <- function(object, ... ) {
+idents <- function(object, ... ){
   UseMethod(generic = 'idents', object = object)
 }
 
@@ -131,7 +131,7 @@ idents <- function(object, ... ) {
 #' @rdname idents
 #' @export idents<-
 #'
-"idents<-" <- function(object, ..., value) {
+"idents<-" <- function(object, ..., value){
   UseMethod(generic = 'idents<-', object = object)
 }
 
@@ -160,6 +160,6 @@ idents <- function(object, ... ) {
 #'
 #' @concept data-access
 #'
-getQboneData <- function(object, slot, ...) {
+getQboneData <- function(object, slot, ...){
   UseMethod(generic = 'getQboneData', object = object)
 }
