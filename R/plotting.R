@@ -22,12 +22,60 @@ NULL
 #' function of \eqn{K_{c}} in the reduced set.
 #'
 #' @param object A Qboneobject
+#' @param ... Arguments passed to other methods
 #'
-#' @importFrom ggplot2 ggplot geom_point
+#' @importFrom ggplot2 ggplot geom_point geom_line
 #'
 #' @export
 #'
-nllplot <- function(){}
+nllplot <- function(
+  object,
+  ...
+){
+  message("Getting data for plotting.")
+  plotdata1 <- loccplotdata(object, ...)
+  plotdata2 <- plotdata1[[3]]
+  p2 <- ggplot(plotdata2, aes(x=x, y=y, color= group)) +
+    geom_point() +
+    geom_line() +
+    scale_y_continuous(limits = c(0.8, 1.0)) +
+    scale_x_continuous(limits = c(-1, max(plotdata2$x)+0.5)) +
+    scale_color_manual(
+      labels = c(expression(paste(bar(rho))), expression(paste(rho^0))),
+      values = c("blue", "red")
+    ) +
+    labs(title = "Find a sparse yet near-lossless basis set",
+         y = "Losslessness",
+         color = NULL
+    ) +
+    geom_vline(xintercept = min(plotdata2$x[c(lasso.Chary_i_ - lasso.Chary1_i_) > 0.001]),
+               linetype="dotted",
+               color = "black",
+               size=0.5) +
+    geom_hline(yintercept = cutoff,
+               linetype="dotted",
+               color = "black",
+               size=0.5) +
+    geom_label(aes(min(x[c(lasso.Chary_i_ - lasso.Chary1_i_) > 0.001]),
+                   0.855,
+                   label=min(x[c(lasso.Chary_i_ - lasso.Chary1_i_) > 0.001])
+    )
+    ) +
+    geom_label(aes(unique(plotdata2$x)[2],
+                   cutoff,
+                   label="cutoff")
+    ) +
+    annotate(geom = "text", x = c(0,unique(plotdata2$x)), y = 0.84, label = c("C",unique(plotdata2$x)), size = 3) +
+    annotate(geom = "text", x = c(0,unique(plotdata2$x)), y = 0.83, label = c(expression(K[C]),unique(plotdata2$x2)), size = 3, angle = 45) +
+    coord_cartesian(ylim = c(0.85, 1.01), xlim = c(0, max(plotdata2$x)+0.5), expand = FALSE, clip = "off") +
+    theme_bw() +
+    theme(plot.margin = unit(c(1, 1, 4, 1), "lines"),
+          axis.title.x = element_blank(),
+          axis.text.x = element_blank(),
+          panel.grid.major.x = element_blank(),
+          panel.grid.minor.x = element_blank())
+  return(p2)
+}
 
 ## 2.2 nllplotrev ----
 #' Plot number of basis coefficients.
@@ -99,8 +147,6 @@ concordCIDX <- function(yhat, y){
 #'
 #' @return concordance value for the matrix
 #'
-#' @importFrom utils txtProgressBar setTxtProgressBar
-#'
 #' @keywords internal
 #'
 #' @noRd
@@ -108,11 +154,11 @@ concordCIDX <- function(yhat, y){
 concordCIMX <- function(input.yhat, input.y){
   k <- dim(input.yhat)[2]
   values <- rep(NA, k)
-  pb <- txtProgressBar(min = 0, max = length(k), style = 3)
+  # pb <- txtProgressBar(min = 0, max = length(k), style = 3)
   for (i in 1:k) {
     values[i] <- concordCIDX(input.y[, i], input.yhat[, i])
   }
-  close(pb)
+  # close(pb)
   return(values)
 }
 
@@ -121,7 +167,8 @@ concordCIMX <- function(input.yhat, input.y){
 #'
 #' @param object Qbone object
 #' @param p Vector of length P  in (0,1)	Probability grids.
-#' @param cutoff Near-lossless values
+#' @param cutoff Near-lossless values#'
+#' @param ... Arguments passed to other methods
 #'
 #' @return concordance value for the matrix
 #'
@@ -132,7 +179,8 @@ concordCIMX <- function(input.yhat, input.y){
 loccplotdata <- function(
   object,
   p = signif(seq(0.001, 0.999, length = 1024), 4),
-  cutoff = 0.990
+  cutoff = 0.990,
+  ...
   ){
   plength = length(p)
   locc <- object@assays[[defaultAssay(object)]]@scale.data[["locc"]][[1]]
@@ -179,8 +227,17 @@ loccplotdata <- function(
   }
 
   quantlet.set <- basis.columns[[  this   ]] [-1]
-  outputs <- list(quantlet.set, lasso.Chary1_i_[ this ])
-  names(outputs) <- list("quantlet", "lccc")
+
+  numbasis <- sort(unique(c(lasso.x)), decreasing = TRUE)
+  plotxaxis <- seq(length(numbasis))
+  plotdata = data.frame(x = c(plotxaxis, plotxaxis),
+                        x2 = c(numbasis, numbasis),
+                        y = c(lasso.Chary_i_, lasso.Chary1_i_),
+                        group = c(rep("mean", length(lasso.Chary_i_)), rep("min", length(lasso.Chary1_i_)))
+                        )
+
+  outputs <- list(quantlet.set, lasso.Chary1_i_[ this ], plotdata)
+  names(outputs) <- list("quantlet", "lccc", "plotdata")
   return(outputs)
 }
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

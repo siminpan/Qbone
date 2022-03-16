@@ -4,10 +4,12 @@
 \alias{nllplot}
 \title{Plot near-losslessness parameters.}
 \usage{
-nllplot()
+nllplot(object, ...)
 }
 \arguments{
 \item{object}{A Qboneobject}
+
+\item{...}{Arguments passed to other methods}
 }
 \description{
 Plots the near-losslessness parameters minimum concordance (\eqn{\rho^{o}})

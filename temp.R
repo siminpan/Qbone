@@ -597,7 +597,7 @@ p2 +
         panel.grid.minor.x = element_blank())
 
 
-
+nllplot(object)
 
 # LCCC ----
 lasso.locc <- locc(
