@@ -553,36 +553,51 @@ p1
 
 plotdata2 = data.frame(x = c(plotxaxis, plotxaxis), x2 = c(numbasis, numbasis), y = c(lasso.Chary_i_, lasso.Chary1_i_), group = c(rep("mean", length(lasso.Chary_i_)), rep("min", length(lasso.Chary1_i_))))
 
-scale1 = max(plotxaxis)/max(numbasis)
 
-p1 <- ggplot(plotdata2, aes(x=x, y=y, color= group)) +
+p2 <- ggplot(plotdata2, aes(x=x, y=y, color= group)) +
   geom_point() +
   geom_line() +
-  scale_y_continuous(limits = c(0.85, 1)) +
-  scale_x_continuous(sec.axis=sec_axis(trans=~ . * scale1, name=expression(K[C]))) +
+  scale_y_continuous(limits = c(0.8, 1.0)) +
+  scale_x_continuous(limits = c(-1, max(plotdata2$x)+0.5)) +
   scale_color_manual(
     labels = c(expression(paste(bar(rho))), expression(paste(rho^0))),
     values = c("blue", "red")
-    ) +
+  ) +
   labs(title = "Find a sparse yet near-lossless basis set",
-       x = "TY [°C]",
        y = "Losslessness",
        color = NULL
-       ) +
+  ) +
   geom_vline(xintercept = min(plotdata2$x[c(lasso.Chary_i_ - lasso.Chary1_i_) > 0.001]),
              linetype="dotted",
              color = "black",
              size=0.5) +
+  geom_hline(yintercept = cutoff,
+             linetype="dotted",
+             color = "black",
+             size=0.5) +
   geom_label(aes(min(x[c(lasso.Chary_i_ - lasso.Chary1_i_) > 0.001]),
-                     0.85,
-                     label=min(x[c(lasso.Chary_i_ - lasso.Chary1_i_) > 0.001])
-                 )
-             )
+                 0.855,
+                 label=min(x[c(lasso.Chary_i_ - lasso.Chary1_i_) > 0.001])
+  )
+  ) +
+  geom_label(aes(unique(plotdata2$x)[2],
+                 cutoff,
+                 label="cutoff")
+  )
+
+p2 +
+  annotate(geom = "text", x = c(0,unique(plotdata2$x)), y = 0.84, label = c("C",unique(plotdata2$x)), size = 3) +
+  annotate(geom = "text", x = c(0,unique(plotdata2$x)), y = 0.83, label = c(expression(K[C]),unique(plotdata2$x2)), size = 3, angle = 45) +
+  coord_cartesian(ylim = c(0.85, 1.01), xlim = c(0, max(plotdata2$x)+0.5), expand = FALSE, clip = "off") +
+  theme_bw() +
+  theme(plot.margin = unit(c(1, 1, 4, 1), "lines"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank())
 
 
-p1
 
-min(x[c(lasso.Chary_i_ - lasso.Chary1_i_) > 0.001])
 
 # LCCC ----
 lasso.locc <- locc(
