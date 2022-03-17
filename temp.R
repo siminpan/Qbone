@@ -597,7 +597,51 @@ p2 +
         panel.grid.minor.x = element_blank())
 
 
-nllplot(object)
+p2.5 = nllplot(object)
+p2.5
+
+p3 <- ggplot(plotdata2, aes(x=x, y=y, color= group)) +
+  geom_point() +
+  geom_line() +
+  scale_y_continuous(limits = c(0.8, 1.0)) +
+  scale_x_reverse(limits = c(max(plotdata2$x)+0.5, 0)) +
+  scale_color_manual(
+    labels = c(expression(paste(bar(rho))), expression(paste(rho^0))),
+    values = c("blue", "red")
+  ) +
+  labs(title = "Find a sparse yet near-lossless basis set",
+       y = "Losslessness",
+       color = NULL
+  ) +
+  geom_vline(xintercept = min(plotdata2$x[c(lasso.Chary_i_ - lasso.Chary1_i_) > 0.001]),
+             linetype="dotted",
+             color = "black",
+             size=0.5) +
+  geom_hline(yintercept = cutoff,
+             linetype="dotted",
+             color = "black",
+             size=0.5) +
+  geom_label(aes(min(x[c(lasso.Chary_i_ - lasso.Chary1_i_) > 0.001]),
+                 0.855,
+                 label=max(x2[c(lasso.Chary_i_ - lasso.Chary1_i_) > 0.001])
+  )
+  ) +
+  geom_label(aes(unique(plotdata2$x)[2],
+                 cutoff,
+                 label="cutoff")
+  ) +
+  annotate(geom = "text", x = c(rev(unique(plotdata2$x)), 0), y = 0.84, label = c(expression(K[C]),rev(unique(plotdata2$x2))), size = 3, angle = 45) +
+  coord_cartesian(ylim = c(0.85, 1.01), xlim = c(max(plotdata2$x)+0.5, 0), expand = FALSE, clip = "off") +
+  theme_bw() +
+  theme(plot.margin = unit(c(1, 1, 4, 1), "lines"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank())
+
+p3
+
+nllplotrev(object)
 
 # LCCC ----
 lasso.locc <- locc(

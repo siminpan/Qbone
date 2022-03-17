@@ -4,10 +4,12 @@
 \alias{nllplotrev}
 \title{Plot number of basis coefficients.}
 \usage{
-nllplotrev()
+nllplotrev(object, ...)
 }
 \arguments{
-\item{object}{A Qboneobject}
+\item{object}{A Qboneobject#'}
+
+\item{...}{Arguments passed to other methods}
 }
 \description{
 Reversed nllplot useful when plotting with other basis like principal
