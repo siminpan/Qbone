@@ -665,6 +665,22 @@ lasso.locc2 <- LCCC.FIT_1(
 )
 
 all.equal(lasso.locc[[1]], lasso.locc2[[1]])
+
+############# We choose # of basis ###############################################################################
+
+lasso.x <- lasso.counts.fit[[2]][ (lasso.counts.fit[[2]] < 1000) ]
+lasso.x.idx <- seq(length(lasso.list1))[ (lasso.counts.fit[[2]] < 1000) ]
+list.order <- lasso.counts.fit[[1]]
+unlist(lapply(list.order, length))
+
+# lasso.counts.fit[[2]]:
+object@assays[["Quantiles"]]@scale.data[["basis.columns"]]
+
+be <- 3
+REDUCED_BASE9 <- BETA_BASE_TOTAL_2[, list.order[[be + 3 ] ]] # our choice in paper
+REDUCED_BASE21 <- BETA_BASE_TOTAL_2[, list.order[[be + 13 ] ]] # Normal case in paper
+
+
 # other ----
 
 Qy2 = matrix( round(unlist( lapply( raw.dataset,  quantiles_p )  ),3) , 1024 )
