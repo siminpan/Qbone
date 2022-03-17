@@ -74,7 +74,7 @@ nllplot <- function(
           axis.text.x = element_blank(),
           panel.grid.major.x = element_blank(),
           panel.grid.minor.x = element_blank())
-  return(p2)
+  return(suppressWarnings(print(p2)))
 }
 
 ## 2.2 nllplotrev ----
@@ -210,7 +210,7 @@ loccplotdata <- function(
 
   lasso.Chary_i_ <- apply(lasso.locc, 2, mean)
   lasso.Chary1_i_ <- apply(lasso.locc, 2, min)
-  ## define names
+
   lasso.x <- remain.basis[ (remain.basis < plength) ][1:lasso.long]
   lasso.x1 <- remain.counts[ (remain.basis < plength) ][1:lasso.long]
 
