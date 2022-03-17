@@ -147,12 +147,17 @@ nllplotrev <- function(
 #'
 #' @param object A Qboneobject
 #' @param n Number of first n basis functions to plot, default = 16.
+#' @param ... Arguments passed to other methods
 #'
 #' @importFrom ggplot2 ggplot geom_point
 #'
 #' @export
 #'
-qbasisplot <- function(){}
+qbasisplot <- function(
+  object,
+  n = 16,
+  ...
+){}
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # 3. Qbone-defined generics ----

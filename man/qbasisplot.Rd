@@ -4,12 +4,14 @@
 \alias{qbasisplot}
 \title{Plot first n quantlet basis functions}
 \usage{
-qbasisplot()
+qbasisplot(object, n = 16, ...)
 }
 \arguments{
 \item{object}{A Qboneobject}
 
 \item{n}{Number of first n basis functions to plot, default = 16.}
+
+\item{...}{Arguments passed to other methods}
 }
 \description{
 Plot first n quantlet basis functions
