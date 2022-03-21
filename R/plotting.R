@@ -24,7 +24,7 @@ NULL
 #' @param object A Qboneobject
 #' @param ... Arguments passed to other methods
 #'
-#' @importFrom ggplot2 ggplot geom_point geom_line
+#' @importFrom ggplot2 ggplot aes geom_point geom_line scale_y_continuous scale_x_continuous scale_color_manual labs geom_vline geom_hline geom_label annotate coord_cartesian theme_bw theme element_blank unit
 #'
 #' @export
 #'
@@ -35,9 +35,15 @@ nllplot <- function(
   message("Getting data for plotting.")
   plotdata1 <- loccplotdata(object, ...)
   plotdata2 <- plotdata1[[3]]
+  plotdata3 <- plotdata2[which(plotdata2$y >= 0.85),]
+  if (nrow(plotdata1[[3]]) != nrow(plotdata3)){
+    message(nrow(plotdata1[[3]]) - nrow(plotdata3), " points removed from ", expression(rho^0), " as it's lower than 0.85")
+  }
+  lasso.mean_i_ = plotdata2$y[plotdata2$group == "mean"]
+  lasso.min_i_ = plotdata2$y[plotdata2$group == "min"]
   p2 <- ggplot(plotdata2, aes(x=x, y=y, color= group)) +
-    geom_point() +
-    geom_line() +
+    geom_point(data = plotdata3, aes(x=x, y=y, color= group)) +
+    geom_line(data = plotdata3, aes(x=x, y=y, color= group)) +
     scale_y_continuous(limits = c(0.8, 1.0)) +
     scale_x_continuous(limits = c(-1, max(plotdata2$x)+0.5)) +
     scale_color_manual(
@@ -48,21 +54,21 @@ nllplot <- function(
          y = "Losslessness",
          color = NULL
     ) +
-    geom_vline(xintercept = min(plotdata2$x[c(lasso.Chary_i_ - lasso.Chary1_i_) > 0.001]),
+    geom_vline(xintercept = min(plotdata2$x[c(lasso.mean_i_ - lasso.min_i_) > 0.001]),
                linetype="dotted",
                color = "black",
                size=0.5) +
-    geom_hline(yintercept = cutoff,
+    geom_hline(yintercept = plotdata2$cutoff,
                linetype="dotted",
                color = "black",
                size=0.5) +
-    geom_label(aes(min(x[c(lasso.Chary_i_ - lasso.Chary1_i_) > 0.001]),
+    geom_label(aes(min(x[c(lasso.mean_i_ - lasso.min_i_) > 0.001]),
                    0.855,
-                   label=min(x[c(lasso.Chary_i_ - lasso.Chary1_i_) > 0.001])
+                   label=min(x[c(lasso.mean_i_ - lasso.min_i_) > 0.001])
     )
     ) +
     geom_label(aes(unique(plotdata2$x)[2],
-                   cutoff,
+                   plotdata2$cutoff,
                    label="cutoff")
     ) +
     annotate(geom = "text", x = c(0,unique(plotdata2$x)), y = 0.84, label = c("C",unique(plotdata2$x)), size = 3) +
@@ -88,7 +94,7 @@ nllplot <- function(
 #' @param object A Qboneobject#'
 #' @param ... Arguments passed to other methods
 #'
-#' @importFrom ggplot2 ggplot geom_point geom_line
+#' @importFrom ggplot2 ggplot aes geom_point geom_line scale_y_continuous scale_x_reverse scale_color_manual labs geom_vline geom_hline geom_label annotate coord_cartesian theme_bw theme element_blank unit
 #'
 #' @export
 #'
@@ -99,9 +105,15 @@ nllplotrev <- function(
   message("Getting data for plotting.")
   plotdata1 <- loccplotdata(object, ...)
   plotdata2 <- plotdata1[[3]]
+  plotdata3 <- plotdata2[which(plotdata2$y >= 0.85),]
+  if (nrow(plotdata1[[3]]) != nrow(plotdata3)){
+    message(nrow(plotdata1[[3]]) - nrow(plotdata3), " points removed from ", expression(rho^0), " as it's lower than 0.85")
+  }
+  lasso.mean_i_ = plotdata2$y[plotdata2$group == "mean"]
+  lasso.min_i_ = plotdata2$y[plotdata2$group == "min"]
   p3 <- ggplot(plotdata2, aes(x=x, y=y, color= group)) +
-    geom_point() +
-    geom_line() +
+    geom_point(data = plotdata3, aes(x=x, y=y, color= group)) +
+    geom_line(data = plotdata3, aes(x=x, y=y, color= group)) +
     scale_y_continuous(limits = c(0.8, 1.0)) +
     scale_x_reverse(limits = c(max(plotdata2$x)+0.5, 0)) +
     scale_color_manual(
@@ -112,21 +124,21 @@ nllplotrev <- function(
          y = "Losslessness",
          color = NULL
     ) +
-    geom_vline(xintercept = min(plotdata2$x[c(lasso.Chary_i_ - lasso.Chary1_i_) > 0.001]),
+    geom_vline(xintercept = min(plotdata2$x[c(lasso.mean_i_ - lasso.min_i_) > 0.001]),
                linetype="dotted",
                color = "black",
                size=0.5) +
-    geom_hline(yintercept = cutoff,
+    geom_hline(yintercept = plotdata2$cutoff,
                linetype="dotted",
                color = "black",
                size=0.5) +
-    geom_label(aes(min(x[c(lasso.Chary_i_ - lasso.Chary1_i_) > 0.001]),
+    geom_label(aes(min(x[c(lasso.mean_i_ - lasso.min_i_) > 0.001]),
                    0.855,
-                   label=max(x2[c(lasso.Chary_i_ - lasso.Chary1_i_) > 0.001])
+                   label=max(x2[c(lasso.mean_i_ - lasso.min_i_) > 0.001])
     )
     ) +
     geom_label(aes(unique(plotdata2$x)[2],
-                   cutoff,
+                   plotdata2$cutoff,
                    label="cutoff")
     ) +
     annotate(geom = "text", x = c(rev(unique(plotdata2$x)), 0), y = 0.84, label = c(expression(K[C]),rev(unique(plotdata2$x2))), size = 3, angle = 45) +
@@ -260,14 +272,14 @@ loccplotdata <- function(
     lasso.locc[, j] <- concordCIMX(y.mat, locc[, , j])
   }
 
-  lasso.Chary_i_ <- apply(lasso.locc, 2, mean)
-  lasso.Chary1_i_ <- apply(lasso.locc, 2, min)
+  lasso.mean_i_ <- apply(lasso.locc, 2, mean)
+  lasso.min_i_ <- apply(lasso.locc, 2, min)
 
   lasso.x <- remain.basis[ (remain.basis < plength) ][1:lasso.long]
   lasso.x1 <- remain.counts[ (remain.basis < plength) ][1:lasso.long]
 
   id2 <- (lasso.x) <= (length(raw.dataset) - 1) ## length(lasso.x)
-  id3 <- lasso.Chary1_i_ >= cutoff
+  id3 <- lasso.min_i_ >= cutoff
   id1 <- id3 & id2
   if (sum(id1) == 0) {
     id <- id2
@@ -284,11 +296,12 @@ loccplotdata <- function(
   plotxaxis <- seq(length(numbasis))
   plotdata = data.frame(x = c(plotxaxis, plotxaxis),
                         x2 = c(numbasis, numbasis),
-                        y = c(lasso.Chary_i_, lasso.Chary1_i_),
-                        group = c(rep("mean", length(lasso.Chary_i_)), rep("min", length(lasso.Chary1_i_)))
+                        y = c(lasso.mean_i_, lasso.min_i_),
+                        group = c(rep("mean", length(lasso.mean_i_)), rep("min", length(lasso.min_i_))),
+                        cutoff = cutoff
                         )
 
-  outputs <- list(quantlet.set, lasso.Chary1_i_[ this ], plotdata)
+  outputs <- list(quantlet.set, lasso.min_i_[ this ], plotdata)
   names(outputs) <- list("quantlet", "lccc", "plotdata")
   return(outputs)
 }

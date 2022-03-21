@@ -554,11 +554,17 @@ p1
 plotdata2 = data.frame(x = c(plotxaxis, plotxaxis), x2 = c(numbasis, numbasis), y = c(lasso.Chary_i_, lasso.Chary1_i_), group = c(rep("mean", length(lasso.Chary_i_)), rep("min", length(lasso.Chary1_i_))))
 
 
+plotdata1 <- loccplotdata(object)
+plotdata2 <- plotdata1[[3]]
+plotdata3 <- plotdata2[which(plotdata2$y >= 0.85),]
+lasso.Chary_i_ = plotdata2$y[plotdata2$group == "mean"]
+lasso.Chary1_i_ = plotdata2$y[plotdata2$group == "min"]
+
 p2 <- ggplot(plotdata2, aes(x=x, y=y, color= group)) +
-  geom_point() +
-  geom_line() +
+  geom_point(data = plotdata3, aes(x=x, y=y, color= group)) +
+  geom_line(data = plotdata3, aes(x=x, y=y, color= group)) +
   scale_y_continuous(limits = c(0.8, 1.0)) +
-  scale_x_continuous(limits = c(-1, max(plotdata2$x)+0.5)) +
+  scale_x_continuous(limits = c(-1, max(plotdata2$x)+0.5))+
   scale_color_manual(
     labels = c(expression(paste(bar(rho))), expression(paste(rho^0))),
     values = c("blue", "red")
@@ -571,7 +577,7 @@ p2 <- ggplot(plotdata2, aes(x=x, y=y, color= group)) +
              linetype="dotted",
              color = "black",
              size=0.5) +
-  geom_hline(yintercept = cutoff,
+  geom_hline(yintercept = plotdata2$cutoff[1],
              linetype="dotted",
              color = "black",
              size=0.5) +
@@ -581,9 +587,13 @@ p2 <- ggplot(plotdata2, aes(x=x, y=y, color= group)) +
   )
   ) +
   geom_label(aes(unique(plotdata2$x)[2],
-                 cutoff,
+                 plotdata2$cutoff[1],
                  label="cutoff")
   )
+
+p2
+suppressWarnings(p2)
+suppressWarnings(print(p2))
 
 p2 +
   annotate(geom = "text", x = c(0,unique(plotdata2$x)), y = 0.84, label = c("C",unique(plotdata2$x)), size = 3) +
@@ -641,6 +651,30 @@ p3 <- ggplot(plotdata2, aes(x=x, y=y, color= group)) +
 
 p3
 
+## off limit testing ----
+z <- rnorm(1000, mean = 0, sd = 1)
+dens <- density(z)
+data <- tibble(x = dens$x, y = dens$y) %>%
+  mutate(variable = case_when(
+    (x >= -2 & x <= 0) ~ "On",
+    (x >= 0.2 & x <= 1) ~ "Off",
+    TRUE ~ NA_character_))
+
+ggplot(data, aes(x, y)) + geom_line() +
+  geom_area(data = filter(data, variable == 'On'), fill = 'grey') +
+  geom_area(data = filter(data, variable == 'Off'), fill = 'light blue') +
+  geom_text(aes(x = 7, y = 0.15, label = "test")) +
+  theme(plot.margin = unit(c(1,7,1,1), "lines")) +
+  scale_y_continuous(limits = c(0.1, 0.2),
+                     expand = c(0, 0),
+                     oob = scales::oob_squish) +
+  scale_x_continuous(limits = c(-5, 5),
+                     oob = scales::oob_keep) +
+  coord_cartesian(clip = "off")
+
+document()
+
+nllplot(object)
 nllplotrev(object)
 
 # LCCC ----
@@ -673,8 +707,11 @@ lasso.x.idx <- seq(length(lasso.list1))[ (lasso.counts.fit[[2]] < 1000) ]
 list.order <- lasso.counts.fit[[1]]
 unlist(lapply(list.order, length))
 
-# lasso.counts.fit[[2]]:
+# lasso.counts.fit[[1]]:
 object@assays[["Quantiles"]]@scale.data[["basis.columns"]]
+
+object@assays[["Quantiles"]]@scale.data[["basis.columns"]][[9]]
+length(object@assays[["Quantiles"]]@scale.data[["basis.columns"]][[9]])
 
 be <- 3
 REDUCED_BASE9 <- BETA_BASE_TOTAL_2[, list.order[[be + 3 ] ]] # our choice in paper
