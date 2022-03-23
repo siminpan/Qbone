@@ -41,7 +41,7 @@ data.frame(row.names = qbonedata@data)
 idents(q2) <- c("c", "d")
 idents(q2)
 
-# lassolist ----
+# lassoList ----
 data.dir = "/home/span/Documents/MOSJ-3DCT/data/csv.test"
 data.dir = "/home/span/Documents/MOSJ-3DCT/data/csv.group"
 q1 = readQbone(data.dir, groupbyfolder = T)
@@ -51,10 +51,13 @@ qa1 = getQboneData(q1, slot = 'data', assay = defaultAssay(q1))
 data.dir = "/home/span/Documents/MOSJ-3DCT/data/csv.group"
 q1 = readQbone(data.dir, groupbyfolder = T)
 q2 = thinData(q1,prop=0.0001)
-q3 = lassolist(q2)
+q3 = lassoList(q2)
 q4 = quantlets(q3)
-object = q4
-q5 = lassolist2(q2)
+dxPlot(q4)
+dxPlotRev(q4)
+q5 = reduceBasis(q4)
+object = q5
+save.image("~/Documents/Qbone.test.Rdata")
 
 document()
 q6 = lassolist2(q2)
@@ -68,8 +71,8 @@ list1 = runlassolist(raw.dataset[[1]])
 
 ## assay.seed ----
 set.seed(12345)
-q7 = lassolist(q2,verbose = F, parallel = T)
-q8 = lassolist(q2, assay.seed = q7@assays[["Lasso"]]@scale.data[["lassolist"]], verbose = F, parallel = T)
+q7 = lassoList(q2,verbose = F, parallel = T)
+q8 = lassoList(q2, assay.seed = q7@assays[["Lasso"]]@scale.data[["lassoList"]], verbose = F, parallel = T)
 all.equal(q8@assays[["Lasso"]]@data,
           q7@assays[["Lasso"]]@data)
 
@@ -77,7 +80,7 @@ all.equal(q7@assays[["Lasso"]]@scale.data[["lassolist"]],
           q8@assays[["Lasso"]]@scale.data[["lassolist"]])
 
 set.seed(12345)
-q9 = lassolist(q2, parallel = T)
+q9 = lassoList(q2, parallel = T)
 set.seed(12345)
 q10 = lassolist2(q2, parallel = T)
 all.equal(q9@assays[["Lasso"]]@data,
@@ -87,9 +90,9 @@ all.equal(q9@assays[["Lasso"]]@scale.data[["lassolist"]],
           q10@assays[["Lasso"]]@scale.data[["lassolist"]])
 
 .Random.seed <- q7@assays[["Lasso"]]@scale.data[["lassolist"]]
-q9 = lassolist(q2, parallel = T)
+q9 = lassoList(q2, parallel = T)
 .Random.seed <- q7@assays[["Lasso"]]@scale.data[["lassolist"]]
-q10 = lassolist(q2, parallel = T)
+q10 = lassoList(q2, parallel = T)
 all.equal(q9@assays[["Lasso"]]@data,
           q10@assays[["Lasso"]]@data)
 
@@ -138,9 +141,9 @@ do2 = cv.glmnet(BETA_BASE_TOTAL_2, y, intercept = TRUE, nfolds = 3)
 library("microbenchmark")
 # lassolist2 is faster (0.1-0.9 second)
 document()
-q7 = lassolist(q2, parallel = T)
+q7 = lassoList(q2, parallel = T)
 q7.2 = lassolist2(q2, verbose=T, parallel = T)
-microbenchmark(lassolist(q2, verbose=F,  parallel = T), lassolist2(q2, verbose=F, parallel = T), times = 10L)
+microbenchmark(lassoList(q2, verbose=F,  parallel = T), lassolist2(q2, verbose=F, parallel = T), times = 10L)
 microbenchmark(lassolist2(q2, verbose=F), lassolist2(q2, verbose=T), times = 10L)
 
 
@@ -256,7 +259,7 @@ cl <- makeCluster(cores-1)
 registerDoParallel(cl)
 
 set.seed(12345)
-q7 = lassolist(q2, verbose=T, parallel = T)
+q7 = lassoList(q2, verbose=T, parallel = T)
 set.seed(12345)
 q7.2 = lassolist2(q2, verbose=F, parallel = T)
 all.equal(q7@assays[["Lasso"]]@data,
@@ -280,15 +283,15 @@ cores = detectCores()
 cl <- makeCluster(cores-1)
 registerDoSNOW(cl)
 set.seed(12345)
-q7 = lassolist(q2, verbose=T, parallel = T)
+q7 = lassoList(q2, verbose=T, parallel = T)
 set.seed(12345)
 q7.2 = lassolist2(q2, verbose=T, parallel = T)
 set.seed(12345)
 q7.3 = lassolist2(q2, verbose=F, parallel = T)
 
 
-system.time(q7.0 <- lassolist(q2, verbose=F, parallel = T))
-system.time(q7.1 <- lassolist(q2, verbose=T, parallel = T))
+system.time(q7.0 <- lassoList(q2, verbose=F, parallel = T))
+system.time(q7.1 <- lassoList(q2, verbose=T, parallel = T))
 system.time(q7.2 <- lassolist2(q2, verbose=T, parallel = T))
 system.time(q7.3 <- lassolist2(q2, verbose=F, parallel = T))
 
@@ -399,7 +402,7 @@ cores = detectCores()
 cl <- makeCluster(cores-1)
 registerDoParallel(cl)
 
-q4 = lassolist(q2, verbose = F, parallel = T)
+q4 = lassoList(q2, verbose = F, parallel = T)
 q5 = lassolist2(q2, verbose = T, parallel = T)
 stopCluster(cl)
 
@@ -678,8 +681,6 @@ document()
 dxPlot(object)
 dxPlotRev(object)
 
-save.image("~/Documents/Qbone.test.Rdata")
-
 p2 = dxPlot(object)
 object@graphs <- list(p2)
 
@@ -845,7 +846,7 @@ re1 <- addMetaData(object = re1, metadata = c(rep("DkkMo", c(10)),
 
 # no name if from list
 re2 = thinData(re1,prop=0.01)
-re3 = lassolist(re2)
+re3 = lassoList(re2)
 re4 = quantlets(re3)
 object = re4
 save.image(file = "/mnt/md0/zlyrebecca/sp/MOSJ-CT/05.6_3Dpoints/test.Qbone.RData")

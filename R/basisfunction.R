@@ -14,19 +14,31 @@ NULL
 # 2. Functions ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-## 2.1 lassolist ----
-#' Use penalized regression (lasso) to find a sparse subset of dictionary elements
+## 2.1 lassoList ----
+#' Use penalized regression (lasso) to find a sparse subset of dictionary
+#' elements
 #'
-#' First construct overcomplete dictionary (Beta CDF). Then uses penalized regression (lasso) to find a sparse subset of dictionary elements.
+#' First construct overcomplete dictionary (Beta CDF). Then uses penalized
+#' regression (lasso) to find a sparse subset of dictionary elements.
 #'
 #' @param object A Qboneobject
 #' @param verbose Print a progress bar
 #' @param new.assay.name New assay name assigned to the lassolist data
-#' @param alpha Vector containing sequence of beta parameter for internal function \code{generateBetaCDF()}
-#' @param beta  Vector containing sequence of beta parameter for internal function \code{generateBetaCDF()}
-#' @param data.assay It is the name of the assay whose data will be used to compute the lasso list. Default is the data from the defaultAssay(object).
-#' @param assay.seed assay information to add into the QboneData object scale.data. The default of \code{lassolist()} will save the random seed for the run. Use \code{.Random.seed <-  object@assays[["Lasso.list"]]@scale.data[["lassolist"]]} before run \code{lassolist()} for the same results.
-#' @param parallel If TRUE, use parallel foreach to fit each fold in \code{cv.glmnet()}. Default use \code{registerDoMC()} to register parallel. There is another function \code{lassolist_parallel()} for overall parallel computing for all sample.
+#' @param data.assay It is the name of the assay whose data will be used to
+#' compute the lasso list. Default is the data from the defaultAssay(object).
+#' @param alpha Vector containing sequence of beta parameter for internal
+#' function \code{generateBetaCDF()}
+#' @param beta  Vector containing sequence of beta parameter for internal
+#' function \code{generateBetaCDF()}
+#' @param assay.seed assay information to add into the QboneData object
+#' scale.data. The default of \code{lassolist()} will save the random seed for
+#'  the run.
+#'  Use \code{.Random.seed <-  object@assays[["Lasso.list"]]@scale.data[["lassolist"]] }
+#'  before run \code{lassolist()} for the same results.
+#' @param parallel If TRUE, use parallel foreach to fit each fold in
+#' \code{cv.glmnet()}. Default use \code{registerDoMC()} to register parallel.
+#' There is another function \code{lassolist_parallel()} for overall parallel
+#' computing for all sample.
 #' @param ... Arguments passed to other methods
 #'
 #' @importFrom glmnet glmnet cv.glmnet
@@ -34,17 +46,18 @@ NULL
 #'
 #' @export
 #'
-lassolist <- function(
+lassoList <- function(
   object,
   verbose = TRUE,
-  data.assay = defaultAssay(object),
   new.assay.name = "Lasso.list",
+  data.assay = defaultAssay(object),
   alpha = c(seq(0.1, 1, by = 0.1), seq(2, 100, by = 1)),
   beta = c(seq(0.1, 1, by = 0.1), seq(2, 100, by = 1)),
   assay.seed = .Random.seed,
   parallel = T,
   ...
 ){
+  # Check data.assay
   if (data.assay == "Lasso.list"){
     stop('The default assay for this Qbone object is already "Lasso.list".')
   }
@@ -100,7 +113,8 @@ lassolist <- function(
                                    sampleid.assays = 1,
                                    assay.name = new.assay.name,
                                    assay.orig = data.assay)
-  new.qbonedata@scale.data <- append(object@assays[[data.assay]]@scale.data,list(lassolist = c(assay.seed)))
+  new.qbonedata@scale.data <- append(object@assays[[data.assay]]@scale.data,
+                                     list(lassolist = c(assay.seed)))
   object[[new.assay.name]] <- new.qbonedata
   defaultAssay(object) <- new.assay.name
   return(object)
@@ -114,28 +128,30 @@ lassolist <- function(
 #'
 #' @param object A Qboneobject
 #' @param new.assay.name New assay name assigned to the quantlets data
+#' @param data.assay It is the name of the assay whose data will be used
+#'  to compute the lasso list. Default is the data from the
+#'  defaultAssay(object).
 #' @param p Vector of length P  in (0,1)	Probability grids.
 #' @param alpha Vector containing sequence of beta parameter for internal
 #'  function \code{generateBetaCDF()}
 #' @param beta  Vector containing sequence of beta parameter for internal
 #'  function \code{generateBetaCDF()}
-#' @param data.assay It is the name of the assay whose data will be used
-#'  to compute the lasso list. Default is the data from the
-#'  defaultAssay(object).
+#' @param ... Arguments passed to other methods
 #'
 #' @export
 #'
 quantlets <- function(
   object,
   new.assay.name = "Quantiles",
+  data.assay = defaultAssay(object),
   p = signif(seq(0.001, 0.999, length = 1024), 4),
   alpha = c(seq(0.1, 1, by = 0.1), seq(2, 100, by = 1)),
   beta = c(seq(0.1, 1, by = 0.1), seq(2, 100, by = 1)),
-  data.assay = defaultAssay(object),
   ...
 ){
+  # Check data.assay
   if(data.assay != "Lasso.list"){
-    warning('The default assay is not "Lasso.list" please double the defaultAssay() of this Qbone object. This step should be run on results of lassolist().')
+    warning('The default assay is not "Lasso.list" please double the defaultAssay() of this Qbone object. This step should be run on results of lassoList().')
   }
   message('Will compute the quantlets basis functions based on "', data.assay, '" results from "', object@assays[["Lasso.list"]]@assay.orig, '" data.', "\n This step may take a while.")
   # Get data
@@ -186,31 +202,86 @@ quantlets <- function(
                                    sampleid.assays = 1,
                                    assay.name = new.assay.name,
                                    assay.orig = data.assay)
-  new.qbonedata@scale.data <- append(object@assays[[data.assay]]@scale.data,list(betaCDF = reduced_BASE, # Pre-quantlets basis functions, which implies the selected beta cdf functions. (P by K matrix. P: desired number of probability grids, and K: number of basis).
-
-                                                                                 locc = lasso.locc, # LOCC value for each choice of the basis function (Z: the length of the possible choices for basis).
-                                                                                 basis.columns = lasso.counts.fit[[1]], # Corresponding basis columns for each possible choice.
-                                                                                 remain.basis = lasso.counts.fit[[2]], # Number of the basis for each possible choice.
-                                                                                 remain.counts = lasso.counts.fit[[3]] # Frequency for each possible choice.
-                                                                                  )
+  new.qbonedata@scale.data <- append(object@assays[[data.assay]]@scale.data,
+                                     list(betaCDF = reduced_BASE, # Pre-quantlets basis functions, which implies the selected beta cdf functions. (P by K matrix. P: desired number of probability grids, and K: number of basis).
+                                          locc = lasso.locc, # LOCC value for each choice of the basis function (Z: the length of the possible choices for basis).
+                                          basis.columns = lasso.counts.fit[[1]], # Corresponding basis columns for each possible choice.
+                                          remain.basis = lasso.counts.fit[[2]], # Number of the basis for each possible choice.
+                                          remain.counts = lasso.counts.fit[[3]] # Frequency for each possible choice.
+                                          )
                                      )
   object[[new.assay.name]] <- new.qbonedata
   defaultAssay(object) <- new.assay.name
   return(object)
 }
 
-## 2.3 ----
+## 2.3 reduceBasis ----
+#' Get the reduce basis set
+#'
+#' Compute reduce basis set based on diagnostic plot, or choose of user.
+#'
+#' @param object A Qboneobject
+#' @param new.assay.name New assay name assigned to the quantlets data
+#' @param data.assay It is the name of the assay whose data will be used
+#'  to compute the lasso list. Default is the data from the
+#'  defaultAssay(object).
+#' @param k number of basis coefficients to keep. This is based on the number
+#'  of dictionary elements (C) to keep. Default will pick the one chosen from
+#'   \code{dxPlot()}.
+#' @param sparsity Sparsity regularization parameter.
+#' @param ... Arguments passed to other methods
+#'
+#' @export
+#'
 
-# object@graphs <- list(dxPlot = p2,
-#                       sparsity = sparsity,
-#                       basis.columns.no = min(plotdata2$x[c(lasso.mean_i_ - lasso.min_i_) > sparsity]))
-# object@assays[["Quantiles"]]@scale.data[["basis.columns"]]
+reduceBasis <- function(
+  object,
+  new.assay.name = "Reduce.basis",
+  data.assay = defaultAssay(object),
+  k = NULL,
+  sparsity = 0.001,
+  ...
+){
+  # Check data.assay
+  if(data.assay != "Quantiles"){
+    warning('The default assay is not "Quantiles" please double the defaultAssay() of this Qbone object. This step should be run on results of quantlets().')
+  }
+  # Get data and compute the reduce basis
+  orig.dataset <- getQboneData(object, slot = 'data', assay = data.assay)
+  if (is.null(k)){
+    # plotdata1 <- loccplotdata(object, ...)
+    plotdata2 <- loccplotdata(object, ...)[[3]]
+    lasso.mean_i_ = plotdata2$y[plotdata2$group == "mean"]
+    lasso.min_i_ = plotdata2$y[plotdata2$group == "min"]
+    basis.columns.no = min(plotdata2$x[c(lasso.mean_i_ - lasso.min_i_) > sparsity])
+    k = max(plotdata2$x2[c(lasso.mean_i_ - lasso.min_i_) > sparsity])
+    basis.columns.select = object@assays[["Quantiles"]]@scale.data[["basis.columns"]][[basis.columns.no]]
+    reduceBasis = object@assays[["Quantiles"]]@scale.data[["betaCDF"]][, basis.columns.select]
+  } else {
+    if (k %in% unlist(lapply(object@assays[["Quantiles"]]@scale.data[["basis.columns"]], length), use.names = F)){
+      basis.columns.no = which(k ==unlist(lapply(object@assays[["Quantiles"]]@scale.data[["basis.columns"]], length), use.names = F))
+      basis.columns.select = object@assays[["Quantiles"]]@scale.data[["basis.columns"]][[basis.columns.no]]
+      reduceBasis = object@assays[["Quantiles"]]@scale.data[["betaCDF"]][, basis.columns.select]
+    } else {
+      stop("Based on overcomplete dictionary, k must be one of the following numbers ",
+           paste0(unlist(lapply(object@assays[["Quantiles"]]@scale.data[["basis.columns"]], length), use.names = F), sep = ", "))
+    }
+  }
+  # Add new information to Qbone object
+  object@assays[[data.assay]]@scale.data <- append(object@assays[[data.assay]]@scale.data,
+                                     list(C = basis.columns.no,
+                                          k = k,
+                                          basis.columns.select = basis.columns.select,
+                                          reduceBasis = reduceBasis
+                                          )
+                                     )
+  names(object@assays) <- ifelse(names(object@assays) == data.assay, new.assay.name, names(object@assays))
+  object@assays[[new.assay.name]]@assay.name <- new.assay.name
+  object@assays[[new.assay.name]]@assay.orig <- data.assay
+  defaultAssay(object) <- new.assay.name
+  return(object)
+}
 
-# object@graphs[[basis.columns.no]]
-
-# object@assays[["Quantiles"]]@scale.data[["betaCDF"]][,]
-# object@assays[["Quantiles"]]@scale.data[["betaCDF"]][,
-# object@assays[["Quantiles"]]@scale.data[["basis.columns"]][[object@graphs[[basis.columns.no]]]]]
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # 3. Qbone-defined generics ----

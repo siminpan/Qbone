@@ -7,10 +7,10 @@
 quantlets(
   object,
   new.assay.name = "Quantiles",
+  data.assay = defaultAssay(object),
   p = signif(seq(0.001, 0.999, length = 1024), 4),
   alpha = c(seq(0.1, 1, by = 0.1), seq(2, 100, by = 1)),
   beta = c(seq(0.1, 1, by = 0.1), seq(2, 100, by = 1)),
-  data.assay = defaultAssay(object),
   ...
 )
 }
@@ -18,6 +18,10 @@ quantlets(
 \item{object}{A Qboneobject}
 
 \item{new.assay.name}{New assay name assigned to the quantlets data}
+
+\item{data.assay}{It is the name of the assay whose data will be used
+to compute the lasso list. Default is the data from the
+defaultAssay(object).}
 
 \item{p}{Vector of length P  in (0,1)    Probability grids.}
 
@@ -27,9 +31,7 @@ function \code{generateBetaCDF()}}
 \item{beta}{Vector containing sequence of beta parameter for internal
 function \code{generateBetaCDF()}}
 
-\item{data.assay}{It is the name of the assay whose data will be used
-to compute the lasso list. Default is the data from the
-defaultAssay(object).}
+\item{...}{Arguments passed to other methods}
 }
 \description{
 Take union set and find near-lossless subset as confirmed by
