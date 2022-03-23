@@ -48,7 +48,8 @@ q1 = readQbone(data.dir, groupbyfolder = T)
 
 qa1 = getQboneData(q1, slot = 'data', assay = defaultAssay(q1))
 
-
+data.dir = "/home/span/Documents/MOSJ-3DCT/data/csv.group"
+q1 = readQbone(data.dir, groupbyfolder = T)
 q2 = thinData(q1,prop=0.0001)
 q3 = lassolist(q2)
 q4 = quantlets(q3)
@@ -675,7 +676,13 @@ ggplot(data, aes(x, y)) + geom_line() +
 document()
 
 dxPlot(object)
-dxPlotrev(object)
+dxPlotRev(object)
+
+save.image("~/Documents/Qbone.test.Rdata")
+
+p2 = dxPlot(object)
+object@graphs <- list(p2)
+
 
 # LCCC ----
 lasso.locc <- locc(

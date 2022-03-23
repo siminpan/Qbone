@@ -4,7 +4,7 @@
 \alias{dxPlot}
 \title{Plot near-losslessness parameters.}
 \usage{
-dxPlot(object, ...)
+dxPlot(object, sparsity = 0.001, ...)
 }
 \arguments{
 \item{object}{A Qboneobject}

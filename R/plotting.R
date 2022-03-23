@@ -30,9 +30,10 @@ NULL
 #'
 dxPlot <- function(
   object,
+  sparsity = 0.001,
   ...
 ){
-  message("Getting data for plotting.")
+  # message("Getting data for plotting.")
   plotdata1 <- loccplotdata(object, ...)
   plotdata2 <- plotdata1[[3]]
   plotdata3 <- plotdata2[which(plotdata2$y >= 0.85),]
@@ -54,7 +55,7 @@ dxPlot <- function(
          y = "Losslessness",
          color = NULL
     ) +
-    geom_vline(xintercept = min(plotdata2$x[c(lasso.mean_i_ - lasso.min_i_) > 0.001]),
+    geom_vline(xintercept = min(plotdata2$x[c(lasso.mean_i_ - lasso.min_i_) > sparsity]),
                linetype="dotted",
                color = "black",
                size=0.5) +
@@ -62,9 +63,10 @@ dxPlot <- function(
                linetype="dotted",
                color = "black",
                size=0.5) +
-    geom_label(aes(min(x[c(lasso.mean_i_ - lasso.min_i_) > 0.001]),
-                   0.855,
-                   label=min(x[c(lasso.mean_i_ - lasso.min_i_) > 0.001])
+    geom_label(aes(min(x[c(lasso.mean_i_ - lasso.min_i_) > sparsity]),
+                   0.865,
+                   label=paste0("C = ", min(x[c(lasso.mean_i_ - lasso.min_i_) > sparsity]), "\n",
+                                expression(K[C]), " = ", max(x2[c(lasso.mean_i_ - lasso.min_i_) > sparsity]))
     )
     ) +
     geom_label(aes(unique(plotdata2$x)[2],
@@ -92,6 +94,7 @@ dxPlot <- function(
 #' for quantlets basis, varying with the number of basis coefficients.
 #'
 #' @param object A Qboneobject#'
+#' @param sparsity Sparsity regularization parameter.
 #' @param ... Arguments passed to other methods
 #'
 #' @importFrom ggplot2 ggplot aes geom_point geom_line scale_y_continuous scale_x_reverse scale_color_manual labs geom_vline geom_hline geom_label annotate coord_cartesian theme_bw theme element_blank unit
@@ -100,9 +103,10 @@ dxPlot <- function(
 #'
 dxPlotRev <- function(
   object,
+  sparsity = 0.001,
   ...
 ){
-  message("Getting data for plotting.")
+  # message("Getting data for plotting.")
   plotdata1 <- loccplotdata(object, ...)
   plotdata2 <- plotdata1[[3]]
   plotdata3 <- plotdata2[which(plotdata2$y >= 0.85),]
@@ -124,7 +128,7 @@ dxPlotRev <- function(
          y = "Losslessness",
          color = NULL
     ) +
-    geom_vline(xintercept = min(plotdata2$x[c(lasso.mean_i_ - lasso.min_i_) > 0.001]),
+    geom_vline(xintercept = min(plotdata2$x[c(lasso.mean_i_ - lasso.min_i_) > sparsity]),
                linetype="dotted",
                color = "black",
                size=0.5) +
@@ -132,9 +136,9 @@ dxPlotRev <- function(
                linetype="dotted",
                color = "black",
                size=0.5) +
-    geom_label(aes(min(x[c(lasso.mean_i_ - lasso.min_i_) > 0.001]),
-                   0.855,
-                   label=max(x2[c(lasso.mean_i_ - lasso.min_i_) > 0.001])
+    geom_label(aes(min(x[c(lasso.mean_i_ - lasso.min_i_) > sparsity]),
+                   0.858,
+                   label=paste0(expression(K[C]), " = ", max(x2[c(lasso.mean_i_ - lasso.min_i_) > sparsity]))
     )
     ) +
     geom_label(aes(unique(plotdata2$x)[2],

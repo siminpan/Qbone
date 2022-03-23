@@ -4,10 +4,12 @@
 \alias{dxPlotRev}
 \title{Plot number of basis coefficients.}
 \usage{
-dxPlotRev(object, ...)
+dxPlotRev(object, sparsity = 0.001, ...)
 }
 \arguments{
 \item{object}{A Qboneobject#'}
+
+\item{sparsity}{Sparsity regularization parameter.}
 
 \item{...}{Arguments passed to other methods}
 }

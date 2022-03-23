@@ -186,7 +186,7 @@ quantlets <- function(
                                    sampleid.assays = 1,
                                    assay.name = new.assay.name,
                                    assay.orig = data.assay)
-  new.qbonedata@scale.data <- append(object@assays[[data.assay]]@scale.data,list(betaCDF = c(reduced_BASE), # Pre-quantlets basis functions, which implies the selected beta cdf functions. (P by K matrix. P: desired number of probability grids, and K: number of basis).
+  new.qbonedata@scale.data <- append(object@assays[[data.assay]]@scale.data,list(betaCDF = reduced_BASE, # Pre-quantlets basis functions, which implies the selected beta cdf functions. (P by K matrix. P: desired number of probability grids, and K: number of basis).
 
                                                                                  locc = lasso.locc, # LOCC value for each choice of the basis function (Z: the length of the possible choices for basis).
                                                                                  basis.columns = lasso.counts.fit[[1]], # Corresponding basis columns for each possible choice.
@@ -199,9 +199,18 @@ quantlets <- function(
   return(object)
 }
 
-# 2.3 ----
+## 2.3 ----
 
+# object@graphs <- list(dxPlot = p2,
+#                       sparsity = sparsity,
+#                       basis.columns.no = min(plotdata2$x[c(lasso.mean_i_ - lasso.min_i_) > sparsity]))
 # object@assays[["Quantiles"]]@scale.data[["basis.columns"]]
+
+# object@graphs[[basis.columns.no]]
+
+# object@assays[["Quantiles"]]@scale.data[["betaCDF"]][,]
+# object@assays[["Quantiles"]]@scale.data[["betaCDF"]][,
+# object@assays[["Quantiles"]]@scale.data[["basis.columns"]][[object@graphs[[basis.columns.no]]]]]
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # 3. Qbone-defined generics ----
