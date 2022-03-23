@@ -22,6 +22,7 @@ NULL
 #' function of \eqn{K_{c}} in the reduced set.
 #'
 #' @param object A Qboneobject
+#' @param sparsity Sparsity regularization parameter.
 #' @param ... Arguments passed to other methods
 #'
 #' @importFrom ggplot2 ggplot aes geom_point geom_line scale_y_continuous scale_x_continuous scale_color_manual labs geom_vline geom_hline geom_label annotate coord_cartesian theme_bw theme element_blank unit
