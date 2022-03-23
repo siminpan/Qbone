@@ -607,7 +607,7 @@ p2 +
         panel.grid.minor.x = element_blank())
 
 
-p2.5 = nllplot(object)
+p2.5 = dxPlot(object)
 p2.5
 
 p3 <- ggplot(plotdata2, aes(x=x, y=y, color= group)) +
@@ -674,8 +674,8 @@ ggplot(data, aes(x, y)) + geom_line() +
 
 document()
 
-nllplot(object)
-nllplotrev(object)
+dxPlot(object)
+dxPlotrev(object)
 
 # LCCC ----
 lasso.locc <- locc(

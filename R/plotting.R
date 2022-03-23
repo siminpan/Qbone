@@ -14,7 +14,7 @@ NULL
 # 2. Functions ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-## 2.1 nllplot ----
+## 2.1 dxPlot ----
 #' Plot near-losslessness parameters.
 #'
 #' Plots the near-losslessness parameters minimum concordance (\eqn{\rho^{o}})
@@ -28,7 +28,7 @@ NULL
 #'
 #' @export
 #'
-nllplot <- function(
+dxPlot <- function(
   object,
   ...
 ){
@@ -83,10 +83,10 @@ nllplot <- function(
   return(suppressWarnings(print(p2)))
 }
 
-## 2.2 nllplotrev ----
+## 2.2 dxPlotRev ----
 #' Plot number of basis coefficients.
 #'
-#' Reversed nllplot useful when plotting with other basis like principal
+#' Reversed dxPlot useful when plotting with other basis like principal
 #' components.
 #' minimum concordance (\eqn{\rho^{o}}) and average (\eqn{\bar{\rho}})
 #' for quantlets basis, varying with the number of basis coefficients.
@@ -98,7 +98,7 @@ nllplot <- function(
 #'
 #' @export
 #'
-nllplotrev <- function(
+dxPlotRev <- function(
   object,
   ...
 ){
@@ -152,7 +152,7 @@ nllplotrev <- function(
   return(suppressWarnings(print(p3)))
 }
 
-## 2.3 qbasisplot ----
+## 2.3 qbasisPlot ----
 #' Plot first n quantlet basis functions
 #'
 #' Plot first n quantlet basis functions
@@ -165,7 +165,7 @@ nllplotrev <- function(
 #'
 #' @export
 #'
-qbasisplot <- function(
+qbasisPlot <- function(
   object,
   n = 16,
   ...
