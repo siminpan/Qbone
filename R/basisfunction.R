@@ -231,6 +231,8 @@ preQuantlets <- function(
 #' @param sparsity Sparsity regularization parameter.
 #' @param ... Arguments passed to other methods
 #'
+#' @importFrom pracma gramSchmidt
+#'
 #' @export
 #'
 
@@ -280,16 +282,30 @@ reduceBasis <- function(
   object@assays[[new.assay.name]]@assay.orig <- data.assay
   defaultAssay(object) <- new.assay.name
   # Orthogonalization
-
+  basis.columns.select.no = object@assays[["Pre.Quantiles"]]@scale.data[["basis.columns"]][[basis.columns.no + 10]]
+  reduceBasis.norms <- object@assays[["Pre.Quantiles"]]@scale.data[["betaCDF"]][, basis.columns.select.no]
+  gramS <- gramSchmidt(reduceBasis, tol = .Machine$double.eps^0.5)
+  norms <- gramSchmidt(as.matrix(reduceBasis.norms), tol = .Machine$double.eps^0.5)$Q
   # Denoising
-
+  quantlet <- waveletDe(gramS$Q[, -1], filter.number = 2, family = "DaubExPhase")[, , 2]
+  quantlet.ns <- cbind(norms, centering.function(quantlet, scale = TRUE))
   # re-standardize
   ## compute empirical coefficients
 
   return(object)
 }
 
-## 2.4 ----
+## 2.4 ocDic ----
+
+## 2.5 unionDic ----
+
+## 2.6 cmnDic ----
+
+## 2.7 orthogDic ----
+
+## 2.8 denoiseDic ----
+
+## 2.9 quantletsDic ----
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # 3. Qbone-defined generics ----
@@ -568,12 +584,12 @@ incidenceVec <- function(
 #' @param remain.basis vector containing k(c) value in paper  (it may be output[[3]] of countBasis)
 #' @param Y.list raw.dataset
 #' @param maxim scalar value (length of probability grids)
+#' @param ... Arguments passed to other methods
 #'
 #' @return Predicted values ( length(probability grids) times n times length(c)  array output ) based on leaveout.list
 #'
 #' @importFrom MASS ginv
 #' @importFrom utils txtProgressBar setTxtProgressBar
-#' @param ... Arguments passed to other methods
 #'
 #' @keywords internal
 #'
@@ -638,6 +654,50 @@ locc <- function(
   outputs <- list(Values
                   # , checks
                   )
+  return(outputs)
+}
+
+## 6.10 waveletDenose ----
+#' Conducts Wavelet Denoising
+#'
+#' @param object n by p matrix
+#' @param ... Arguments passed to other methods
+#'
+#' @return array[,,1] includes denoised values based on the usual wavelet
+#' method. array[,,2] includes denoised values based on nondecimal method
+#'
+#' @importFrom wavethresh wd accessD nlevelsWT threshold wst wr AvBasis
+#' @importFrom stats mad
+#'
+#' @keywords internal
+#'
+#' @noRd
+#'
+waveletDe <- function(
+  object,
+  filter.number = 2,
+  family = "DaubExPhase",
+  ...
+){
+  object <- as.matrix(object)
+  n <- dim(object)[1]
+  p <- dim(object)[2]
+  outputs <- array(NA, c(n, p, 2))
+  for (i in 1:p) {
+    ywd <- wd(object[, i], filter.number = filter.number, family = family)
+    fineCoefs <- accessD(ywd, lev = nlevelsWT(ywd) - 1)
+    sigma <- mad(fineCoefs)
+    utDJ <- sigma * sqrt(2 * log(1024))
+    ywdT <- threshold(ywd, policy = "manual", value = utDJ)
+    outputs[, i, 1] <- wr(ywdT)
+
+    ywst <- wst(object[, i], filter.number = filter.number, family = family)
+    fineWSTCoefs <- accessD(ywst, lev = nlevelsWT(ywst) - 1)
+    sigmaWST <- mad(fineWSTCoefs)
+    utWSTDJ <- sigmaWST * sqrt(2 * log(1024))
+    ywstT <- threshold(ywst, policy = "manual", value = utWSTDJ)
+    outputs[, i, 2] <- AvBasis(ywstT)
+  }
   return(outputs)
 }
 

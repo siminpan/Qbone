@@ -256,7 +256,8 @@ loccplotdata <- function(
   # checking defaultAssay(object):
   raw.dataset <- getQboneData(object, slot = 'data',
                               assay = object@assays[[
-                                object@assays[[defaultAssay(object)]]@assay.orig
+                                "Lasso.list"
+                                #object@assays[[defaultAssay(object)]]@assay.orig
                                 ]]@assay.orig
                               )
   basis.columns <- object@assays[[defaultAssay(object)]]@scale.data[["basis.columns"]]
