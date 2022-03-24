@@ -142,7 +142,7 @@ lassoList <- function(
 #'
 preQuantlets <- function(
   object,
-  new.assay.name = "Pre-Quantiles",
+  new.assay.name = "Pre.Quantiles",
   data.assay = defaultAssay(object),
   p = signif(seq(0.001, 0.999, length = 1024), 4),
   alpha = c(seq(0.1, 1, by = 0.1), seq(2, 100, by = 1)),
@@ -243,8 +243,8 @@ reduceBasis <- function(
   ...
 ){
   # Check data.assay
-  if(data.assay != "Pre-Quantiles"){
-    warning('The default assay is not "Pre-Quantiles" please double the defaultAssay() of this Qbone object. This step should be run on results of preQuantlets().')
+  if(data.assay != "Pre.Quantiles"){
+    warning('The default assay is not "Pre.Quantiles" please double the defaultAssay() of this Qbone object. This step should be run on results of preQuantlets().')
   }
   # Get data and compute the reduce basis
   orig.dataset <- getQboneData(object, slot = 'data', assay = data.assay)
@@ -255,16 +255,16 @@ reduceBasis <- function(
     lasso.min_i_ = plotdata2$y[plotdata2$group == "min"]
     basis.columns.no = min(plotdata2$x[c(lasso.mean_i_ - lasso.min_i_) > sparsity])
     k = max(plotdata2$x2[c(lasso.mean_i_ - lasso.min_i_) > sparsity])
-    basis.columns.select = object@assays[["Pre-Quantiles"]]@scale.data[["basis.columns"]][[basis.columns.no]]
-    reduceBasis = object@assays[["Pre-Quantiles"]]@scale.data[["betaCDF"]][, basis.columns.select]
+    basis.columns.select = object@assays[["Pre.Quantiles"]]@scale.data[["basis.columns"]][[basis.columns.no]]
+    reduceBasis = object@assays[["Pre.Quantiles"]]@scale.data[["betaCDF"]][, basis.columns.select]
   } else {
-    if (k %in% unlist(lapply(object@assays[["Pre-Quantiles"]]@scale.data[["basis.columns"]], length), use.names = F)){
-      basis.columns.no = which(k ==unlist(lapply(object@assays[["Pre-Quantiles"]]@scale.data[["basis.columns"]], length), use.names = F))
-      basis.columns.select = object@assays[["Pre-Quantiles"]]@scale.data[["basis.columns"]][[basis.columns.no]]
-      reduceBasis = object@assays[["Pre-Quantiles"]]@scale.data[["betaCDF"]][, basis.columns.select]
+    if (k %in% unlist(lapply(object@assays[["Pre.Quantiles"]]@scale.data[["basis.columns"]], length), use.names = F)){
+      basis.columns.no = which(k ==unlist(lapply(object@assays[["Pre.Quantiles"]]@scale.data[["basis.columns"]], length), use.names = F))
+      basis.columns.select = object@assays[["Pre.Quantiles"]]@scale.data[["basis.columns"]][[basis.columns.no]]
+      reduceBasis = object@assays[["Pre.Quantiles"]]@scale.data[["betaCDF"]][, basis.columns.select]
     } else {
       stop("Based on overcomplete dictionary, k must be one of the following numbers ",
-           paste0(unlist(lapply(object@assays[["Pre-Quantiles"]]@scale.data[["basis.columns"]], length), use.names = F), sep = ", "))
+           paste0(unlist(lapply(object@assays[["Pre.Quantiles"]]@scale.data[["basis.columns"]], length), use.names = F), sep = ", "))
     }
   }
   # Add new information to Qbone object

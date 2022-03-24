@@ -6,7 +6,7 @@
 \usage{
 preQuantlets(
   object,
-  new.assay.name = "Pre-Quantiles",
+  new.assay.name = "Pre.Quantiles",
   data.assay = defaultAssay(object),
   p = signif(seq(0.001, 0.999, length = 1024), 4),
   alpha = c(seq(0.1, 1, by = 0.1), seq(2, 100, by = 1)),
