@@ -52,7 +52,7 @@ data.dir = "/home/span/Documents/MOSJ-3DCT/data/csv.group"
 q1 = readQbone(data.dir, groupbyfolder = T)
 q2 = thinData(q1,prop=0.0001)
 q3 = lassoList(q2)
-q4 = quantlets(q3)
+q4 = preQuantlets(q3)
 dxPlot(q4)
 dxPlotRev(q4)
 q5 = reduceBasis(q4)
@@ -847,7 +847,7 @@ re1 <- addMetaData(object = re1, metadata = c(rep("DkkMo", c(10)),
 # no name if from list
 re2 = thinData(re1,prop=0.01)
 re3 = lassoList(re2)
-re4 = quantlets(re3)
+re4 = preQuantlets(re3)
 object = re4
 save.image(file = "/mnt/md0/zlyrebecca/sp/MOSJ-CT/05.6_3Dpoints/test.Qbone.RData")
 

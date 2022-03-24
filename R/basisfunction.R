@@ -120,8 +120,8 @@ lassoList <- function(
   return(object)
 }
 
-## 2.2 quantlets ----
-#' Get the quantlets basis functions
+## 2.2 preQuantlets ----
+#' Get the pre-quantlets basis functions
 #'
 #' Take union set and find near-lossless subset as confirmed by
 #' cross-validated concordance correlation coefficient (CVCCC)
@@ -140,9 +140,9 @@ lassoList <- function(
 #'
 #' @export
 #'
-quantlets <- function(
+preQuantlets <- function(
   object,
-  new.assay.name = "Quantiles",
+  new.assay.name = "Pre-Quantiles",
   data.assay = defaultAssay(object),
   p = signif(seq(0.001, 0.999, length = 1024), 4),
   alpha = c(seq(0.1, 1, by = 0.1), seq(2, 100, by = 1)),
@@ -243,8 +243,8 @@ reduceBasis <- function(
   ...
 ){
   # Check data.assay
-  if(data.assay != "Quantiles"){
-    warning('The default assay is not "Quantiles" please double the defaultAssay() of this Qbone object. This step should be run on results of quantlets().')
+  if(data.assay != "Pre-Quantiles"){
+    warning('The default assay is not "Pre-Quantiles" please double the defaultAssay() of this Qbone object. This step should be run on results of preQuantlets().')
   }
   # Get data and compute the reduce basis
   orig.dataset <- getQboneData(object, slot = 'data', assay = data.assay)
@@ -255,16 +255,16 @@ reduceBasis <- function(
     lasso.min_i_ = plotdata2$y[plotdata2$group == "min"]
     basis.columns.no = min(plotdata2$x[c(lasso.mean_i_ - lasso.min_i_) > sparsity])
     k = max(plotdata2$x2[c(lasso.mean_i_ - lasso.min_i_) > sparsity])
-    basis.columns.select = object@assays[["Quantiles"]]@scale.data[["basis.columns"]][[basis.columns.no]]
-    reduceBasis = object@assays[["Quantiles"]]@scale.data[["betaCDF"]][, basis.columns.select]
+    basis.columns.select = object@assays[["Pre-Quantiles"]]@scale.data[["basis.columns"]][[basis.columns.no]]
+    reduceBasis = object@assays[["Pre-Quantiles"]]@scale.data[["betaCDF"]][, basis.columns.select]
   } else {
-    if (k %in% unlist(lapply(object@assays[["Quantiles"]]@scale.data[["basis.columns"]], length), use.names = F)){
-      basis.columns.no = which(k ==unlist(lapply(object@assays[["Quantiles"]]@scale.data[["basis.columns"]], length), use.names = F))
-      basis.columns.select = object@assays[["Quantiles"]]@scale.data[["basis.columns"]][[basis.columns.no]]
-      reduceBasis = object@assays[["Quantiles"]]@scale.data[["betaCDF"]][, basis.columns.select]
+    if (k %in% unlist(lapply(object@assays[["Pre-Quantiles"]]@scale.data[["basis.columns"]], length), use.names = F)){
+      basis.columns.no = which(k ==unlist(lapply(object@assays[["Pre-Quantiles"]]@scale.data[["basis.columns"]], length), use.names = F))
+      basis.columns.select = object@assays[["Pre-Quantiles"]]@scale.data[["basis.columns"]][[basis.columns.no]]
+      reduceBasis = object@assays[["Pre-Quantiles"]]@scale.data[["betaCDF"]][, basis.columns.select]
     } else {
       stop("Based on overcomplete dictionary, k must be one of the following numbers ",
-           paste0(unlist(lapply(object@assays[["Quantiles"]]@scale.data[["basis.columns"]], length), use.names = F), sep = ", "))
+           paste0(unlist(lapply(object@assays[["Pre-Quantiles"]]@scale.data[["basis.columns"]], length), use.names = F), sep = ", "))
     }
   }
   # Add new information to Qbone object
@@ -279,9 +279,17 @@ reduceBasis <- function(
   object@assays[[new.assay.name]]@assay.name <- new.assay.name
   object@assays[[new.assay.name]]@assay.orig <- data.assay
   defaultAssay(object) <- new.assay.name
+  # Orthogonalization
+
+  # Denoising
+
+  # re-standardize
+  ## compute empirical coefficients
+
   return(object)
 }
 
+## 2.4 ----
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # 3. Qbone-defined generics ----
