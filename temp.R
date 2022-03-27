@@ -56,7 +56,7 @@ q3 = lassoList(q2)
 q4 = preQuantlets(q3)
 dxPlot(q4)
 dxPlotRev(q4)
-q5 = ecQuantlets(q4)
+q6 = ecQuantlets(q4)
 object = q5
 save.image("~/Documents/Qbone.test.Rdata")
 

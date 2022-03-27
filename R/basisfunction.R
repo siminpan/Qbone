@@ -251,12 +251,12 @@ ecQuantlets <- function(
     warning('The default assay is not "Pre.Quantiles" please double the defaultAssay() of this Qbone object. This step should be run on results of preQuantlets().')
   }
   # Get data and compute the reduce basis
-  orig.dataset <- raw.dataset <- getQboneData(object, slot = 'data',
-                                              assay = object@assays[[
-                                                "Lasso.list"
-                                                #object@assays[[defaultAssay(object)]]@assay.orig
-                                              ]]@assay.orig
-  )
+  # orig.dataset <- raw.dataset <- getQboneData(object, slot = 'data',
+  #                                             assay = object@assays[[
+  #                                               "Lasso.list"
+  #                                               #object@assays[[defaultAssay(object)]]@assay.orig
+  #                                             ]]@assay.orig
+  # )
   if (is.null(k)){
     # plotdata1 <- loccplotdata(object, ...)
     plotdata2 <- loccplotdata(object, ...)[[3]]
@@ -276,21 +276,23 @@ ecQuantlets <- function(
            paste0(unlist(lapply(object@assays[["Pre.Quantiles"]]@scale.data[["basis.columns"]], length), use.names = F), sep = ", "))
     }
   }
-  # Update Pre.Quantiles with Reduce.basis in Qbone object
-  object@assays[[data.assay]]@scale.data <- append(object@assays[[data.assay]]@scale.data,
-                                     list(C = basis.columns.no,
-                                          k = k,
-                                          basis.columns.select = basis.columns.select,
-                                          reduceBasis = reduceBasis
-                                          )
-                                     )
-  names(object@assays) <- ifelse(names(object@assays) == data.assay, "Reduce.basis", names(object@assays))
-  object@assays[["Reduce.basis"]]@assay.name <- "Reduce.basis"
-  object@assays[["Reduce.basis"]]@assay.orig <- data.assay
-  defaultAssay(object) <- "Reduce.basis"
+
+  # # Update Pre.Quantiles with Reduce.basis in Qbone object
+  # object@assays[[data.assay]]@scale.data <- append(object@assays[[data.assay]]@scale.data,
+  #                                    list(C = basis.columns.no,
+  #                                         k = k,
+  #                                         basis.columns.select = basis.columns.select,
+  #                                         reduceBasis = reduceBasis
+  #                                         )
+  #                                    )
+  # names(object@assays) <- ifelse(names(object@assays) == data.assay, "Reduce.basis", names(object@assays))
+  # object@assays[["Reduce.basis"]]@assay.name <- "Reduce.basis"
+  # object@assays[["Reduce.basis"]]@assay.orig <- data.assay
+  # defaultAssay(object) <- "Reduce.basis"
+
   # Orthogonalization
-  basis.columns.select.no = object@assays[["Reduce.basis"]]@scale.data[["basis.columns"]][[basis.columns.no + 10]]
-  reduceBasis.norms <- object@assays[["Reduce.basis"]]@scale.data[["betaCDF"]][, basis.columns.select.no]
+  basis.columns.select.no = object@assays[[data.assay]]@scale.data[["basis.columns"]][[basis.columns.no + 10]]
+  reduceBasis.norms <- object@assays[[data.assay]]@scale.data[["betaCDF"]][, basis.columns.select.no]
   gramS <- gramSchmidt(reduceBasis, tol = .Machine$double.eps^0.5)
   norms <- gramSchmidt(as.matrix(reduceBasis.norms), tol = .Machine$double.eps^0.5)$Q
   # Denoising
@@ -306,10 +308,10 @@ ecQuantlets <- function(
              ),
       3
       ),
-    dim(object@assays[["Reduce.basis"]]@scale.data[["reduceBasis"]])[1]
+    dim(reduceBasis)[1]
     )
-  emp.raw.dataset <- vector("list", length(orig.dataset))
-  for (i in 1:length(orig.dataset)) {
+  emp.raw.dataset <- vector("list", length(object@meta.data[["id"]]))
+  for (i in 1:length(object@meta.data[["id"]])){
     emp.raw.dataset[[i]] <- eQy[, i]
   }
   empCoefs <- empCoefs(quantlets.ns, emp.raw.dataset)
@@ -319,12 +321,17 @@ ecQuantlets <- function(
   # get it back
   # empCoefs2 <- matrix(unlist(empCoefs.list), nrow=length(empCoefs.list), byrow=TRUE)
   new.qbonedata <- createQboneData(empCoefs.list,
-                                   meta.assays = data.frame(id = names(orig.dataset)),
+                                   meta.assays = data.frame(id = object@meta.data[["id"]]),
                                    sampleid.assays = 1,
                                    assay.name = new.assay.name,
                                    assay.orig = data.assay)
   new.qbonedata@scale.data <- append(object@assays[[defaultAssay(object)]]@scale.data,
-                                     list(quantlets = quantlets.ns))
+                                     list(C = basis.columns.no,
+                                          k = k,
+                                          basis.columns.select = basis.columns.select,
+                                          reduceBasis = reduceBasis,
+                                          quantlets = quantlets.ns)
+                                     )
   object[[new.assay.name]] <- new.qbonedata
   defaultAssay(object) <- new.assay.name
   return(object)
@@ -741,7 +748,7 @@ waveletDe <- function(
 #' Compute Empirical Coefficients
 #'
 #' @param quantlet quanvelts basis
-#' @param raw.dataset input dataset
+#' @param raw.dataset Empirical quantiles for each subject
 #' @param ... Arguments passed to other methods
 #'
 #' @return mats
