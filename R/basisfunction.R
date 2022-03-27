@@ -14,6 +14,8 @@ NULL
 # 2. Functions ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+# Function logic based on R Object ----
+
 ## 2.1 lassoList ----
 #' Use penalized regression (lasso) to find a sparse subset of dictionary
 #' elements
@@ -215,10 +217,10 @@ preQuantlets <- function(
   return(object)
 }
 
-## 2.3 reduceBasis ----
-#' Get the reduce basis set
+## 2.3 ecQuantlets ----
+#' Get the Compute Empirical Coefficients for quantlets
 #'
-#' Compute reduce basis set based on diagnostic plot, or choose of user.
+#' Compute empirical coefficients for quantlets
 #'
 #' @param object A Qboneobject
 #' @param new.assay.name New assay name assigned to the quantlets data
@@ -236,9 +238,9 @@ preQuantlets <- function(
 #' @export
 #'
 
-reduceBasis <- function(
+ecQuantlets <- function(
   object,
-  new.assay.name = "Reduce.basis",
+  new.assay.name = "Empirical.Coefficients",
   data.assay = defaultAssay(object),
   k = NULL,
   sparsity = 0.001,
@@ -249,7 +251,12 @@ reduceBasis <- function(
     warning('The default assay is not "Pre.Quantiles" please double the defaultAssay() of this Qbone object. This step should be run on results of preQuantlets().')
   }
   # Get data and compute the reduce basis
-  orig.dataset <- getQboneData(object, slot = 'data', assay = data.assay)
+  orig.dataset <- raw.dataset <- getQboneData(object, slot = 'data',
+                                              assay = object@assays[[
+                                                "Lasso.list"
+                                                #object@assays[[defaultAssay(object)]]@assay.orig
+                                              ]]@assay.orig
+  )
   if (is.null(k)){
     # plotdata1 <- loccplotdata(object, ...)
     plotdata2 <- loccplotdata(object, ...)[[3]]
@@ -269,7 +276,7 @@ reduceBasis <- function(
            paste0(unlist(lapply(object@assays[["Pre.Quantiles"]]@scale.data[["basis.columns"]], length), use.names = F), sep = ", "))
     }
   }
-  # Add new information to Qbone object
+  # Update Pre.Quantiles with Reduce.basis in Qbone object
   object@assays[[data.assay]]@scale.data <- append(object@assays[[data.assay]]@scale.data,
                                      list(C = basis.columns.no,
                                           k = k,
@@ -277,24 +284,53 @@ reduceBasis <- function(
                                           reduceBasis = reduceBasis
                                           )
                                      )
-  names(object@assays) <- ifelse(names(object@assays) == data.assay, new.assay.name, names(object@assays))
-  object@assays[[new.assay.name]]@assay.name <- new.assay.name
-  object@assays[[new.assay.name]]@assay.orig <- data.assay
-  defaultAssay(object) <- new.assay.name
+  names(object@assays) <- ifelse(names(object@assays) == data.assay, "Reduce.basis", names(object@assays))
+  object@assays[["Reduce.basis"]]@assay.name <- "Reduce.basis"
+  object@assays[["Reduce.basis"]]@assay.orig <- data.assay
+  defaultAssay(object) <- "Reduce.basis"
   # Orthogonalization
-  basis.columns.select.no = object@assays[["Pre.Quantiles"]]@scale.data[["basis.columns"]][[basis.columns.no + 10]]
-  reduceBasis.norms <- object@assays[["Pre.Quantiles"]]@scale.data[["betaCDF"]][, basis.columns.select.no]
+  basis.columns.select.no = object@assays[["Reduce.basis"]]@scale.data[["basis.columns"]][[basis.columns.no + 10]]
+  reduceBasis.norms <- object@assays[["Reduce.basis"]]@scale.data[["betaCDF"]][, basis.columns.select.no]
   gramS <- gramSchmidt(reduceBasis, tol = .Machine$double.eps^0.5)
   norms <- gramSchmidt(as.matrix(reduceBasis.norms), tol = .Machine$double.eps^0.5)$Q
   # Denoising
-  quantlet <- waveletDe(gramS$Q[, -1], filter.number = 2, family = "DaubExPhase")[, , 2]
-  quantlet.ns <- cbind(norms, centering.function(quantlet, scale = TRUE))
-  # re-standardize
-  ## compute empirical coefficients
-
+  quantlets <- waveletDe(gramS$Q[, -1], filter.number = 2, family = "DaubExPhase")[, , 2]
+  quantlets.ns <- cbind(norms, centering.function(quantlets, scale = TRUE))
+  # Compute Empirical Coefficients
+  # eQ = getQboneData(object, slot = 'data', assay = defaultAssay(object))
+  # eQy = matrix(round(unlist(eQ, use.names = F),3), 1024)
+  eQy = matrix(
+    round(
+      unlist(getQboneData(object, slot = 'data', assay = defaultAssay(object)),
+             use.names = F
+             ),
+      3
+      ),
+    dim(object@assays[["Reduce.basis"]]@scale.data[["reduceBasis"]])[1]
+    )
+  emp.raw.dataset <- vector("list", length(orig.dataset))
+  for (i in 1:length(orig.dataset)) {
+    emp.raw.dataset[[i]] <- eQy[, i]
+  }
+  empCoefs <- empCoefs(quantlets.ns, emp.raw.dataset)
+  # Build new Qbone object
+  empCoefs.list <- split(empCoefs, seq(nrow(empCoefs)))
+  names(empCoefs.list) <- object@meta.data[["id"]]
+  # get it back
+  # empCoefs2 <- matrix(unlist(empCoefs.list), nrow=length(empCoefs.list), byrow=TRUE)
+  new.qbonedata <- createQboneData(empCoefs.list,
+                                   meta.assays = data.frame(id = names(orig.dataset)),
+                                   sampleid.assays = 1,
+                                   assay.name = new.assay.name,
+                                   assay.orig = data.assay)
+  new.qbonedata@scale.data <- append(object@assays[[defaultAssay(object)]]@scale.data,
+                                     list(quantlets = quantlets.ns))
+  object[[new.assay.name]] <- new.qbonedata
+  defaultAssay(object) <- new.assay.name
   return(object)
 }
 
+# Function logic based on Dic ----
 ## 2.4 ocDic ----
 
 ## 2.5 unionDic ----
@@ -699,6 +735,38 @@ waveletDe <- function(
     outputs[, i, 2] <- AvBasis(ywstT)
   }
   return(outputs)
+}
+
+## 6.11 empCoefs----
+#' Compute Empirical Coefficients
+#'
+#' @param quantlet quanvelts basis
+#' @param raw.dataset input dataset
+#' @param ... Arguments passed to other methods
+#'
+#' @return mats
+#'
+#' @keywords internal
+#'
+#' @noRd
+#'
+
+empCoefs <- function(
+  quantlet,
+  raw.dataset,
+  ...
+  ){
+  n <- length(raw.dataset)
+  mats <- matrix(NA, nrow = n, ncol = (dim(quantlet)[2] + 1))
+  for (i in 1:n) {
+    y <- raw.dataset[[i]]
+    y.long <- length(y)
+    set.seed(123 + i)
+    grids <- sort(sample(dim(quantlet)[1], y.long))
+    Psi <- cbind(rep(1, length(grids)), quantlet[grids, ])
+    mats[i, ] <- solve(t(Psi) %*% Psi) %*% t(Psi) %*% y
+  }
+  return(mats)
 }
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

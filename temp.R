@@ -48,6 +48,7 @@ q1 = readQbone(data.dir, groupbyfolder = T)
 
 qa1 = getQboneData(q1, slot = 'data', assay = defaultAssay(q1))
 
+# save image ----
 data.dir = "/home/span/Documents/MOSJ-3DCT/data/csv.group"
 q1 = readQbone(data.dir, groupbyfolder = T)
 q2 = thinData(q1,prop=0.0001)
@@ -55,7 +56,7 @@ q3 = lassoList(q2)
 q4 = preQuantlets(q3)
 dxPlot(q4)
 dxPlotRev(q4)
-q5 = reduceBasis(q4)
+q5 = ecQuantlets(q4)
 object = q5
 save.image("~/Documents/Qbone.test.Rdata")
 
