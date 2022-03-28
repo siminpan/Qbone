@@ -153,7 +153,7 @@ preQuantlets <- function(
 ){
   # Check data.assay
   if(data.assay != "Lasso.list"){
-    warning('The default assay is not "Lasso.list" please double the defaultAssay() of this Qbone object. This step should be run on results of lassoList().')
+    warning('The default assay is not "Lasso.list" please double check the defaultAssay() of this Qbone object. This step should be run on results of lassoList().')
   }
   message('Will compute the quantlets basis functions based on "', data.assay, '" results from "', object@assays[["Lasso.list"]]@assay.orig, '" data.', "\n This step may take a while.")
   # Get data
@@ -248,7 +248,7 @@ ecQuantlets <- function(
 ){
   # Check data.assay
   if(data.assay != "Pre.Quantiles"){
-    warning('The default assay is not "Pre.Quantiles" please double the defaultAssay() of this Qbone object. This step should be run on results of preQuantlets().')
+    warning('The default assay is not "Pre.Quantiles" please double check the defaultAssay() of this Qbone object. This step should be run on results of preQuantlets().')
   }
   # Get data and compute the reduce basis
   # orig.dataset <- raw.dataset <- getQboneData(object, slot = 'data',

@@ -44,8 +44,16 @@ qfrModel <- function(
   ...
 ){
   # Check data.assay
-  if(data.assay != "Empirical.Coefficients"){
-    warning('The default assay is not "Empirical.Coefficients" please double the defaultAssay() of this Qbone object. This step should be run on results of ecQuantlets().')
+  if (data.assay != "Empirical.Coefficients"){
+    warning('The default assay is not "Empirical.Coefficients" please double check the defaultAssay() of this Qbone object. This step should be run on results of ecQuantlets().')
+  }
+  if (is.null(X)){
+    warning('Covariates X was not provided, will atomically generate covariate matrix based on Qbone object metadata group information. Please double check the output.')
+    X <- covM(object)
+  }
+  if (is.null(H)){
+    warning('Number of clustering groups H was not provided, will atomically generate covariate matrix based on Qbone object metadata group information. Please double check the output.')
+    H <- length(names(table(object@meta.data[["group"]])))
   }
   empCoefs.list <- getQboneData(object, slot = 'data', assay = data.assay)
   empCoefs <- matrix(unlist(empCoefs.list, use.names = F), nrow=length(empCoefs.list), byrow=TRUE)
@@ -150,56 +158,92 @@ preMCMC <- function(
   Px <- dim(X)[2]
 
   B00 <- solve(t(X) %*% X) %*% t(X) %*% sd_l2
-  BETA_LSE <- B00
+  beta_LSE <- B00
   ## 1 -> smallest!  64 -> largest!
 
-  ### ORD_BETA_LSE = matrix(NA, ncol= Px, nrow= K)   ## j=1
+  ### ORD_beta_LSE = matrix(NA, ncol= Px, nrow= K)   ## j=1
 
-  ### for(j in 1:Px){ORD_BETA_LSE[, j] = order(abs(BETA_LSE[j,]))}
+  ### for(j in 1:Px){ORD_beta_LSE[, j] = order(abs(beta_LSE[j,]))}
 
   JP_XI <- matrix(NA, nrow = Px, ncol = K)
   JP_XE <- matrix(NA, nrow = Px, ncol = K) ##  d_0_2[i,][JP_I[i,]]
   JP_XB <- matrix(NA, nrow = Px, ncol = K)
   B00_2 <- B00^2
   for (i in 1:Px){ ##  i =1
-    JP_XI[i, ] <- c(1, 2, (order(B00_2[i, -c(1, 2) ], decreasing = TRUE) + 2))
-    ## JP_XI[i,] =   c(1,   (order(    B00_2[i, -c(1) ] , decreasing = TRUE ) + 1 )  )
+    JP_XI[i, ] <- c(1, 2, (order(B00_2[i, -c(1, 2)], decreasing = TRUE) + 2))
+    ## JP_XI[i,] = c(1, (order(B00_2[i, -c(1)], decreasing = TRUE) + 1))
     JP_XE[i, ] <- cumsum(B00_2[i, JP_XI[i, ]]) / sum(B00_2[i, JP_XI[i, ]])
-    JP_XB[i, JP_XI[i, ]  ] <- JP_XE[i, ]
+    JP_XB[i, JP_XI[i, ]] <- JP_XE[i, ]
   }
 
-  if (Px != length(delta2)){
-    cuts <- rep(delta2, Px)
-  }
   if (Px == length(delta2)){
     cuts <- delta2
+  } else {
+    cuts <- rep(delta2, Px)
   }
-  # cuts = c( 0.667, 0.667,  0.675, 0.652, 0.667, 0.652, 0.65  )
+
   Set.off <- vector("list", Px)
   Set.on <- vector("list", Px)
   for (i in 1:Px){ ## i=3
-    Set.off[[i]] <- seq(K)[ JP_XB[i, ] > cuts[i]   ]
-    Set.on[[i]] <- seq(K)[ JP_XB[i, ] <= cuts[i]   ]
+    Set.off[[i]] <- seq(K)[JP_XB[i, ] > cuts[i]]
+    Set.on[[i]] <- seq(K)[JP_XB[i, ] <= cuts[i]]
   }
 
-
-
   TB00 <- matrix(0, nrow = Px, ncol = K)
-  Lambda_TB00 <- matrix(0, nrow = K, ncol = Px)
+  lambda_TB00 <- matrix(0, nrow = K, ncol = Px)
   for (i in 1:Px){ ## i=3
-    if (is.null(Set.off[[i]]) == TRUE){
-      Lambda_TB00[, i] <- 0
+    if (is.null(Set.off[[i]])){
+      lambda_TB00[, i] <- 0
+    } else {
+      lambda_TB00[  Set.off[[i]], i] <- 100000
+      lambda_TB00[ -Set.off[[i]], i] <- 0
     }
-    if (is.null(Set.off[[i]]) != TRUE){
-      Lambda_TB00[  Set.off[[i]], i] <- 100000
-      Lambda_TB00[ -Set.off[[i]], i] <- 0
-    }
-    TB00[i, ] <- ifelse((Lambda_TB00[, i] == 0), B00[i, ], 0)
+    TB00[i, ] <- ifelse(lambda_TB00[, i] == 0, B00[i, ], 0)
   }
 
   outputs <- list(sd_l2, sdPhi, scale_f, d_l2, Phi, TB00, r)
   names(outputs) <- list("sd_l2", "sdPhi", "scale_f", "d_l2", "Phi", "TB00", "cluster")
   return(outputs)
+}
+
+## 6.2 covM ----
+#' Generate covariate matrix from Qbone object atomically.
+#'
+#' atomically generate covariate matrix based on Qbone object metadata group information.
+#'
+#' @param object Qbone object
+#' @param added.cov probability grids on (0,1)
+#' @param ... Arguments passed to other methods
+#'
+#' @return matrix containing # of beta parameters times the length of index.p
+#'
+#' @keywords internal
+#'
+#' @noRd
+#'
+covM <- function(
+  object,
+  added.cov = NULL,
+  ...
+  ){
+  # if (int == T){
+    int <- rep(1, length(object@meta.data[["group"]]))
+  # } else {
+  #   int <- rep(0, length(object@meta.data[["group"]]))
+  # }
+  X <- cbind(int)
+  table1 <- table(object@meta.data[["group"]])
+  for (i in 1:length(names(table1))){
+    assign(paste0("g", i), ifelse(object@meta.data[["group"]] == names(table1)[i], 1, 0))
+    X <- cbind(X, get(paste0("g", i)))
+  }
+  colnames(X) = c("int", names(table1))
+  X <- as.matrix(X)
+  if (!is.null(added.cov)){
+    X <- cbind(X, added.cov)
+  }
+  X <- X[,-1]
+  return(X)
 }
 
 

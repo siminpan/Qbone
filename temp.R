@@ -64,6 +64,30 @@ document()
 q6 = lassolist2(q2)
 all.equal(q6,q4)
 
+
+covM <- function(object, int = T, added.cov = NULL){
+  if (int == T){
+    int <- rep(1, length(object@meta.data[["group"]]))
+  } else {
+    int <- rep(0, length(object@meta.data[["group"]]))
+  }
+  X <- cbind(int)
+  table1 <- table(object@meta.data[["group"]])
+  for (i in 1:length(names(table1))){
+    assign(paste0("g", i), ifelse(object@meta.data[["group"]] == names(table1)[i], 1, 0))
+    X <- cbind(X, get(paste0("g", i)))
+  }
+  colnames(X) = c("int", names(table1))
+  X <- as.matrix(X)
+  if (!is.null(added.cov)){
+    X <- cbind(X, added.cov)
+  }
+  return(X)
+}
+
+X <- covM(object)
+
+
 ## old ----
 raw.dataset <- getQboneData(q2, slot = 'data', assay = defaultAssay(q2))
 a1 = c(seq(0.1, 1, by = 0.1), seq(2, 100, by = 1))
@@ -850,8 +874,13 @@ re2 = thinData(re1,prop=0.01)
 re3 = lassoList(re2)
 re4 = preQuantlets(re3)
 object = re4
-save.image(file = "/mnt/md0/zlyrebecca/sp/MOSJ-CT/05.6_3Dpoints/test.Qbone.RData")
+dxPlot(re4)
+dxPlotRev(re4)
+re5 = ecQuantlets(re4)
+object = re5
+save.image(file = "/home/span/Documents/MOSJ-3DCT/data/05.6_3Dpoints/test.Qbone.RData")
 
+load("/home/span/Documents/MOSJ-3DCT/data/05.6_3Dpoints/test.Qbone.RData")
 
 load("/home/span/Documents/MOSJ-3DCT/data/05.6_3Dpoints/quafunreg_5.RData")
 
