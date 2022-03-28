@@ -44,5 +44,6 @@ Collate:
     'QboneObject.R'
     'RcppExports.R'
     'basisfunction.R'
+    'functionalregression.R'
     'plotting.R'
     'preprocessing.R'
