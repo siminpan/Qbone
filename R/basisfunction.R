@@ -14,7 +14,7 @@ NULL
 # 2. Functions ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-# Function logic based on R Object ----
+# Function logic based on algorithm step ----
 
 ## 2.1 lassoList ----
 #' Use penalized regression (lasso) to find a sparse subset of dictionary
