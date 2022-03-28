@@ -303,7 +303,7 @@ ecQuantlets <- function(
   # eQy = matrix(round(unlist(eQ, use.names = F),3), 1024)
   eQy = matrix(
     round(
-      unlist(getQboneData(object, slot = 'data', assay = defaultAssay(object)),
+      unlist(getQboneData(object, slot = 'data', assay = data.assay),
              use.names = F
              ),
       3
@@ -325,7 +325,7 @@ ecQuantlets <- function(
                                    sampleid.assays = 1,
                                    assay.name = new.assay.name,
                                    assay.orig = data.assay)
-  new.qbonedata@scale.data <- append(object@assays[[defaultAssay(object)]]@scale.data,
+  new.qbonedata@scale.data <- append(object@assays[[data.assay]]@scale.data,
                                      list(C = basis.columns.no,
                                           k = k,
                                           basis.columns.select = basis.columns.select,
