@@ -58,9 +58,12 @@ qfrModel <- function(
   empCoefs.list <- getQboneData(object, slot = 'data', assay = data.assay)
   empCoefs <- matrix(unlist(empCoefs.list, use.names = F), nrow=length(empCoefs.list), byrow=TRUE)
   reduceBasis <- object@assays[[data.assay]]@scale.data[["reduceBasis"]]
+  orthogBasis <- object@assays[[data.assay]]@scale.data[["orthogBasis"]]
   quantlets <- object@assays[[data.assay]]@scale.data[["quantlets"]]
-  emp_fit <- preMCMC(empCoefs, reduceBasis, quantlets, # X = X, delta2 = delta2, H = H,
+  emp_fit <- preMCMC(empCoefs, reduceBasis, orthogBasis, quantlets,
+                     # X = X, delta2 = delta2, H = H,
                      ...)
+  mcmc_fit <- MCMC(X, emp_fit$sd_l2, emp_fit$r, emp_fit$TB00, ...)
 
 }
 
@@ -87,9 +90,10 @@ qfrModel <- function(
 #' Computes scaled empirical coefficients, clustering, and initial
 #' coefficients input
 #'
-#' @param empCoefs vector containing sequence of beta parameter
-#' @param reduceBasis  vector containing sequence of beta parameter
-#' @param quantlets probability grids on (0,1)
+#' @param empCoefs empirical coefficients
+#' @param reduceBasis  reduced basis function
+#' @param orthogBasis orthogonal basis function
+#' @param quantlets quantlets basis function
 #' @param X Covariates
 #' @param delta2 Cutoff percentage of the energy for the functional coefficients
 #' @param H Number of clustering groups.
@@ -104,6 +108,7 @@ qfrModel <- function(
 preMCMC <- function(
   empCoefs,
   reduceBasis,
+  orthogBasis,
   quantlets,
   X,
   delta2,
@@ -127,14 +132,7 @@ preMCMC <- function(
   singluar <- round(diag(upper_R_T), 8) ## upper_R_T%*%t(upper_R_T)
   est_eigen <- c(200, singluar)
 
-  if (length(est_eigen) >= 7){
-    H1 <- H
-    hc <- hclust(dist(est_eigen)^2, "cen")
-    r <- cutree(hc, k = H1)
-  } else {
-    H1 <- H
-    r <- seq(length(est_eigen))
-  }
+  r <- basisCluster(reduceBasis, orthogBasis, H) # reduceBasis = reduceBasis, quantlets = quantlets, H = H
 
   d_l2 <- empCoefs
   K <- dim(d_l2)[2]
@@ -244,6 +242,307 @@ covM <- function(
   }
   X <- X[,-1]
   return(X)
+}
+
+## 6.3 basisCluster ----
+#' Cluster basis indices based on their eigen-values
+#'
+#' @param reduceBasis  reduced basis function
+#' @param orthogBasis orthogonal basis function
+#' @param H Number of clustering groups.
+#' @param ... Arguments passed to other methods
+#'
+#' @return matrix containing # of beta parameters times the length of index.p
+#'
+#' @importFrom stats hclust cutree
+#' @keywords internal
+#'
+#' @noRd
+#'
+basisCluster <- function(
+  reduceBasis,
+  orthogBasis,
+  H = NULL,
+  ...
+  ){
+  lambda_v <- eigenmapmtm(reduceBasis, orthogBasis)
+  est_eigen <- round(diag(eigenmapmtm(lambda_v, lambda_v)), 8)
+  if (length(est_eigen) >= 6){
+    H1 <- H - 1
+    hc <- hclust(dist(est_eigen)^2, "cen")
+    r <- cutree(hc, k = H1)
+  } else {
+    r <- seq(length(est_eigen))
+  }
+  return(c(1, r + 1))
+}
+
+## 6.4 MCMC ----
+#' Markov chain Monte Carlo (MCMC) computations
+#'
+#' @param X Covariates
+#' @param empCoefs Empirical coefficients
+#' @param r Clustering indicators
+#' @param TB00  initial values of functional coefficients
+#' @param noi number of MCMC iteration
+#' @param burn Number of burn-in
+#' @param ep1 prior for nu. Default is inverse gamma dist
+#' @param keep.zero T or F to keep 0
+#' @param ... Arguments passed to other methods
+#'
+#' @return MCMC samples
+#'
+#' @importFrom stats hclust cutree
+#' @keywords internal
+#'
+#' @noRd
+#'
+MCMC <- function(
+  X,
+  empCoefs,
+  r,
+  TB00,
+  noi = 2000,
+  burn = 200,
+  ep1 = 0.0064,
+  keep.zero = FALSE,
+  ...
+){
+  # Set up
+  N <- dim(X)[1]
+  Px <- dim(X)[2]
+  K <- dim(empCoefs)[2]
+
+  H <- length(unique(r))
+  # B00 <- solve(t(X) %*% X) %*% t(X) %*% empCoefs
+  B00 <- solve(t(X) %*% X) %*% eigenmapmtm(X, empCoefs)
+  A00 <- TB00
+  A00 <- ifelse(A00 == 0, 0, 1)
+  C00 <- matrix(rep(r, Px), nrow = Px, ncol = K, byrow = TRUE)
+  vec_C00 <- as.vector(C00)
+  PA00 <- matrix(NA, ncol = K, nrow = Px)
+  vec_PA00 <- as.vector(PA00)
+
+  # SSE_K <- diag(t(empCoefs - X %*% B00) %*% (empCoefs - X %*% B00))
+  SSE_K <- diag(eigenmapmtm((empCoefs - X %*% B00), (empCoefs - X %*% B00)))
+  sigma2_K <- SSE_K/N
+
+  nu0 <- ep1
+  g <- rep(100000, K)
+
+  one <- 1
+  ## empCoefs=sd_l2
+
+  # Fully Bayesian
+  ## noi
+
+  set.seed(noi + 2022) # || double check
+
+  MCMC_BETA <- matrix(0, ncol = Px * K, nrow = noi)
+  MCMC_OMEGA <- matrix(0, ncol = K, nrow = noi)
+
+  MCMC_ALPHA <- matrix(0, ncol = Px * K, nrow = noi)
+
+
+  MCMC_PHI <- matrix(NA, ncol = length(unique(r)), nrow = burn)
+  MCMC_GAM <- matrix(NA, ncol = length(unique(r)), nrow = burn)
+  ## MCMC_PHI  = matrix(  NA, ncol= H ,  nrow =  noi  )
+  ## MCMC_GAM  = matrix(  NA, ncol= H ,  nrow =  noi  )
+
+  ## MCMC_OB  = matrix(  0, ncol= Px*K  ,  nrow =  noi  )
+  MCMC_PA <- matrix(0, ncol = Px * K, nrow = burn)
+  MCMC_TAU <- matrix(0, ncol = Px * K, nrow = burn)
+  PA00 <- matrix(NA, ncol = K, nrow = Px)
+  TAU00 <- matrix(NA, ncol = K, nrow = Px)
+
+  for (it in 1:noi){ ##   it =1
+
+    if (it <= burn){
+      ## new_x = rbinom(N, 1, Ft  )
+      ## X[, 13] =new_x
+
+      if (it == 1){
+        sigma2_K0 <- sigma2_K
+        temp.B00 <- B00
+        MCMC_BETA[ 1, ] <- as.vector(B00)
+        temp.A00 <- A00
+        temp.C00 <- C00
+        MCMC_PA[ 1, ] <- as.vector(PA00)
+        temp.PA00 <- PA00
+        temp.TAU00 <- TAU00
+      } else {
+        sigma2_K0 <- MCMC_OMEGA[(it - 1), ]
+        temp.B00 <- matrix(MCMC_BETA[(it - 1), ], ncol = K, nrow = Px)
+        temp.A00 <- matrix(MCMC_ALPHA[(it - 1), ], ncol = K, nrow = Px)
+      }
+      # Empirical Bayes part
+
+      for (j in 1:Px){ ## j =4;   j =1 ;  j =2 ;   j =3 ;
+
+        if ((Px - 1) != 1){
+          B_j_ <- matrix(temp.B00[ -j, ], ncol = K, nrow = (Px - 1))
+          X_j_ <- X[, -j]
+        } else {
+          B_j_ <- matrix(temp.B00[ -j, ], ncol = K, nrow = (Px - 1), byrow = TRUE)
+          X_j <- matrix(X[, -j], ncol = (Px - 1), nrow = N, byrow = TRUE)
+        }
+
+        B_j <- temp.B00[  j, ]
+        X_j <- X[, j]
+
+        V_j_all_h <- (sum(X_j^2)/sigma2_K0)^{-1}
+        eta_j_all_h <- B_j/sqrt(V_j_all_h)
+
+        # cluster by engen  ##indicator by trashold by energy
+        cluster_j <- C00[j, ] ##   cluster_j_all_h
+        nonzeor_j <- A00[j, ] ##   indicator_j_all_h
+
+        Ob_j_all_h <- rep(NA, K)
+
+        for (h in 1:length(unique(r))){ ###  h =6 ## r
+          hh <- unique(r)[h]
+
+          crruent_cluster_j <- (cluster_j == hh)
+
+          nonzero_in_crruent_cluster_j <- (crruent_cluster_j) & (nonzeor_j == 1)
+          zero_in_crruent_cluster_j <- (crruent_cluster_j) & (nonzeor_j == 0)
+
+          total.obs_in_crruent_cluster_j <- sum(crruent_cluster_j)
+          effective.obs_in_crruent_cluster_j <- sum(nonzero_in_crruent_cluster_j)
+          prob_nonzero_in_crruent_cluster_j <- effective.obs_in_crruent_cluster_j / total.obs_in_crruent_cluster_j
+
+          freedom_in_crruent_cluster_j <- effective.obs_in_crruent_cluster_j - 1
+
+          MCMC_PHI[it, h] <- prob_nonzero_in_crruent_cluster_j
+
+          if (prob_nonzero_in_crruent_cluster_j == 1){
+            nonzeor_j[crruent_cluster_j] <- 1
+            temp.TAU00[j, crruent_cluster_j] <- Inf
+            MCMC_GAM[it, h] <- Inf
+            temp.PA00[j, crruent_cluster_j] <- 1
+          } else if (prob_nonzero_in_crruent_cluster_j == 0){
+            if (keep.zero == TRUE){
+              nonzeor_j[ crruent_cluster_j] <- 0
+              temp.TAU00[j, crruent_cluster_j ] <- 0
+              MCMC_GAM[it, h] <- 0
+              temp.PA00[j, crruent_cluster_j ] <- 0
+            } else {
+              nonzeor_j[ crruent_cluster_j] <- 1
+              temp.TAU00[j, crruent_cluster_j ] <- Inf
+              MCMC_GAM[it, h] <- Inf
+              temp.PA00[j, crruent_cluster_j ] <- 1
+            }
+          } else {
+            if (freedom_in_crruent_cluster_j >= 1){
+              G_j_h <- max(0, sum((eta_j_all_h^2)[nonzero_in_crruent_cluster_j]) / (sum(nonzero_in_crruent_cluster_j) - 1))
+              MCMC_GAM[it, h] <- G_j_h
+
+              temp.TAU00[j, crruent_cluster_j ] <- V_j_all_h[crruent_cluster_j] * G_j_h
+              prob_j_h <- prob_nonzero_in_crruent_cluster_j
+
+              if (sum(nonzero_in_crruent_cluster_j) >= 1){
+                prob0 <- prob_j_h / (1 - prob_j_h) / sqrt(1 + G_j_h) * exp(0.5 * eta_j_all_h[nonzero_in_crruent_cluster_j]^2 * (G_j_h / (1 + G_j_h)))
+                Ob_j_all_h[nonzero_in_crruent_cluster_j] <- ifelse(prob0 != Inf, prob0, 10^128)
+                temp.PA00[j, nonzero_in_crruent_cluster_j] <- Ob_j_all_h[nonzero_in_crruent_cluster_j] / (Ob_j_all_h[nonzero_in_crruent_cluster_j] + 1)
+              }
+              if (sum(zero_in_crruent_cluster_j) >= 1){
+                Ob_j_all_h[zero_in_crruent_cluster_j] <- prob_j_h / (1 - prob_j_h) / sqrt(1 + G_j_h) * exp(0.5 * eta_j_all_h[zero_in_crruent_cluster_j]^2 * (G_j_h / (1 + G_j_h)))
+                temp.PA00[j, zero_in_crruent_cluster_j] <- Ob_j_all_h[zero_in_crruent_cluster_j] / (Ob_j_all_h[zero_in_crruent_cluster_j] + 1)
+              }
+            } ## close  freedom_in_crruent_cluster_j >= 1
+            if (freedom_in_crruent_cluster_j == 0){
+              G_j_h <- Inf
+              MCMC_GAM[it, h] <- G_j_h
+              temp.TAU00[j, crruent_cluster_j] <- V_j_all_h[crruent_cluster_j] * G_j_h
+              prob_j_h <- prob_nonzero_in_crruent_cluster_j
+
+              if (sum(nonzero_in_crruent_cluster_j) >= 1){
+                Ob_j_all_h[  nonzero_in_crruent_cluster_j] <- Inf
+                temp.PA00[j, nonzero_in_crruent_cluster_j] <- 1
+              }
+              if (sum(zero_in_crruent_cluster_j) >= 1){
+                Ob_j_all_h[  zero_in_crruent_cluster_j] <- Inf
+                temp.PA00[j, zero_in_crruent_cluster_j] <- 1
+              }
+            } ## close  freedom_in_crruent_cluster_j == 0
+          } ## close probability condition
+        } ## close h
+      } ## close j
+
+      MCMC_TAU[it, ] <- as.vector(temp.TAU00)
+      MCMC_PA [it, ] <- as.vector(temp.PA00)
+    } ## close   if( it <= burn )
+
+
+
+    # Main Estimation
+
+    for (j in 1:Px){ ## j =2;   j =1 ;
+
+      for (k in 1:K){ ## k =26
+
+        if ((Px - 1) != 1){
+          B_j_ <- matrix(temp.B00[ -j, ], ncol = K, nrow = (Px - 1))
+          X_j_ <- X[, -j]
+        } else {
+          B_j_ <- matrix(temp.B00[ -j, ], ncol = K, nrow = (Px - 1), byrow = TRUE)
+          X_j <- matrix(X[, -j], ncol = (Px - 1), nrow = N, byrow = TRUE)
+        }
+
+        B_j <- temp.B00[  j, ]
+        X_j <- X[, j]
+
+        hat_xSx <- sum(X_j^2 / sigma2_K0[k])
+        hat_xSy1 <- sum(X_j * empCoefs[, k] / sigma2_K0[k])
+        # hat_xSy2 <- sum(X_j * (X_j_ %*% B_j_[, k]) / sigma2_K0[k]) #### t(X_j)%*%X_j_%*% B_j_[, k]/sigma2_K0[k]
+        hat_xSy2 <- sum(X_j * eigenmapmm(X_j_, B_j_[, k]) / sigma2_K0[k]) #### t(X_j)%*%X_j_%*% B_j_[, k]/sigma2_K0[k]
+        hat_xSy <- hat_xSy1 - hat_xSy2
+
+        if (temp.TAU00[j, k] <= 0.000000001){
+          Vb <- 0
+          # Eb <- Vb %*% (hat_xSy)
+          Eb <- eigenmapmm(Vb, (hat_xSy))
+          E <- matrix(rnorm(one, 0, 1), nrow = 1, ncol = one) # || double check seed
+          beta_j <- t(c(Eb))
+        } else {
+          Vb <- g[j] * solve(hat_xSx + 1 / temp.TAU00[j, k]) / (g[j] + 1)
+          # Eb <- Vb %*% (hat_xSy)
+          Eb <- eigenmapmm(Vb, (hat_xSy))
+          E <- matrix(rnorm(one, 0, 1), nrow = 1, ncol = one) # || double check seed
+          beta_j <- t(t(E %*% chol(Vb)) + c(Eb))
+        } ##
+
+        u <- runif(1, 0, 1)  # || double check seed
+        if (u <= temp.PA00[j, k]){
+          beta_j <- beta_j
+        } else {
+          beta_j <- 0
+        }
+        ### posit =   (k-1)*Px + j
+        ### MCMC_BETA[ it,  posit ] = beta_j
+        temp.B00[j, k ] <- beta_j
+      } ##   close ## j =1
+    } ##  close ## k =1
+    MCMC_BETA[it, ] <- as.vector(temp.B00)
+    temp.A00 <- temp.B00
+    temp.A00 <- ifelse(temp.A00 == 0, 0, 1)
+    MCMC_ALPHA[it, ] <- as.vector(temp.A00)
+
+    est <- matrix(MCMC_BETA[it, ], nrow = Px, ncol = K)
+    # SSE <- diag(t(empCoefs - X %*% est) %*% (empCoefs - X %*% est))
+    SSE <- diag(eigenmapmtm((empCoefs - X %*% est), (empCoefs - X %*% est)))
+    MCMC_OMEGA[it, ] <- 1 / rgamma(K, (nu0 + N) / 2, (nu0 + SSE) / 2) # || double check seed
+  }
+  #
+
+  POST_BETA_FULL <- MCMC_BETA[-c(1:burn), ]
+  POST_OMEGA_FULL <- MCMC_OMEGA[-c(1:burn), ]
+  POST_ALPHA <- MCMC_ALPHA[-c(1:burn), ]
+  POST_TAU <- MCMC_TAU[-c(1:burn), ]
+
+  outputs <- list(POST_BETA_FULL)
+  names(outputs) <- list("postbeta")
+  return(outputs)
 }
 
 

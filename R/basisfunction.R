@@ -330,6 +330,7 @@ ecQuantlets <- function(
                                           k = k,
                                           basis.columns.select = basis.columns.select,
                                           reduceBasis = reduceBasis,
+                                          orthogBasis = gramS$Q,
                                           quantlets = quantlets.ns)
                                      )
   object[[new.assay.name]] <- new.qbonedata
@@ -768,7 +769,7 @@ empCoefs <- function(
   for (i in 1:n) {
     y <- raw.dataset[[i]]
     y.long <- length(y)
-    set.seed(123 + i)
+    set.seed(123 + i) # || double check
     grids <- sort(sample(dim(quantlet)[1], y.long))
     Psi <- cbind(rep(1, length(grids)), quantlet[grids, ])
     mats[i, ] <- solve(t(Psi) %*% Psi) %*% t(Psi) %*% y
