@@ -291,7 +291,8 @@ ecQuantlets <- function(
   # defaultAssay(object) <- "Reduce.basis"
 
   # Orthogonalization
-  basis.columns.select.no = object@assays[[data.assay]]@scale.data[["basis.columns"]][[basis.columns.no + 10]]
+  # basis.columns.select.no = object@assays[[data.assay]]@scale.data[["basis.columns"]][[basis.columns.no + 10]]
+  basis.columns.select.no = which(2 ==unlist(lapply(object@assays[["Pre.Quantiles"]]@scale.data[["basis.columns"]], length), use.names = F))
   reduceBasis.norms <- object@assays[[data.assay]]@scale.data[["betaCDF"]][, basis.columns.select.no]
   gramS <- gramSchmidt(reduceBasis, tol = .Machine$double.eps^0.5)
   norms <- gramSchmidt(as.matrix(reduceBasis.norms), tol = .Machine$double.eps^0.5)$Q

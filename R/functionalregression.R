@@ -63,7 +63,8 @@ qfrModel <- function(
   emp_fit <- preMCMC(empCoefs, reduceBasis, orthogBasis, quantlets,
                      # X = X, delta2 = delta2, H = H,
                      ...)
-  mcmc_fit <- MCMC(X, emp_fit$sd_l2, emp_fit$r, emp_fit$TB00, ...)
+  # mcmc_fit <- MCMC(X, emp_fit$sd_l2, emp_fit$cluster, emp_fit$TB00, ...)
+  mcmc_fit <- MCMC(X = X, empCoefs = emp_fit$sd_l2, r = emp_fit$cluster, TB00 = emp_fit$TB00, ...)
 
 }
 
@@ -293,6 +294,7 @@ basisCluster <- function(
 #' @return MCMC samples
 #'
 #' @importFrom stats hclust cutree
+#' @importFrom utils txtProgressBar setTxtProgressBar
 #' @keywords internal
 #'
 #' @noRd
@@ -354,7 +356,8 @@ MCMC <- function(
   MCMC_TAU <- matrix(0, ncol = Px * K, nrow = burn)
   PA00 <- matrix(NA, ncol = K, nrow = Px)
   TAU00 <- matrix(NA, ncol = K, nrow = Px)
-
+  message("Start MCMC iteration: ")
+  pb <- txtProgressBar(min = 0, max = noi, style = 3)
   for (it in 1:noi){ ##   it =1
 
     if (it <= burn){
@@ -532,7 +535,9 @@ MCMC <- function(
     # SSE <- diag(t(empCoefs - X %*% est) %*% (empCoefs - X %*% est))
     SSE <- diag(eigenmapmtm((empCoefs - X %*% est), (empCoefs - X %*% est)))
     MCMC_OMEGA[it, ] <- 1 / rgamma(K, (nu0 + N) / 2, (nu0 + SSE) / 2) # || double check seed
+    setTxtProgressBar(pb, it)
   }
+  close(pb)
   #
 
   POST_BETA_FULL <- MCMC_BETA[-c(1:burn), ]
