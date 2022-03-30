@@ -247,7 +247,7 @@ concordCIMX <- function(input.yhat, input.y){
 #'
 loccplotdata <- function(
   object,
-  p = signif(seq(0.001, 0.999, length = 1024), 4),
+  p = object@assays[[data.assay]]@scale.data[["p"]],
   cutoff = 0.990,
   ...
   ){
@@ -290,13 +290,12 @@ loccplotdata <- function(
   if (sum(id1) == 0) {
     id <- id2
     this <- min(seq(length(id))[id])
-  }
-  if (sum(id1) != 0) {
+  } else {
     id <- id1
     this <- max(seq(length(id))[id])
   }
 
-  quantlet.set <- basis.columns[[  this   ]] [-1]
+  quantlet.set <- basis.columns[[this]][-1]
 
   numbasis <- sort(unique(c(lasso.x)), decreasing = TRUE)
   plotxaxis <- seq(length(numbasis))

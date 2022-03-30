@@ -258,25 +258,33 @@ ecQuantlets <- function(
   #                                               #object@assays[[defaultAssay(object)]]@assay.orig
   #                                             ]]@assay.orig
   # )
+  # plotdata1 <- loccplotdata(object, ...)
+  plotdata2 <- loccplotdata(object, ...)[[3]]
+  lasso.mean_i_ = plotdata2$y[plotdata2$group == "mean"]
+  lasso.min_i_ = plotdata2$y[plotdata2$group == "min"]
   if (is.null(k)){
-    # plotdata1 <- loccplotdata(object, ...)
-    plotdata2 <- loccplotdata(object, ...)[[3]]
-    lasso.mean_i_ = plotdata2$y[plotdata2$group == "mean"]
-    lasso.min_i_ = plotdata2$y[plotdata2$group == "min"]
-    basis.columns.no = min(plotdata2$x[c(lasso.mean_i_ - lasso.min_i_) > sparsity])
     k = max(plotdata2$x2[c(lasso.mean_i_ - lasso.min_i_) > sparsity])
+    # basis.columns.no = min(plotdata2$x[c(lasso.mean_i_ - lasso.min_i_) > sparsity])
+    basis.columns.no = which(k == unlist(lapply(object@assays[["Pre.Quantiles"]]@scale.data[["basis.columns"]], length), use.names = F))
     basis.columns.select = object@assays[["Pre.Quantiles"]]@scale.data[["basis.columns"]][[basis.columns.no]]
     reduceBasis = object@assays[["Pre.Quantiles"]]@scale.data[["betaCDF"]][, basis.columns.select]
+  } else if (k %in% plotdata2$x2){
+    # basis.columns.no = plotdata2[which(plotdata2$x2 == k),"x"][1]
+    basis.columns.no = which(k == unlist(lapply(object@assays[["Pre.Quantiles"]]@scale.data[["basis.columns"]], length), use.names = F))
+    basis.columns.select = object@assays[["Pre.Quantiles"]]@scale.data[["basis.columns"]][[basis.columns.no]]
+    reduceBasis = object@assays[["Pre.Quantiles"]]@scale.data[["betaCDF"]][, basis.columns.select]
+    # if (k %in% unlist(lapply(object@assays[["Pre.Quantiles"]]@scale.data[["basis.columns"]], length), use.names = F)){
+    #   basis.columns.no = which(k == unlist(lapply(object@assays[["Pre.Quantiles"]]@scale.data[["basis.columns"]], length), use.names = F))
+    #   basis.columns.select = object@assays[["Pre.Quantiles"]]@scale.data[["basis.columns"]][[basis.columns.no]]
+    #   reduceBasis = object@assays[["Pre.Quantiles"]]@scale.data[["betaCDF"]][, basis.columns.select]
+    # } else {
+    #   stop("Based on overcomplete dictionary, k must be one of the following numbers ",
+    #        paste0(unlist(lapply(object@assays[["Pre.Quantiles"]]@scale.data[["basis.columns"]], length), use.names = F), sep = ", "))
+    # }
   } else {
-    if (k %in% unlist(lapply(object@assays[["Pre.Quantiles"]]@scale.data[["basis.columns"]], length), use.names = F)){
-      basis.columns.no = which(k == unlist(lapply(object@assays[["Pre.Quantiles"]]@scale.data[["basis.columns"]], length), use.names = F))
-      basis.columns.select = object@assays[["Pre.Quantiles"]]@scale.data[["basis.columns"]][[basis.columns.no]]
-      reduceBasis = object@assays[["Pre.Quantiles"]]@scale.data[["betaCDF"]][, basis.columns.select]
-    } else {
       stop("Based on overcomplete dictionary, k must be one of the following numbers ",
            paste0(unlist(lapply(object@assays[["Pre.Quantiles"]]@scale.data[["basis.columns"]], length), use.names = F), sep = ", "))
     }
-  }
 
   # # Update Pre.Quantiles with Reduce.basis in Qbone object
   # object@assays[[data.assay]]@scale.data <- append(object@assays[[data.assay]]@scale.data,
@@ -293,7 +301,8 @@ ecQuantlets <- function(
 
   # Orthogonalization
   # basis.columns.select.no = object@assays[[data.assay]]@scale.data[["basis.columns"]][[basis.columns.no + 10]]
-  basis.columns.select.no = which(2 == unlist(lapply(object@assays[["Pre.Quantiles"]]@scale.data[["basis.columns"]], length), use.names = F))
+  # basis.columns.select.no = which(2 == unlist(lapply(object@assays[["Pre.Quantiles"]]@scale.data[["basis.columns"]], length), use.names = F))
+  basis.columns.select.no = length(object@assays[["Pre.Quantiles"]]@scale.data[["basis.columns"]])
   reduceBasis.norms <- object@assays[[data.assay]]@scale.data[["betaCDF"]][, basis.columns.select.no]
   gramS <- gramSchmidt(reduceBasis, tol = .Machine$double.eps^0.5)
   norms <- gramSchmidt(as.matrix(reduceBasis.norms), tol = .Machine$double.eps^0.5)$Q

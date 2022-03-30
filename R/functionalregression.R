@@ -25,6 +25,7 @@ NULL
 #'  to compute the lasso list. Default is the data from the
 #'  defaultAssay(object).
 #' @param X Covariates (N by A matrix, N is the number of observations)
+#' @param X1 New covariates for inferencing MCMC fit result.
 #' @param delta2 Cutoff percentage of the energy for the functional coefficients
 #' @param H Number of clustering groups. Cluster basis indices based on their eigen-values.
 #' @param pct.range Percentage range from original data set. Use as the range of the domain for the density estimate. Default is c(0.05, 0.95). You can override it by assign \code{xranges = c(min, max)}
@@ -39,6 +40,7 @@ qfrModel <- function(
   new.assay.name = "Q.F.Regression",
   data.assay = defaultAssay(object),
   X = NULL,
+  X1 = NULL,
   delta2 = 0.95,
   H = NULL,
   pct.range = c(0.05, 0.95),
@@ -50,11 +52,11 @@ qfrModel <- function(
     warning('The default assay is not "Empirical.Coefficients" please double check the defaultAssay() of this Qbone object. This step should be run on results of ecQuantlets().')
   }
   if (is.null(X)){
-    warning('Covariates X was not provided, will atomically generate covariate matrix based on Qbone object metadata group information. Please double check the output.')
+    warning('Covariates X was not provided, will atomically generate covariate matrix based on Qbone object metadata group information. Please double check the covariates matrix X')
     X <- covM(object)
   }
   if (is.null(H)){
-    warning('Number of clustering groups H was not provided, will atomically generate covariate matrix based on Qbone object metadata group information. Please double check the output.')
+    warning('Number of clustering groups H was not provided, will atomically generate covariate matrix based on Qbone object metadata group information. Please double check H.')
     H <- length(unique(object@meta.data[["group"]]))
   }
   # Get data
@@ -64,11 +66,13 @@ qfrModel <- function(
   orthogBasis <- object@assays[[data.assay]]@scale.data[["orthogBasis"]]
   quantlets <- object@assays[[data.assay]]@scale.data[["quantlets"]]
   # preMCMC
-  emp_fit <- preMCMC(empCoefs,
-                     reduceBasis,
-                     orthogBasis,
-                     quantlets,
-                     # X = X, delta2 = delta2, H = H,
+  emp_fit <- preMCMC(empCoefs = empCoefs,
+                     reduceBasis = reduceBasis,
+                     orthogBasis = orthogBasis,
+                     quantlets = quantlets,
+                     X = X,
+                     delta2 = delta2,
+                     H = H,
                      ...)
   # MCMC
   # mcmc_fit <- MCMC(X, emp_fit$sd_l2, emp_fit$cluster, emp_fit$TB00, ...)
@@ -175,7 +179,11 @@ preMCMC <- function(
   singluar <- round(diag(upper_R_T), 8) ## upper_R_T%*%t(upper_R_T)
   est_eigen <- c(200, singluar)
 
-  r <- basisCluster(reduceBasis, orthogBasis, H) # reduceBasis = reduceBasis, quantlets = quantlets, H = H
+  # r <- basisCluster(reduceBasis, orthogBasis, H) # reduceBasis = reduceBasis, orthogBasis = orthogBasis, H = H
+  r <- basisCluster(reduceBasis = reduceBasis,
+                    orthogBasis = orthogBasis,
+                    H = H,
+                    ...)
 
   d_l2 <- empCoefs
   K <- dim(d_l2)[2]
@@ -358,7 +366,6 @@ MCMC <- function(
   K <- dim(empCoefs)[2]
 
   H <- length(unique(r))
-  # B00 <- solve(t(X) %*% X) %*% t(X) %*% empCoefs
   B00 <- solve(t(X) %*% X) %*% eigenmapmtm(X, empCoefs)
   A00 <- TB00
   A00 <- ifelse(A00 == 0, 0, 1)
@@ -367,7 +374,6 @@ MCMC <- function(
   PA00 <- matrix(NA, ncol = K, nrow = Px)
   vec_PA00 <- as.vector(PA00)
 
-  # SSE_K <- diag(t(empCoefs - X %*% B00) %*% (empCoefs - X %*% B00))
   SSE_K <- diag(eigenmapmtm((empCoefs - X %*% B00), (empCoefs - X %*% B00)))
   sigma2_K <- SSE_K/N
 
@@ -375,10 +381,8 @@ MCMC <- function(
   g <- rep(100000, K)
 
   one <- 1
-  ## empCoefs=sd_l2
 
   # Fully Bayesian
-  ## noi
 
   set.seed(noi + 2022) # || double check
 
@@ -390,21 +394,16 @@ MCMC <- function(
 
   MCMC_PHI <- matrix(NA, ncol = length(unique(r)), nrow = burn)
   MCMC_GAM <- matrix(NA, ncol = length(unique(r)), nrow = burn)
-  ## MCMC_PHI  = matrix(  NA, ncol= H ,  nrow =  noi  )
-  ## MCMC_GAM  = matrix(  NA, ncol= H ,  nrow =  noi  )
 
-  ## MCMC_OB  = matrix(  0, ncol= Px*K  ,  nrow =  noi  )
   MCMC_PA <- matrix(0, ncol = Px * K, nrow = burn)
   MCMC_TAU <- matrix(0, ncol = Px * K, nrow = burn)
   PA00 <- matrix(NA, ncol = K, nrow = Px)
   TAU00 <- matrix(NA, ncol = K, nrow = Px)
   message("Start MCMC iteration: ")
   pb <- txtProgressBar(min = 0, max = noi, style = 3)
-  for (it in 1:noi){ ##   it =1
+  for (it in 1:noi){
 
     if (it <= burn){
-      ## new_x = rbinom(N, 1, Ft  )
-      ## X[, 13] =new_x
 
       if (it == 1){
         sigma2_K0 <- sigma2_K
@@ -422,7 +421,7 @@ MCMC <- function(
       }
       # Empirical Bayes part
 
-      for (j in 1:Px){ ## j =4;   j =1 ;  j =2 ;   j =3 ;
+      for (j in 1:Px){
 
         if ((Px - 1) != 1){
           B_j_ <- matrix(temp.B00[ -j, ], ncol = K, nrow = (Px - 1))
@@ -439,12 +438,12 @@ MCMC <- function(
         eta_j_all_h <- B_j/sqrt(V_j_all_h)
 
         # cluster by engen  ##indicator by trashold by energy
-        cluster_j <- C00[j, ] ##   cluster_j_all_h
-        nonzeor_j <- A00[j, ] ##   indicator_j_all_h
+        cluster_j <- C00[j, ]
+        nonzeor_j <- A00[j, ]
 
         Ob_j_all_h <- rep(NA, K)
 
-        for (h in 1:length(unique(r))){ ###  h =6 ## r
+        for (h in 1:length(unique(r))){
           hh <- unique(r)[h]
 
           crruent_cluster_j <- (cluster_j == hh)
@@ -494,7 +493,7 @@ MCMC <- function(
                 Ob_j_all_h[zero_in_crruent_cluster_j] <- prob_j_h / (1 - prob_j_h) / sqrt(1 + G_j_h) * exp(0.5 * eta_j_all_h[zero_in_crruent_cluster_j]^2 * (G_j_h / (1 + G_j_h)))
                 temp.PA00[j, zero_in_crruent_cluster_j] <- Ob_j_all_h[zero_in_crruent_cluster_j] / (Ob_j_all_h[zero_in_crruent_cluster_j] + 1)
               }
-            } ## close  freedom_in_crruent_cluster_j >= 1
+            }
             if (freedom_in_crruent_cluster_j == 0){
               G_j_h <- Inf
               MCMC_GAM[it, h] <- G_j_h
@@ -509,22 +508,20 @@ MCMC <- function(
                 Ob_j_all_h[  zero_in_crruent_cluster_j] <- Inf
                 temp.PA00[j, zero_in_crruent_cluster_j] <- 1
               }
-            } ## close  freedom_in_crruent_cluster_j == 0
+            }
           } ## close probability condition
-        } ## close h
-      } ## close j
+        }
+      }
 
       MCMC_TAU[it, ] <- as.vector(temp.TAU00)
       MCMC_PA [it, ] <- as.vector(temp.PA00)
-    } ## close   if( it <= burn )
-
-
+    }
 
     # Main Estimation
 
-    for (j in 1:Px){ ## j =2;   j =1 ;
+    for (j in 1:Px){
 
-      for (k in 1:K){ ## k =26
+      for (k in 1:K){
 
         if ((Px - 1) != 1){
           B_j_ <- matrix(temp.B00[ -j, ], ncol = K, nrow = (Px - 1))
@@ -539,19 +536,17 @@ MCMC <- function(
 
         hat_xSx <- sum(X_j^2 / sigma2_K0[k])
         hat_xSy1 <- sum(X_j * empCoefs[, k] / sigma2_K0[k])
-        # hat_xSy2 <- sum(X_j * (X_j_ %*% B_j_[, k]) / sigma2_K0[k]) #### t(X_j)%*%X_j_%*% B_j_[, k]/sigma2_K0[k]
+
         hat_xSy2 <- sum(X_j * eigenmapmm(X_j_, B_j_[, k]) / sigma2_K0[k]) #### t(X_j)%*%X_j_%*% B_j_[, k]/sigma2_K0[k]
         hat_xSy <- hat_xSy1 - hat_xSy2
 
         if (temp.TAU00[j, k] <= 0.000000001){
           Vb <- 0
-          # Eb <- Vb %*% (hat_xSy)
           Eb <- eigenmapmm(Vb, (hat_xSy))
           E <- matrix(rnorm(one, 0, 1), nrow = 1, ncol = one) # || double check seed
           beta_j <- t(c(Eb))
         } else {
           Vb <- g[j] * solve(hat_xSx + 1 / temp.TAU00[j, k]) / (g[j] + 1)
-          # Eb <- Vb %*% (hat_xSy)
           Eb <- eigenmapmm(Vb, (hat_xSy))
           E <- matrix(rnorm(one, 0, 1), nrow = 1, ncol = one) # || double check seed
           beta_j <- t(t(E %*% chol(Vb)) + c(Eb))
@@ -574,7 +569,6 @@ MCMC <- function(
     MCMC_ALPHA[it, ] <- as.vector(temp.A00)
 
     est <- matrix(MCMC_BETA[it, ], nrow = Px, ncol = K)
-    # SSE <- diag(t(empCoefs - X %*% est) %*% (empCoefs - X %*% est))
     SSE <- diag(eigenmapmtm((empCoefs - X %*% est), (empCoefs - X %*% est)))
     MCMC_OMEGA[it, ] <- 1 / rgamma(K, (nu0 + N) / 2, (nu0 + SSE) / 2) # || double check seed
     setTxtProgressBar(pb, it)
@@ -911,17 +905,20 @@ inferenceMCMC <- function(
     QUNT_DENS_FULL <- NULL
     MEAN_DENS_FULL <- NULL
   }
+  xdomain = seq(xranges[1], xranges[2], length.out = n.sup)
 
   outputs <- list(
     BETA_FULL, QUAN_ucl_BETA_FULL, QUAN_lcl_BETA_FULL, DataSp_est,
     MCMC_F_BASIS_CI, LPMAP_FULL, GPMAP_FULL, MU_BAYES, VAR_BAYES, MU3_BAYES, MU4_BAYES,
-    STAT_MU_DIFF, STAT_VAR_DIFF, STAT_MU3_DIFF, STAT_MU4_DIFF, QUNT_DENS_FULL, MEAN_DENS_FULL
+    STAT_MU_DIFF, STAT_VAR_DIFF, STAT_MU3_DIFF, STAT_MU4_DIFF, QUNT_DENS_FULL, MEAN_DENS_FULL,
+    X, X1, xdomain
   )
 
   names(outputs) <- list(
     "est", "estCIu", "estCIl", "DataEst",
     "jointCI", "local_p", "global_p", "mu_G", "sigma_G", "mu3_G", "mu4_G",
-    "mu_diff", "sigma_diff", "mu3_diff", "mu4_diff", "denCI_G", "den_G"
+    "mu_diff", "sigma_diff", "mu3_diff", "mu4_diff", "denCI_G", "den_G",
+    "covariates.X", "covariates.X1", "xdomain"
   )
 
   return(outputs)

@@ -58,6 +58,7 @@ dxPlot(q4)
 dxPlotRev(q4)
 q5 = ecQuantlets(q4)
 object = q5
+q6 = qfrModel(q5, X1 = PX0)
 save.image("~/Documents/Qbone.test.Rdata")
 
 document()
@@ -716,6 +717,8 @@ mcmcinfer_object = mcmc_infer
 p = p1024
 edit=10
 opt = 1
+n.sup = 100
+xdomain <- seq(xranges1[1], xranges1[2], length.out = n.sup)
 
 plot( 0, type="n",    ylim=c(0,11), xlim=c(-0.2,0.3)  )
 lines(  xdomain[-1] ,  mcmcinfer_object$den_G[,1] , col="black", lty=1 , lwd=1) # NT
@@ -725,7 +728,7 @@ lines(  xdomain[-1] ,  mcmcinfer_object$den_G[,7] , col="orange", lty=1 , lwd=1)
 title( "Predicted densities" , cex=1.5)
 
 legend( 0.1, 11,
-        c("DKKMo", "Combination", "DRB", "NT"),
+        c("NT", "Combination", "DKKMo", "DRB"),
         lty= c(1,1,1,1)  ,
         col =c("black","red","blue" ,"orange") ,
         cex = 1 , bty = "n", ncol=1)
@@ -890,6 +893,8 @@ re1 <- addMetaData(object = re1, metadata = c(rep("DkkMo", c(10)),
                    col = "group")
 
 # no name if from list
+library("devtools")
+document()
 re2 = thinData(re1,prop=0.01)
 re3 = lassoList(re2)
 re4 = preQuantlets(re3)
@@ -898,13 +903,34 @@ dxPlot(re4)
 dxPlotRev(re4)
 re5 = ecQuantlets(re4)
 object = re5
-re6 = qfrModel(re5)
+re6 = qfrModel(object, X1 = PX0)
 save.image(file = "/home/span/Documents/MOSJ-3DCT/data/05.6_3Dpoints/test.Qbone.RData")
 # save(list=c("re1", "re2", "re3", "re4", "re5"), file = "/home/span/Documents/MOSJ-3DCT/data/05.6_3Dpoints/test.Qbone.RData")
 
 load("/home/span/Documents/MOSJ-3DCT/data/05.6_3Dpoints/test.Qbone.RData")
 
 load("/home/span/Documents/MOSJ-3DCT/data/05.6_3Dpoints/quafunreg_5.RData")
+
+
+new.assay.name = "Q.F.Regression"
+data.assay = defaultAssay(object)
+X = NULL
+delta2 = 0.95
+H = NULL
+pct.range = c(0.05, 0.95)
+assay.seed2 = .Random.seed
+
+mm_1 <- c(1,0.25,0,0.25)
+mm_2 <- c(0,0.25,0.25,1)
+mm_3 <- c(0,0.25,1,0.25)
+mm_4 <- c(1,0.25,0.25,0)
+mm_5 <- c(0.25,1,0.25,0)
+mm_6 <- c(0.25,0,0.25,1)
+mm_7 <- c(1,1,0.25,0.25)
+mm_8 <- c(0.25,0.25,1,1)
+
+PX0 <- rbind(mm_1,mm_2,mm_3,mm_4,mm_5,mm_6,mm_7,mm_8)
+X1 <- PX0
 
 # fit q4 in quafunreg.R ----
 lasso.list = getQboneData(object, slot = 'data', assay = "Lasso.list")

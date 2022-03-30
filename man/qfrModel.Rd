@@ -9,6 +9,7 @@ qfrModel(
   new.assay.name = "Q.F.Regression",
   data.assay = defaultAssay(object),
   X = NULL,
+  X1 = NULL,
   delta2 = 0.95,
   H = NULL,
   pct.range = c(0.05, 0.95),
@@ -26,6 +27,8 @@ to compute the lasso list. Default is the data from the
 defaultAssay(object).}
 
 \item{X}{Covariates (N by A matrix, N is the number of observations)}
+
+\item{X1}{New covariates for inferencing MCMC fit result.}
 
 \item{delta2}{Cutoff percentage of the energy for the functional coefficients}
 
