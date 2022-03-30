@@ -55,17 +55,25 @@ qfrModel <- function(
     warning('Number of clustering groups H was not provided, will atomically generate covariate matrix based on Qbone object metadata group information. Please double check the output.')
     H <- length(names(table(object@meta.data[["group"]])))
   }
+  # Get data
   empCoefs.list <- getQboneData(object, slot = 'data', assay = data.assay)
   empCoefs <- matrix(unlist(empCoefs.list, use.names = F), nrow=length(empCoefs.list), byrow=TRUE)
   reduceBasis <- object@assays[[data.assay]]@scale.data[["reduceBasis"]]
   orthogBasis <- object@assays[[data.assay]]@scale.data[["orthogBasis"]]
   quantlets <- object@assays[[data.assay]]@scale.data[["quantlets"]]
+  # preMCMC
   emp_fit <- preMCMC(empCoefs, reduceBasis, orthogBasis, quantlets,
                      # X = X, delta2 = delta2, H = H,
                      ...)
+  # MCMC
   # mcmc_fit <- MCMC(X, emp_fit$sd_l2, emp_fit$cluster, emp_fit$TB00, ...)
   mcmc_fit <- MCMC(X = X, empCoefs = emp_fit$sd_l2, r = emp_fit$cluster, TB00 = emp_fit$TB00, ...)
-  mcmc_infer
+  # MCMC inference
+  orig.dataset <- getQboneData(object, slot = 'data', assay = object@assays[[data.assay]]@assay.orig)
+  # xranges1 = c(min(sapply(orig.dataset, min)), max(sapply(orig.dataset, max)))
+  xranges1 = quantile(sapply(orig.dataset, quantile, probs = seq(0, 1, 1/10)), probs = c(0.1, 0.9)) # probs = seq(0, 1, 1/10)
+
+  mcmc_infer <- inferenceMCMC()
 
 }
 
@@ -578,7 +586,7 @@ inferenceMCMC <- function(
   signifit = 0.975,
   X1 = NULL,
   p,
-  n.sup = 77,
+  n.sup = 100,
   xranges = c(-10, 60),
   ...
   ){
@@ -588,144 +596,140 @@ inferenceMCMC <- function(
   K <- dim(BackTransfor)[2]
 
 
-  quantiles2 <- function(x, probs = c(1 - signifit, signifit)) {
+  quantiles2 <- function(x, probs = c(1 - signifit, signifit)){
     quantile(x, probs)
   }
 
 
   ## mcmcEmpCoef= mcmc_fit2[[1]]
-  Sys.time() -> start
   ITF_BETA_FULL <- array(NA, c(BN, Tp, dim(X)[2])) ## dim( ITF_BETA_FULL)
 
-  for (i in 1:(BN)) { ## i=1
-    ITQ_BAYES <- BackTransfor %*% t(matrix(mcmcEmpCoef[ i, ], ncol = K, nrow = Px))
-    for (j in 1:Px) {
+  for (i in 1:(BN)){ ## i=1
+    # ITQ_BAYES <- BackTransfor %*% t(matrix(mcmcEmpCoef[i, ], ncol = K, nrow = Px))
+    ITQ_BAYES <- eigenmapmmt(BackTransfor, matrix(mcmcEmpCoef[i, ], ncol = K, nrow = Px))
+    for (j in 1:Px){
       ITF_BETA_FULL[i, , j] <- ITQ_BAYES[, j]
     }
   }
-
 
   MEAN_BETA_FULL <- apply(mcmcEmpCoef, 2, mean)
   BETA_FULL <- matrix(MEAN_BETA_FULL, nrow = Px)
 
   QUAN_BETA_FULL <- apply(ITF_BETA_FULL, c(2, 3), quantiles2)
+  QUAN_BETA_FULL <- apply(ITF_BETA_FULL, c(2, 3), quantile, probs = c(1 - signifit, signifit))
+
   QUAN_ucl_BETA_FULL <- QUAN_BETA_FULL[2, , ]
   QUAN_lcl_BETA_FULL <- QUAN_BETA_FULL[1, , ]
 
   DataSp_est <- BackTransfor %*% t(BETA_FULL)
-
-
-
 
   MCMC_F_BASIS_MEAN <- matrix(0, nrow = Tp, ncol = Px)
   MCMC_F_BASIS_VAR <- matrix(0, nrow = Tp, ncol = Px)
   MCMC_F_BASIS_CI <- array(0, c(Tp, Px, 2))
   MCMC_F_BASIS_Z <- matrix(0, nrow = BN, ncol = Px)
 
-
-  for (j in 1:Px) { ## j =1
-    M_j <- apply(ITF_BETA_FULL[, , j ], 2, mean)
-    S_j <- (apply(ITF_BETA_FULL[, , j ], 2, var))^{
-      0.5
-    }
-    Z_j <- (ITF_BETA_FULL[, , j ] - matrix(M_j, nrow = BN, ncol = Tp, byrow = TRUE)) %*% diag(S_j^{
-      -1
-    }, ncol = Tp, nrow = Tp)
+  for (j in 1:Px){ ## j =1
+    M_j <- apply(ITF_BETA_FULL[, , j], 2, mean)
+    S_j <- (apply(ITF_BETA_FULL[, , j], 2, var))^{0.5}
+    # Z_j <- (ITF_BETA_FULL[, , j] - matrix(M_j, nrow = BN, ncol = Tp, byrow = TRUE)) %*% diag(S_j^{-1}, ncol = Tp, nrow = Tp)
+    Z_j <- eigenmapmm((ITF_BETA_FULL[, , j] - matrix(M_j, nrow = BN, ncol = Tp, byrow = TRUE)), diag(S_j^{-1}, ncol = Tp, nrow = Tp))
     abs_Z_J <- apply(abs(Z_j), 1, max)
     qalpha <- quantile(abs_Z_J, signifit - 0.025)
     I_j_995 <- M_j + qalpha * S_j
     I_j_005 <- M_j - qalpha * S_j
-    MCMC_F_BASIS_MEAN[, j ] <- M_j
-    MCMC_F_BASIS_VAR[, j ] <- S_j
-    MCMC_F_BASIS_Z[, j ] <- abs_Z_J ## msides
+    MCMC_F_BASIS_MEAN[, j] <- M_j
+    MCMC_F_BASIS_VAR[, j] <- S_j
+    MCMC_F_BASIS_Z[, j] <- abs_Z_J ## msides
 
     MCMC_F_BASIS_CI[, j, 1 ] <- I_j_995
     MCMC_F_BASIS_CI[, j, 2 ] <- I_j_005
   }
 
-  ##########################################################################################################
+  #
   PMAP_FULL0 <- matrix(0, nrow = Tp, ncol = Px - 1)
-  for (j in 2:Px) { ## j =2
-    M_j <- apply(ITF_BETA_FULL[, , j ], 2, mean)
-    S_j <- (apply(ITF_BETA_FULL[, , j ], 2, var))^{
-      0.5
-    }
-    for (i in 1:BN) {
-      PMAP_FULL0[, (j - 1)] <- PMAP_FULL0[, (j - 1)] + (abs(M_j / S_j) <= MCMC_F_BASIS_Z[i, j]) + 0
+  for (j in 2:Px){ ## j =2
+    M_j <- apply(ITF_BETA_FULL[, , j], 2, mean)
+    S_j <- (apply(ITF_BETA_FULL[, , j], 2, var))^{0.5}
+    for (k in 1:BN){
+      PMAP_FULL0[, (j - 1)] <- PMAP_FULL0[, (j - 1)] + (abs(M_j / S_j) <= MCMC_F_BASIS_Z[k, j]) + 0
     }
   }
   PMAP_FULL <- PMAP_FULL0 / BN
 
-  flag <- function(x, probs = c((1 - signifit) * 2)) {
-    (x <= (1 - signifit) * 2)
-  }
+  flag1 <- function(x, probs = c((1 - signifit) * 2)){(x <= (1 - signifit) * 2)}
+  flag2 <- function(x) (x <= (1 - signifit) * 2)
 
-  LPMAP_FULL <- apply(PMAP_FULL, 2, flag)
+  LPMAP_FULL <- apply(PMAP_FULL, 2, flag1)
+  LPMAP_FULL <- apply(PMAP_FULL, 2, flag2)
+  LPMAP_FULL <- apply(PMAP_FULL, 2, function(x) (x <= (1 - signifit) * 2))
+
   GPMAP_FULL <- apply(PMAP_FULL, 2, min)
-  ###############################################################################################################
-
-
-  if (is.null(X1) != TRUE) {
+  #
+  if (!is.null(X1)){
     PX0 <- X1
     Px0 <- dim(X1)[2]
     ### BN=1800
     STAT_MU <- matrix(NA, nrow = BN, ncol = dim(PX0)[1])
-    for (i in 1:BN) { ### i =1
+    for (i in 1:BN){ ### i =1
       ITQ_BAYES0 <- matrix(NA, ncol = Px, nrow = Tp)
-      for (j in 1:Px) {
-        ITQ_BAYES0[, j  ] <- ITF_BETA_FULL[i, , j]
+      for (j in 1:Px){
+        ITQ_BAYES0[, j] <- ITF_BETA_FULL[i, , j]
       }
-
-      ITQ_BAYES <- ITQ_BAYES0 %*% t(PX0)
-      STAT_MU[i, ] <- t(ITQ_BAYES) %*% rep(1 / Tp, Tp)
+      # ITQ_BAYES <- ITQ_BAYES0 %*% t(PX0)
+      ITQ_BAYES <- eigenmapmmt(ITQ_BAYES0, PX0)
+      # STAT_MU[i, ] <- t(ITQ_BAYES) %*% rep(1 / Tp, Tp)
+      STAT_MU[i, ] <- eigenmapmtm(ITQ_BAYES, rep(1 / Tp, Tp))
     }
 
-
     MU_BAYES <- rbind(apply(STAT_MU, 2, mean), apply(STAT_MU, 2, quantiles2))
-
+    MU_BAYES <- rbind(apply(STAT_MU, 2, mean), apply(STAT_MU, 2, quantile, probs = c(1 - signifit, signifit)))
 
     STAT_VAR <- matrix(NA, nrow = BN, ncol = dim(PX0)[1])
-    for (i in 1:BN) { ### i =1
+    for (i in 1:BN){ ### i =1
       ITQ_BAYES0 <- matrix(NA, ncol = Px, nrow = Tp)
-      for (j in 1:Px) {
-        ITQ_BAYES0[, j  ] <- ITF_BETA_FULL[i, , j]
+      for (j in 1:Px){
+        ITQ_BAYES0[, j] <- ITF_BETA_FULL[i, , j]
       }
 
-      ITQ_BAYES <- ITQ_BAYES0 %*% t(PX0)
+      # ITQ_BAYES <- ITQ_BAYES0 %*% t(PX0)
+      ITQ_BAYES <- eigenmapmmt(ITQ_BAYES0, PX0)
       CT_ITQ_BAYES <- ITQ_BAYES - matrix(rep(MU_BAYES[1, ], each = Tp, nrow = Tp), ncol = dim(PX0)[1])
-      STAT_VAR[i, ] <- (t(CT_ITQ_BAYES^2) %*% rep(1 / Tp, Tp))^{
-        0.5
-      }
+      # STAT_VAR[i, ] <- (t(CT_ITQ_BAYES^2) %*% rep(1 / Tp, Tp))^{0.5}
+      STAT_VAR[i, ] <- (eigenmapmtm(CT_ITQ_BAYES^2, rep(1 / Tp, Tp)))^{0.5}
     }
 
     VAR_BAYES <- rbind(apply(STAT_VAR, 2, mean), apply(STAT_VAR, 2, quantiles2))
-
+    VAR_BAYES <- rbind(apply(STAT_VAR, 2, mean), apply(STAT_VAR, 2, quantile, probs = c(1 - signifit, signifit)))
 
     STAT_MU3 <- matrix(NA, nrow = BN, ncol = dim(PX0)[1])
     STAT_MU4 <- matrix(NA, nrow = BN, ncol = dim(PX0)[1])
-    for (i in 1:BN) { ### i =1
+    for (i in 1:BN){ ### i =1
       ITQ_BAYES0 <- matrix(NA, ncol = Px, nrow = Tp)
-      for (j in 1:Px) {
-        ITQ_BAYES0[, j  ] <- ITF_BETA_FULL[i, , j]
+      for (j in 1:Px){
+        ITQ_BAYES0[, j] <- ITF_BETA_FULL[i, , j]
       }
-      ITQ_BAYES <- ITQ_BAYES0 %*% t(PX0)
+      # ITQ_BAYES <- ITQ_BAYES0 %*% t(PX0)
+      ITQ_BAYES <- eigenmapmmt(ITQ_BAYES0, PX0)
+      ######################################################
       CT_ITQ_BAYES <- ITQ_BAYES - matrix(rep(MU_BAYES[1, ], each = Tp), nrow = Tp, ncol = dim(PX0)[1])
-      ST_ITQ_BAYES <- (ITQ_BAYES - matrix(rep(MU_BAYES[1, ], each = Tp), nrow = Tp, ncol = dim(PX0)[1])) %*% diag(VAR_BAYES[1, ]^{
-        -1
-      }, ncol = dim(PX0)[1], nrow = dim(PX0)[1])
+      ST_ITQ_BAYES <- (ITQ_BAYES - matrix(rep(MU_BAYES[1, ], each = Tp), nrow = Tp, ncol = dim(PX0)[1])) %*% diag(VAR_BAYES[1, ]^{-1}, ncol = dim(PX0)[1], nrow = dim(PX0)[1])
       STAT_MU3[i, ] <- t(ST_ITQ_BAYES^3) %*% rep(1 / Tp, Tp)
       STAT_MU4[i, ] <- t(CT_ITQ_BAYES^4) %*% rep(1 / Tp, Tp) / VAR_BAYES[1, ]^4
     }
-    MU3_BAYES <- rbind(apply(STAT_MU3, 2, mean), apply(STAT_MU3, 2, quantiles2))
-    MU4_BAYES <- rbind(apply(STAT_MU4, 2, mean), apply(STAT_MU4, 2, quantiles2))
 
-    ###############################################################################################################
+    MU3_BAYES <- rbind(apply(STAT_MU3, 2, mean), apply(STAT_MU3, 2, quantiles2))
+    MU3_BAYES <- rbind(apply(STAT_MU3, 2, mean), apply(STAT_MU3, 2, quantile, probs = c(1 - signifit, signifit)))
+
+    MU4_BAYES <- rbind(apply(STAT_MU4, 2, mean), apply(STAT_MU4, 2, quantiles2))
+    MU4_BAYES <- rbind(apply(STAT_MU4, 2, mean), apply(STAT_MU4, 2, quantile, probs = c(1 - signifit, signifit)))
+
+    #
 
     spx <- dim(PX0)[1]
     ## dim(STAT_MU)
     STAT_MU_DIFF <- matrix(NA, nrow = spx / 2, ncol = 10)
     k.n <- 0
-    for (k in 1:(spx / 2)) { ###    k =6
+    for (k in 1:(spx / 2)){ ###    k =6
       i <- 2 * (k - 1) + 1
       j <- 2 * (k - 1) + 2
       k.n <- k.n + 1
@@ -751,7 +755,7 @@ inferenceMCMC <- function(
 
     STAT_VAR_DIFF <- matrix(NA, nrow = spx / 2, ncol = 10)
     k.n <- 0
-    for (k in 1:(spx / 2)) { ###    k =6
+    for (k in 1:(spx / 2)){ ###    k =6
       i <- 2 * (k - 1) + 1
       j <- 2 * (k - 1) + 2
       k.n <- k.n + 1
@@ -778,7 +782,7 @@ inferenceMCMC <- function(
 
     STAT_MU3_DIFF <- matrix(NA, nrow = spx / 2, ncol = 10)
     k.n <- 0
-    for (k in 1:(spx / 2)) { ###    k =6
+    for (k in 1:(spx / 2)){ ###    k =6
       i <- 2 * (k - 1) + 1
       j <- 2 * (k - 1) + 2
       k.n <- k.n + 1
@@ -806,7 +810,7 @@ inferenceMCMC <- function(
 
     STAT_MU4_DIFF <- matrix(NA, nrow = spx / 2, ncol = 10)
     k.n <- 0
-    for (k in 1:(spx / 2)) { ###    k =6
+    for (k in 1:(spx / 2)){ ###    k =6
       i <- 2 * (k - 1) + 1
       j <- 2 * (k - 1) + 2
       k.n <- k.n + 1
@@ -832,7 +836,7 @@ inferenceMCMC <- function(
     }
 
 
-    #########################################################################################################
+    #
 
     ## n.sup = 77
     xdomain <- seq(xranges[1], xranges[2], length.out = n.sup)
@@ -840,20 +844,20 @@ inferenceMCMC <- function(
     DENSITY_FULL <- array(NA, c(BN, (n.sup - 1), dim(X1)[1]))
 
 
-    for (i in 1:BN) { ### i =1
+    for (i in 1:BN){ ### i =1
       ITQ_BAYES0 <- matrix(NA, ncol = Px, nrow = Tp)
-      for (j in 1:Px) {
+      for (j in 1:Px){
         ITQ_BAYES0[, j  ] <- ITF_BETA_FULL[i, , j]
       }
       ITQ_BAYES <- ITQ_BAYES0 %*% t(X1)
 
-      for (h in 1:dim(X1)[1]) { ### h =1
+      for (h in 1:dim(X1)[1]){ ### h =1
 
-        for (k in 1:n.sup) { ##  k=1
-          if (sum(ITQ_BAYES[, h] <= xdomain[k]) == 0) {
+        for (k in 1:n.sup){ ##  k=1
+          if (sum(ITQ_BAYES[, h] <= xdomain[k]) == 0){
             I_DENSITY_FULL[i, k, h] <- 0
           }
-          if ((sum(ITQ_BAYES[, h] <= xdomain[k]) != 0)) {
+          if ((sum(ITQ_BAYES[, h] <= xdomain[k]) != 0)){
             I_DENSITY_FULL[i, k, h] <- max(p[ ITQ_BAYES[, h] <= xdomain[k] ])
           }
 
@@ -865,10 +869,10 @@ inferenceMCMC <- function(
 
     MEAN_DENS_FULL <- apply(DENSITY_FULL, c(2, 3), mean)
     QUNT_DENS_FULL <- apply(DENSITY_FULL, c(2, 3), quantiles2)
+    QUNT_DENS_FULL <- apply(DENSITY_FULL, c(2, 3), quantile, probs = c(1 - signifit, signifit))
 
-    #########################################################################################
-  } ## if closed!
-  if (is.null(X1) == TRUE) {
+    #
+  } else {
     MU_BAYES <- NULL
     VAR_BAYES <- NULL
     MU3_BAYES <- NULL
@@ -881,18 +885,16 @@ inferenceMCMC <- function(
     MEAN_DENS_FULL <- NULL
   }
 
-  Stage_Est_1 <- (Sys.time() - start)
-
   outputs <- list(
     BETA_FULL, QUAN_ucl_BETA_FULL, QUAN_lcl_BETA_FULL, DataSp_est,
     MCMC_F_BASIS_CI, LPMAP_FULL, GPMAP_FULL, MU_BAYES, VAR_BAYES, MU3_BAYES, MU4_BAYES,
-    STAT_MU_DIFF, STAT_VAR_DIFF, STAT_MU3_DIFF, STAT_MU4_DIFF, QUNT_DENS_FULL, MEAN_DENS_FULL, Stage_Est_1
+    STAT_MU_DIFF, STAT_VAR_DIFF, STAT_MU3_DIFF, STAT_MU4_DIFF, QUNT_DENS_FULL, MEAN_DENS_FULL
   )
 
   names(outputs) <- list(
     "est", "estCIu", "estCIl", "DataEst",
     "jointCI", "local_p", "global_p", "mu_G", "sigma_G", "mu3_G", "mu4_G",
-    "mu_diff", "sigma_diff", "mu3_diff", "mu4_diff", "denCI_G", "den_G", "runtime"
+    "mu_diff", "sigma_diff", "mu3_diff", "mu4_diff", "denCI_G", "den_G"
   )
 
   return(outputs)
