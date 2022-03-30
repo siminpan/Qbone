@@ -268,7 +268,7 @@ ecQuantlets <- function(
     reduceBasis = object@assays[["Pre.Quantiles"]]@scale.data[["betaCDF"]][, basis.columns.select]
   } else {
     if (k %in% unlist(lapply(object@assays[["Pre.Quantiles"]]@scale.data[["basis.columns"]], length), use.names = F)){
-      basis.columns.no = which(k ==unlist(lapply(object@assays[["Pre.Quantiles"]]@scale.data[["basis.columns"]], length), use.names = F))
+      basis.columns.no = which(k == unlist(lapply(object@assays[["Pre.Quantiles"]]@scale.data[["basis.columns"]], length), use.names = F))
       basis.columns.select = object@assays[["Pre.Quantiles"]]@scale.data[["basis.columns"]][[basis.columns.no]]
       reduceBasis = object@assays[["Pre.Quantiles"]]@scale.data[["betaCDF"]][, basis.columns.select]
     } else {
@@ -292,7 +292,7 @@ ecQuantlets <- function(
 
   # Orthogonalization
   # basis.columns.select.no = object@assays[[data.assay]]@scale.data[["basis.columns"]][[basis.columns.no + 10]]
-  basis.columns.select.no = which(2 ==unlist(lapply(object@assays[["Pre.Quantiles"]]@scale.data[["basis.columns"]], length), use.names = F))
+  basis.columns.select.no = which(2 == unlist(lapply(object@assays[["Pre.Quantiles"]]@scale.data[["basis.columns"]], length), use.names = F))
   reduceBasis.norms <- object@assays[[data.assay]]@scale.data[["betaCDF"]][, basis.columns.select.no]
   gramS <- gramSchmidt(reduceBasis, tol = .Machine$double.eps^0.5)
   norms <- gramSchmidt(as.matrix(reduceBasis.norms), tol = .Machine$double.eps^0.5)$Q

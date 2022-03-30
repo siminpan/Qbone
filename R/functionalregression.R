@@ -65,6 +65,7 @@ qfrModel <- function(
                      ...)
   # mcmc_fit <- MCMC(X, emp_fit$sd_l2, emp_fit$cluster, emp_fit$TB00, ...)
   mcmc_fit <- MCMC(X = X, empCoefs = emp_fit$sd_l2, r = emp_fit$cluster, TB00 = emp_fit$TB00, ...)
+  mcmc_infer
 
 }
 
@@ -550,6 +551,352 @@ MCMC <- function(
   return(outputs)
 }
 
+## 6.5 inferenceMCMC ----
+#' Inference in data space based on the output produced from MCMC function
+#'
+#' @param mcmcEmpCoef MCMC samples for coefficients. (Output from \code{MCMC()})
+#' @param BackTransfor P by K matrix. Basis function to transform back to the original data space (P: desired number of probability grids, and K: number of basis)
+#' @param X Covariates.
+#' @param signifit Scalar in (0,1)	The level of size alpha (default=0.975 allow for the inference at the level of .05)
+#' @param X1 New covariates
+#' @param p Probability grids
+#' @param n.sup Positive integer. Number of grids points of density estimates
+#' @param xranges Vector consisting of c(min, max) as the range of the domain for the density estimate
+#' @param ... Arguments passed to other methods
+#'
+#' @return MCMC samples
+#'
+#' @importFrom utils txtProgressBar setTxtProgressBar
+#' @keywords internal
+#'
+#' @noRd
+#'
+inferenceMCMC <- function(
+  mcmcEmpCoef,
+  BackTransfor = NULL,
+  X,
+  signifit = 0.975,
+  X1 = NULL,
+  p,
+  n.sup = 77,
+  xranges = c(-10, 60),
+  ...
+  ){
+  BN <- dim(mcmcEmpCoef)[1]
+  Px <- dim(X)[2]
+  Tp <- dim(BackTransfor)[1]
+  K <- dim(BackTransfor)[2]
+
+
+  quantiles2 <- function(x, probs = c(1 - signifit, signifit)) {
+    quantile(x, probs)
+  }
+
+
+  ## mcmcEmpCoef= mcmc_fit2[[1]]
+  Sys.time() -> start
+  ITF_BETA_FULL <- array(NA, c(BN, Tp, dim(X)[2])) ## dim( ITF_BETA_FULL)
+
+  for (i in 1:(BN)) { ## i=1
+    ITQ_BAYES <- BackTransfor %*% t(matrix(mcmcEmpCoef[ i, ], ncol = K, nrow = Px))
+    for (j in 1:Px) {
+      ITF_BETA_FULL[i, , j] <- ITQ_BAYES[, j]
+    }
+  }
+
+
+  MEAN_BETA_FULL <- apply(mcmcEmpCoef, 2, mean)
+  BETA_FULL <- matrix(MEAN_BETA_FULL, nrow = Px)
+
+  QUAN_BETA_FULL <- apply(ITF_BETA_FULL, c(2, 3), quantiles2)
+  QUAN_ucl_BETA_FULL <- QUAN_BETA_FULL[2, , ]
+  QUAN_lcl_BETA_FULL <- QUAN_BETA_FULL[1, , ]
+
+  DataSp_est <- BackTransfor %*% t(BETA_FULL)
+
+
+
+
+  MCMC_F_BASIS_MEAN <- matrix(0, nrow = Tp, ncol = Px)
+  MCMC_F_BASIS_VAR <- matrix(0, nrow = Tp, ncol = Px)
+  MCMC_F_BASIS_CI <- array(0, c(Tp, Px, 2))
+  MCMC_F_BASIS_Z <- matrix(0, nrow = BN, ncol = Px)
+
+
+  for (j in 1:Px) { ## j =1
+    M_j <- apply(ITF_BETA_FULL[, , j ], 2, mean)
+    S_j <- (apply(ITF_BETA_FULL[, , j ], 2, var))^{
+      0.5
+    }
+    Z_j <- (ITF_BETA_FULL[, , j ] - matrix(M_j, nrow = BN, ncol = Tp, byrow = TRUE)) %*% diag(S_j^{
+      -1
+    }, ncol = Tp, nrow = Tp)
+    abs_Z_J <- apply(abs(Z_j), 1, max)
+    qalpha <- quantile(abs_Z_J, signifit - 0.025)
+    I_j_995 <- M_j + qalpha * S_j
+    I_j_005 <- M_j - qalpha * S_j
+    MCMC_F_BASIS_MEAN[, j ] <- M_j
+    MCMC_F_BASIS_VAR[, j ] <- S_j
+    MCMC_F_BASIS_Z[, j ] <- abs_Z_J ## msides
+
+    MCMC_F_BASIS_CI[, j, 1 ] <- I_j_995
+    MCMC_F_BASIS_CI[, j, 2 ] <- I_j_005
+  }
+
+  ##########################################################################################################
+  PMAP_FULL0 <- matrix(0, nrow = Tp, ncol = Px - 1)
+  for (j in 2:Px) { ## j =2
+    M_j <- apply(ITF_BETA_FULL[, , j ], 2, mean)
+    S_j <- (apply(ITF_BETA_FULL[, , j ], 2, var))^{
+      0.5
+    }
+    for (i in 1:BN) {
+      PMAP_FULL0[, (j - 1)] <- PMAP_FULL0[, (j - 1)] + (abs(M_j / S_j) <= MCMC_F_BASIS_Z[i, j]) + 0
+    }
+  }
+  PMAP_FULL <- PMAP_FULL0 / BN
+
+  flag <- function(x, probs = c((1 - signifit) * 2)) {
+    (x <= (1 - signifit) * 2)
+  }
+
+  LPMAP_FULL <- apply(PMAP_FULL, 2, flag)
+  GPMAP_FULL <- apply(PMAP_FULL, 2, min)
+  ###############################################################################################################
+
+
+  if (is.null(X1) != TRUE) {
+    PX0 <- X1
+    Px0 <- dim(X1)[2]
+    ### BN=1800
+    STAT_MU <- matrix(NA, nrow = BN, ncol = dim(PX0)[1])
+    for (i in 1:BN) { ### i =1
+      ITQ_BAYES0 <- matrix(NA, ncol = Px, nrow = Tp)
+      for (j in 1:Px) {
+        ITQ_BAYES0[, j  ] <- ITF_BETA_FULL[i, , j]
+      }
+
+      ITQ_BAYES <- ITQ_BAYES0 %*% t(PX0)
+      STAT_MU[i, ] <- t(ITQ_BAYES) %*% rep(1 / Tp, Tp)
+    }
+
+
+    MU_BAYES <- rbind(apply(STAT_MU, 2, mean), apply(STAT_MU, 2, quantiles2))
+
+
+    STAT_VAR <- matrix(NA, nrow = BN, ncol = dim(PX0)[1])
+    for (i in 1:BN) { ### i =1
+      ITQ_BAYES0 <- matrix(NA, ncol = Px, nrow = Tp)
+      for (j in 1:Px) {
+        ITQ_BAYES0[, j  ] <- ITF_BETA_FULL[i, , j]
+      }
+
+      ITQ_BAYES <- ITQ_BAYES0 %*% t(PX0)
+      CT_ITQ_BAYES <- ITQ_BAYES - matrix(rep(MU_BAYES[1, ], each = Tp, nrow = Tp), ncol = dim(PX0)[1])
+      STAT_VAR[i, ] <- (t(CT_ITQ_BAYES^2) %*% rep(1 / Tp, Tp))^{
+        0.5
+      }
+    }
+
+    VAR_BAYES <- rbind(apply(STAT_VAR, 2, mean), apply(STAT_VAR, 2, quantiles2))
+
+
+    STAT_MU3 <- matrix(NA, nrow = BN, ncol = dim(PX0)[1])
+    STAT_MU4 <- matrix(NA, nrow = BN, ncol = dim(PX0)[1])
+    for (i in 1:BN) { ### i =1
+      ITQ_BAYES0 <- matrix(NA, ncol = Px, nrow = Tp)
+      for (j in 1:Px) {
+        ITQ_BAYES0[, j  ] <- ITF_BETA_FULL[i, , j]
+      }
+      ITQ_BAYES <- ITQ_BAYES0 %*% t(PX0)
+      CT_ITQ_BAYES <- ITQ_BAYES - matrix(rep(MU_BAYES[1, ], each = Tp), nrow = Tp, ncol = dim(PX0)[1])
+      ST_ITQ_BAYES <- (ITQ_BAYES - matrix(rep(MU_BAYES[1, ], each = Tp), nrow = Tp, ncol = dim(PX0)[1])) %*% diag(VAR_BAYES[1, ]^{
+        -1
+      }, ncol = dim(PX0)[1], nrow = dim(PX0)[1])
+      STAT_MU3[i, ] <- t(ST_ITQ_BAYES^3) %*% rep(1 / Tp, Tp)
+      STAT_MU4[i, ] <- t(CT_ITQ_BAYES^4) %*% rep(1 / Tp, Tp) / VAR_BAYES[1, ]^4
+    }
+    MU3_BAYES <- rbind(apply(STAT_MU3, 2, mean), apply(STAT_MU3, 2, quantiles2))
+    MU4_BAYES <- rbind(apply(STAT_MU4, 2, mean), apply(STAT_MU4, 2, quantiles2))
+
+    ###############################################################################################################
+
+    spx <- dim(PX0)[1]
+    ## dim(STAT_MU)
+    STAT_MU_DIFF <- matrix(NA, nrow = spx / 2, ncol = 10)
+    k.n <- 0
+    for (k in 1:(spx / 2)) { ###    k =6
+      i <- 2 * (k - 1) + 1
+      j <- 2 * (k - 1) + 2
+      k.n <- k.n + 1
+      TEST_STATS <- STAT_MU[, j ] - STAT_MU[, i]
+
+      M_j <- mean(TEST_STATS)
+      S_j <- var(TEST_STATS)^{
+        0.5
+      }
+      Z_j <- (TEST_STATS - M_j) / S_j
+      Quan_Z_j_u <- quantile(Z_j, 0.975)
+      Quan_Z_j_l <- quantile(Z_j, 0.025)
+
+      STAT_MU_DIFF[k.n, 1 ] <- i
+      STAT_MU_DIFF[k.n, 2 ] <- j
+      ## STAT_MU_DIFF[k.n, 3, mets]= round( TRUE_VAR[j] -  TRUE_VAR[i] , 2)
+      STAT_MU_DIFF[k.n, 4:6] <- c(M_j, M_j + Quan_Z_j_l * S_j, M_j + Quan_Z_j_u * S_j)
+      STAT_MU_DIFF[k.n, 7] <- ifelse((M_j + Quan_Z_j_l * S_j < 0) & (M_j + Quan_Z_j_u * S_j > 0) == TRUE, 0, 1)
+      STAT_MU_DIFF[k.n, 8] <- mean(abs(M_j / S_j) <= Z_j)
+      STAT_MU_DIFF[k.n, 9] <- ifelse(STAT_MU_DIFF[k.n, 3] == 0, 0, 1)
+      STAT_MU_DIFF[k.n, 10 ] <- min(mean(TEST_STATS > 0), mean(TEST_STATS < 0))
+    }
+
+    STAT_VAR_DIFF <- matrix(NA, nrow = spx / 2, ncol = 10)
+    k.n <- 0
+    for (k in 1:(spx / 2)) { ###    k =6
+      i <- 2 * (k - 1) + 1
+      j <- 2 * (k - 1) + 2
+      k.n <- k.n + 1
+      TEST_STATS <- STAT_VAR[, j] - STAT_VAR[, i]
+
+      M_j <- mean(TEST_STATS)
+      S_j <- var(TEST_STATS)^{
+        0.5
+      }
+      Z_j <- (TEST_STATS - M_j) / S_j
+      Quan_Z_j_u <- quantile(Z_j, 0.975)
+      Quan_Z_j_l <- quantile(Z_j, 0.025)
+
+      STAT_VAR_DIFF[k.n, 1] <- i
+      STAT_VAR_DIFF[k.n, 2] <- j
+      ## STAT_VAR_DIFF[k.n, 3]= round( TRUE_VAR[j] -  TRUE_VAR[i] , 2)
+      STAT_VAR_DIFF[k.n, 4:6] <- c(M_j, M_j + Quan_Z_j_l * S_j, M_j + Quan_Z_j_u * S_j)
+      STAT_VAR_DIFF[k.n, 7] <- ifelse((M_j + Quan_Z_j_l * S_j < 0) & (M_j + Quan_Z_j_u * S_j > 0) == TRUE, 0, 1)
+      STAT_VAR_DIFF[k.n, 8] <- mean(abs(M_j / S_j) <= Z_j)
+      STAT_VAR_DIFF[k.n, 9] <- ifelse(STAT_VAR_DIFF[k.n, 3] == 0, 0, 1)
+      STAT_VAR_DIFF[k.n, 10 ] <- min(mean(TEST_STATS > 0), mean(TEST_STATS < 0))
+    }
+
+
+    STAT_MU3_DIFF <- matrix(NA, nrow = spx / 2, ncol = 10)
+    k.n <- 0
+    for (k in 1:(spx / 2)) { ###    k =6
+      i <- 2 * (k - 1) + 1
+      j <- 2 * (k - 1) + 2
+      k.n <- k.n + 1
+      TEST_STATS <- STAT_MU3[, j] - STAT_MU3[, i ]
+
+      M_j <- mean(TEST_STATS)
+      S_j <- var(TEST_STATS)^{
+        0.5
+      }
+      Z_j <- (TEST_STATS - M_j) / S_j
+      Quan_Z_j_u <- quantile(Z_j, 0.975)
+      Quan_Z_j_l <- quantile(Z_j, 0.025)
+
+      STAT_MU3_DIFF[k.n, 1] <- i
+      STAT_MU3_DIFF[k.n, 2] <- j
+      ## STAT_MU3_DIFF[k.n, 3]= round( TRUE_MU3[j] -  TRUE_MU3[i] , 2)
+      STAT_MU3_DIFF[k.n, 4:6] <- c(M_j, M_j + Quan_Z_j_l * S_j, M_j + Quan_Z_j_u * S_j)
+      STAT_MU3_DIFF[k.n, 7] <- ifelse((M_j + Quan_Z_j_l * S_j < 0) & (M_j + Quan_Z_j_u * S_j > 0) == TRUE, 0, 1)
+      STAT_MU3_DIFF[k.n, 8] <- mean(abs(M_j / S_j) <= Z_j)
+      STAT_MU3_DIFF[k.n, 9] <- ifelse(STAT_MU3_DIFF[k.n, 3] == 0, 0, 1)
+      STAT_MU3_DIFF[k.n, 10 ] <- min(mean(TEST_STATS > 0), mean(TEST_STATS < 0))
+    }
+
+
+
+    STAT_MU4_DIFF <- matrix(NA, nrow = spx / 2, ncol = 10)
+    k.n <- 0
+    for (k in 1:(spx / 2)) { ###    k =6
+      i <- 2 * (k - 1) + 1
+      j <- 2 * (k - 1) + 2
+      k.n <- k.n + 1
+
+      TEST_STATS <- STAT_MU4[, j] - STAT_MU4[, i]
+
+      M_j <- mean(TEST_STATS)
+      S_j <- var(TEST_STATS)^{
+        0.5
+      }
+      Z_j <- (TEST_STATS - M_j) / S_j
+      Quan_Z_j_u <- quantile(Z_j, 0.975)
+      Quan_Z_j_l <- quantile(Z_j, 0.025)
+
+      STAT_MU4_DIFF[k.n, 1] <- i
+      STAT_MU4_DIFF[k.n, 2] <- j
+      ## STAT_MU4_DIFF[k.n, 3]= round( TRUE_MU4[j] -  TRUE_MU4[i] , 2)
+      STAT_MU4_DIFF[k.n, 4:6] <- c(M_j, M_j + Quan_Z_j_l * S_j, M_j + Quan_Z_j_u * S_j)
+      STAT_MU4_DIFF[k.n, 7] <- ifelse((M_j + Quan_Z_j_l * S_j < 0) & (M_j + Quan_Z_j_u * S_j > 0) == TRUE, 0, 1)
+      STAT_MU4_DIFF[k.n, 8] <- mean(abs(M_j / S_j) <= Z_j)
+      STAT_MU4_DIFF[k.n, 9] <- ifelse(STAT_MU4_DIFF[k.n, 3] == 0, 0, 1)
+      STAT_MU4_DIFF[k.n, 10] <- min(mean(TEST_STATS > 0), mean(TEST_STATS < 0))
+    }
+
+
+    #########################################################################################################
+
+    ## n.sup = 77
+    xdomain <- seq(xranges[1], xranges[2], length.out = n.sup)
+    I_DENSITY_FULL <- array(NA, c(BN, n.sup, dim(X1)[1]))
+    DENSITY_FULL <- array(NA, c(BN, (n.sup - 1), dim(X1)[1]))
+
+
+    for (i in 1:BN) { ### i =1
+      ITQ_BAYES0 <- matrix(NA, ncol = Px, nrow = Tp)
+      for (j in 1:Px) {
+        ITQ_BAYES0[, j  ] <- ITF_BETA_FULL[i, , j]
+      }
+      ITQ_BAYES <- ITQ_BAYES0 %*% t(X1)
+
+      for (h in 1:dim(X1)[1]) { ### h =1
+
+        for (k in 1:n.sup) { ##  k=1
+          if (sum(ITQ_BAYES[, h] <= xdomain[k]) == 0) {
+            I_DENSITY_FULL[i, k, h] <- 0
+          }
+          if ((sum(ITQ_BAYES[, h] <= xdomain[k]) != 0)) {
+            I_DENSITY_FULL[i, k, h] <- max(p[ ITQ_BAYES[, h] <= xdomain[k] ])
+          }
+
+          DENSITY_FULL[i, , h] <- diff(I_DENSITY_FULL[i, , h], 1) / diff(xdomain, 1)
+        }
+      } ### close
+    } ## close where is.null(X1) ==FALSE
+
+
+    MEAN_DENS_FULL <- apply(DENSITY_FULL, c(2, 3), mean)
+    QUNT_DENS_FULL <- apply(DENSITY_FULL, c(2, 3), quantiles2)
+
+    #########################################################################################
+  } ## if closed!
+  if (is.null(X1) == TRUE) {
+    MU_BAYES <- NULL
+    VAR_BAYES <- NULL
+    MU3_BAYES <- NULL
+    MU4_BAYES <- NULL
+    STAT_MU_DIFF <- NULL
+    STAT_VAR_DIFF <- NULL
+    STAT_MU3_DIFF <- NULL
+    STAT_MU4_DIFF <- NULL
+    QUNT_DENS_FULL <- NULL
+    MEAN_DENS_FULL <- NULL
+  }
+
+  Stage_Est_1 <- (Sys.time() - start)
+
+  outputs <- list(
+    BETA_FULL, QUAN_ucl_BETA_FULL, QUAN_lcl_BETA_FULL, DataSp_est,
+    MCMC_F_BASIS_CI, LPMAP_FULL, GPMAP_FULL, MU_BAYES, VAR_BAYES, MU3_BAYES, MU4_BAYES,
+    STAT_MU_DIFF, STAT_VAR_DIFF, STAT_MU3_DIFF, STAT_MU4_DIFF, QUNT_DENS_FULL, MEAN_DENS_FULL, Stage_Est_1
+  )
+
+  names(outputs) <- list(
+    "est", "estCIu", "estCIl", "DataEst",
+    "jointCI", "local_p", "global_p", "mu_G", "sigma_G", "mu3_G", "mu4_G",
+    "mu_diff", "sigma_diff", "mu3_diff", "mu4_diff", "denCI_G", "den_G", "runtime"
+  )
+
+  return(outputs)
+}
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # 7. TESTING ----
