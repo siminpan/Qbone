@@ -205,7 +205,8 @@ preQuantlets <- function(
                                    assay.name = new.assay.name,
                                    assay.orig = data.assay)
   new.qbonedata@scale.data <- append(object@assays[[data.assay]]@scale.data,
-                                     list(betaCDF = reduced_BASE, # Pre-quantlets basis functions, which implies the selected beta cdf functions. (P by K matrix. P: desired number of probability grids, and K: number of basis).
+                                     list(p = p, # Probability grids
+                                          betaCDF = reduced_BASE, # Pre-quantlets basis functions, which implies the selected beta cdf functions. (P by K matrix. P: desired number of probability grids, and K: number of basis).
                                           locc = lasso.locc, # LOCC value for each choice of the basis function (Z: the length of the possible choices for basis).
                                           basis.columns = lasso.counts.fit[[1]], # Corresponding basis columns for each possible choice.
                                           remain.basis = lasso.counts.fit[[2]], # Number of the basis for each possible choice.
@@ -390,19 +391,14 @@ generateBetaCDF <- function(
   index.p,
   ...
   ){
-  # n1 <- as.character(alpha)
-  # n2 <- as.character(beta)
   BETASCDF0 <- matrix(NA, ncol = length(index.p), nrow = length(beta) * length(alpha))
-  for (i in 1:length(alpha)){ ##   i=1;   j=12;   a1[i]    a2[j]
+  for (i in 1:length(alpha)){
     for (j in 1:length(beta)){
       rowth <- (j - 1) * length(beta) + i
       BETASCDF0[rowth, ] <- pbeta(index.p, alpha[i], beta[j])
       BETASCDF0[rowth, ] <- round(centeringFunction(BETASCDF0[rowth, ], scale = TRUE), 7)
     }
   }
-  ## name.mat = outer( paste0( "(", n1 , se="") ,paste0(",", n2, ")" , se="")  ,  FUN=paste ,sep="")
-  ## matrix.rownames = as.vector(  name.mat )
-  ## outputs= list( BETASCDF0 ,  name.mat , matrix.rownames )
   outputs <- BETASCDF0
   return(outputs)
 }
@@ -429,7 +425,8 @@ centeringFunction <- function(
   meanx <- drop(eigenmapmm(matrix(rep(1, x.n), ncol = x.n), object.x)) / x.n
   mean1 <- as.matrix(meanx)
   n1 <- dim(mean1)[1]
-  jj <- eigenmapmm(one,t(rep(1, dim(object.x)[2]))) # rep(1, x.n) %*% t(rep(1, dim(object.x)[2])) # one %*% two # eigenmapmm(one, two)
+  # jj <- eigenmapmm(one,t(rep(1, dim(object.x)[2])))
+  jj <- eigenmapmmt(one,rep(1, dim(object.x)[2]))
   mean.mat <- diag(meanx, nrow = n1, ncol = n1)
   cen.x <- object.x - eigenmapmm(jj, mean.mat)
   if (scale == FALSE){
@@ -581,12 +578,12 @@ countBasis <- function(
   nonzero.obs,
   ...
 ){
-  colum <- unlist(nonzero.list) ## length(colum )
-  obs <- unlist(nonzero.obs) ## length(obs)
+  colum <- unlist(nonzero.list)
+  obs <- unlist(nonzero.obs)
   mytable_colum0 <- table(colum, obs)
-  unique.colum <- as.numeric(rownames(margin.table(mytable_colum0, 1))) ## length( unique.colum )
-  unique.count <- as.numeric(margin.table(mytable_colum0, 1)) ## length( unique.count )
-  margin.count <- c(0, sort(unique(unique.count), method = "quick")) ## length(margin.count)
+  unique.colum <- as.numeric(rownames(margin.table(mytable_colum0, 1)))
+  unique.count <- as.numeric(margin.table(mytable_colum0, 1))
+  margin.count <- c(0, sort(unique(unique.count), method = "quick"))
   long.set <- length(margin.count) - 1
   list.set <- vector("list", long.set)
   for (i in 1:long.set){
@@ -612,8 +609,8 @@ incidenceVec <- function(
   setlistofobs,
   frqlistofobs
   ){
-  colum <- unlist(setlistofobs) ## length(colum )
-  obs <- unlist(frqlistofobs) ## length( obs)
+  colum <- unlist(setlistofobs, use.names = F)
+  obs <- unlist(frqlistofobs, use.names = F)
   mytable_colum0 <- table(colum, obs)
   unique.colum <- as.numeric(rownames(margin.table(mytable_colum0, 1)))
   unique.count <- as.numeric(margin.table(mytable_colum0, 1))
@@ -655,7 +652,6 @@ locc <- function(
   }
   feasible.long <- sum(active.set)
   max.long <- max(unlist(lapply(Y.list, length), use.names = FALSE))
-  # checks <- matrix(NA, nrow = n, ncol = feasible.long)
   Values <- array(NA, c(max.long, n, feasible.long))
 
   pb <- txtProgressBar(min = 0, max = length(Y.list), style = 3)
@@ -672,18 +668,17 @@ locc <- function(
     Psi <- cbind(rep(1, length(grid.p)), BETA_BASE_TOTAL_2)
 
     # pbj <- txtProgressBar(min = 0, max = length(feasible.long), style = 3)
-    for (j in 1:feasible.long){ ###  j = 20
+    for (j in 1:feasible.long){
 
       colum_i_ <- leaveout.list[[i]][[1]]
-      obs_i_ <- leaveout.list[[i]][[2]] ## length(IncidenceVec_i_)
+      obs_i_ <- leaveout.list[[i]][[2]]
 
       SET1_i_ <- sort(colum_i_[obs_i_ > remain.counts[active.set][j]])
-      smPsi_i_ <- Psi[, (SET1_i_) + 1] ## dim(smPsi_i_)
+      smPsi_i_ <- Psi[, (SET1_i_) + 1]
 
       # Values[(1:y.long), i, j] <- try(smPsi_i_ %*% ginv(t(smPsi_i_) %*% smPsi_i_, tol = sqrt(.Machine$double.eps)) %*% t(smPsi_i_) %*% y)
       # Values[(1:y.long), i, j] <- try(smPsi_i_ %*% (ginv(t(smPsi_i_) %*% smPsi_i_, tol = sqrt(.Machine$double.eps)) %*% (t(smPsi_i_) %*% y)))
       # Values[(1:y.long), i, j] <- try(smPsi_i_ %*% (ginv(eigenmapmtm(smPsi_i_, smPsi_i_), tol = sqrt(.Machine$double.eps)) %*% eigenmapmtm(smPsi_i_,y)))
-      ## dim(Qy)
       # gitsmp = ginv(eigenmapmtm(smPsi_i_, smPsi_i_), tol = sqrt(.Machine$double.eps))
       # try1 = try(eigenmapmtm(smPsi_i_,y))
       # try2 = try(eigenmapmm(gitsmp, try1))
@@ -697,7 +692,6 @@ locc <- function(
   }
   close(pb)
   outputs <- list(Values
-                  # , checks
                   )
   return(outputs)
 }

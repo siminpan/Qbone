@@ -11,6 +11,7 @@ qfrModel(
   X = NULL,
   delta2 = 0.95,
   H = NULL,
+  pct.range = c(0.05, 0.95),
   assay.seed2 = .Random.seed,
   ...
 )
@@ -29,6 +30,8 @@ defaultAssay(object).}
 \item{delta2}{Cutoff percentage of the energy for the functional coefficients}
 
 \item{H}{Number of clustering groups. Cluster basis indices based on their eigen-values.}
+
+\item{pct.range}{Percentage range from original data set. Use as the range of the domain for the density estimate. Default is c(0.05, 0.95). You can override it by assign \code{xranges = c(min, max)}}
 
 \item{...}{Arguments passed to other methods}
 }

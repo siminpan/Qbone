@@ -269,6 +269,8 @@ lasso.locc <- locc(
   alpha = alpha,
   beta = beta
 )
+
+microbenchmark(length((table(object@meta.data[["group"]]))), length(unique(object@meta.data[["group"]])))
 ### for each ----
 library("parallel")
 library("doParallel")
@@ -709,6 +711,24 @@ dxPlotRev(object)
 p2 = dxPlot(object)
 object@graphs <- list(p2)
 
+# FIg 6 ----
+mcmcinfer_object = mcmc_infer
+p = p1024
+edit=10
+opt = 1
+
+plot( 0, type="n",    ylim=c(0,11), xlim=c(-0.2,0.3)  )
+lines(  xdomain[-1] ,  mcmcinfer_object$den_G[,1] , col="black", lty=1 , lwd=1) # NT
+lines(  xdomain[-1] ,  mcmcinfer_object$den_G[,3] , col="red", lty=1 , lwd=1)  # DRB
+lines(  xdomain[-1] ,  mcmcinfer_object$den_G[,5] , col="blue", lty=1 , lwd=1) # DKKMo
+lines(  xdomain[-1] ,  mcmcinfer_object$den_G[,7] , col="orange", lty=1 , lwd=1) # DKKMoDRB
+title( "Predicted densities" , cex=1.5)
+
+legend( 0.1, 11,
+        c("DKKMo", "Combination", "DRB", "NT"),
+        lty= c(1,1,1,1)  ,
+        col =c("black","red","blue" ,"orange") ,
+        cex = 1 , bty = "n", ncol=1)
 
 # LCCC ----
 lasso.locc <- locc(
@@ -878,8 +898,9 @@ dxPlot(re4)
 dxPlotRev(re4)
 re5 = ecQuantlets(re4)
 object = re5
+re6 = qfrModel(re5)
 save.image(file = "/home/span/Documents/MOSJ-3DCT/data/05.6_3Dpoints/test.Qbone.RData")
-save(list=c("re1", "re2", "re3", "re4", "re5"), file = "/home/span/Documents/MOSJ-3DCT/data/05.6_3Dpoints/test.Qbone.RData")
+# save(list=c("re1", "re2", "re3", "re4", "re5"), file = "/home/span/Documents/MOSJ-3DCT/data/05.6_3Dpoints/test.Qbone.RData")
 
 load("/home/span/Documents/MOSJ-3DCT/data/05.6_3Dpoints/test.Qbone.RData")
 
@@ -893,3 +914,9 @@ raw.dataset2 = getQboneData(object, slot = 'data', assay = "Thin")
 all.equal(Values, locc)
 all.equal(raw.dataset, raw.dataset2)
 all.equal(lasso.locc, lasso.values)
+
+# test hasArg(x1) in function ----
+
+test1 <- function(...) {if(hasArg(x1)){print("ex")}else{F}}
+test1(x1= NULL)
+x
