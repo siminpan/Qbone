@@ -52,11 +52,11 @@ qfrModel <- function(
     warning('The default assay is not "Empirical.Coefficients" please double check the defaultAssay() of this Qbone object. This step should be run on results of ecQuantlets().')
   }
   if (is.null(X)){
-    warning('Covariates X was not provided, will atomically generate covariate matrix based on Qbone object metadata group information. Please double check the covariates matrix X')
+    message('Covariates X was not provided, will atomically generate covariate matrix based on Qbone object metadata group information. Please double check the covariates matrix X')
     X <- covM(object)
   }
   if (is.null(H)){
-    warning('Number of clustering groups H was not provided, will atomically generate covariate matrix based on Qbone object metadata group information. Please double check H.')
+    message('Number of clustering groups H was not provided, will atomically generate covariate matrix based on Qbone object metadata group information. Please double check H.')
     H <- length(unique(object@meta.data[["group"]]))
   }
   # Get data
