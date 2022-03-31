@@ -235,7 +235,6 @@ concordCIMX <- function(input.yhat, input.y){
 #' Get data for plotting locc result
 #'
 #' @param object Qbone object
-#' @param p Vector of length P  in (0,1)	Probability grids.
 #' @param cutoff Near-lossless values#'
 #' @param ... Arguments passed to other methods
 #'
@@ -247,10 +246,10 @@ concordCIMX <- function(input.yhat, input.y){
 #'
 loccplotdata <- function(
   object,
-  p = object@assays[[defaultAssay(object)]]@scale.data[["p"]],
   cutoff = 0.990,
   ...
   ){
+  p = object@assays[[defaultAssay(object)]]@scale.data[["p"]]
   plength = length(p)
   locc <- object@assays[[defaultAssay(object)]]@scale.data[["locc"]][[1]]
   # checking defaultAssay(object):
