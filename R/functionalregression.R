@@ -724,7 +724,6 @@ inferenceMCMC <- function(
   #
   if (!is.null(X1)){
     PX0 <- X1
-    Px0 <- dim(X1)[2]
 
     STAT_MU <- matrix(NA, nrow = BN, ncol = dim(PX0)[1])
     for (i in 1:BN){

@@ -86,7 +86,7 @@ dxPlot <- function(
   return(suppressWarnings(print(p2)))
 }
 
-## 2.2 dxPlotRev ----
+## 2.2 dxPlotRev ----   || double check issue with Qbone.test.prop0.0001.Rdata
 #' Plot number of basis coefficients.
 #'
 #' Reversed dxPlot useful when plotting with other basis like principal
@@ -229,6 +229,124 @@ qbasisPlot <- function(
                    nrow = 4)
     )
   )
+}
+
+## 2.4 pdPlot ----
+#' Plot predicted densities
+#'
+#' Plot predicted densities
+#'
+#' @param object A Qboneobject
+#' @param plot.col Columns to plot from \code{qfrModel()} results \code{object@assays[["Q.F.Regression"]]@scale.data[["mcmc_infer"]][["den_G"]] }. Corresponding to \code{X1} (new covariates) agrement in \code{qfrModel()}.
+#' @param mean.diff T or F to add mean difference testing for two consecutive subjects posterior probability scores
+#' @param var.diff T or F to add variance difference testing for two consecutive subjects posterior probability scores
+#' @param skewed.diff T or F to add skewness difference testing for two consecutive subjects posterior probability scores
+#' @param kurtosis.diff T or F to add kurtosis difference testing for two consecutive subjects posterior probability scores
+#' @param group.names Group name for plot legend
+#' @param ... Arguments passed to other methods
+#'
+#' @importFrom ggplot2 ggplot geom_line geom_smooth theme_bw ggtitle theme element_text element_blank annotate
+#' @importFrom gridExtra grid.arrange
+#'
+#' @export
+#'
+pdPlot <- function(
+  object,
+  plot.col,
+  mean.diff = F,
+  var.diff = F,
+  skewed.diff = F,
+  kurtosis.diff = F,
+  group.names,
+  ...
+){
+  # x aixs
+  data.x = data.frame(x = object@assays[["Q.F.Regression"]]@scale.data[["mcmc_infer"]][["xdomain"]][-1])
+  # Density estimates
+  data = as.data.frame(object@assays[["Q.F.Regression"]]@scale.data[["mcmc_infer"]][["den_G"]])[, c(plot.col)]
+  if (hasArg(group.names)){
+    colnames(data) = group.names
+  }
+  data.m = reshape2::melt(data)
+  data.m = cbind(data.x, data.m)
+  # Plot
+  p <- ggplot(data.m,
+              aes(x=x, y = value, color = variable)) +
+    geom_line() +
+    ggtitle("Predicted Densities") +
+    # theme_bw() +
+    theme(axis.title.x = element_blank(),
+          axis.title.y = element_blank(),
+          plot.title = element_text(hjust = 0.5))
+    # geom_vline(xintercept = 0,
+    #            linetype="dotted",
+    #            color = "black",
+    #            size=0.5)
+  # Mean difference
+  if (mean.diff){
+    data.mu = as.data.frame(round(object@assays[["Q.F.Regression"]]@scale.data[["mcmc_infer"]][["mu_diff"]] ,3))
+    for (i in 1:length(plot.col)){
+      if (plot.col[i] %in% data.mu$V1){
+        p <- p +
+          annotate(x = -Inf, y = Inf, hjust = 0, vjust = 2 + (i - 1) * 1.5,
+                   # x= quantile(data.m$x, probs = c(0.001)),
+                   # y= quantile(data.m$value, probs = c(0.99)) + (i - 1) * quantile(data.m$value, probs = c(0.15)),
+                   # hjust=0, vjust=0,
+                   size = 3,
+                   geom = "text",
+                   label = paste0("Mean Shift ", colnames(data)[i], " (p=", data.mu[which(plot.col[i] == data.mu$V1),8], ")"))
+      }
+    }
+  }
+  # Variance difference
+  if (var.diff){
+    data.var = as.data.frame(round(object@assays[["Q.F.Regression"]]@scale.data[["mcmc_infer"]][["sigma_diff"]] ,3))
+    for (i in 1:length(plot.col)){
+      if (plot.col[i] %in% data.var$V1){
+        p <- p +
+          annotate(x = Inf, y = Inf, hjust = 1, vjust = 2 + (i - 1) * 1.5,
+                   # x= quantile(data.m$x, probs = c(0.75)),
+                   # y= quantile(data.m$value, probs = c(0.99)) + (i - 1) * quantile(data.m$value, probs = c(0.15)),
+                   # hjust=0, vjust=0,
+                   size = 3,
+                   geom = "text",
+                   label = paste0("Var Shift ", colnames(data)[i], " (p=", data.var[which(plot.col[i] == data.var$V1),8], ")"))
+      }
+    }
+  }
+  # Skewness difference
+  if (skewed.diff){
+    data.skewed = as.data.frame(round(object@assays[["Q.F.Regression"]]@scale.data[["mcmc_infer"]][["mu3_diff"]] ,3))
+    for (i in 1:length(plot.col)){
+      if (plot.col[i] %in% data.skewed$V1){
+        p <- p +
+          annotate(x = -Inf, y = -Inf, hjust = 0, vjust = -2 - (i - 1) * 1.5,
+                   # x= quantile(data.m$x, probs = c(0.75)),
+                   # y= quantile(data.m$value, probs = c(0.99)) + (i - 1) * quantile(data.m$value, probs = c(0.15)),
+                   # hjust=0, vjust=0,
+                   size = 3,
+                   geom = "text",
+                   label = paste0("Skewness Shift ", colnames(data)[i], " (p=", data.skewed[which(plot.col[i] == data.skewed$V1),8], ")"))
+      }
+    }
+  }
+  # Kurtosis difference
+  if (kurtosis.diff){
+    data.kurtosis = as.data.frame(round(object@assays[["Q.F.Regression"]]@scale.data[["mcmc_infer"]][["mu4_diff"]] ,3))
+    for (i in 1:length(plot.col)){
+      if (plot.col[i] %in% data.kurtosis$V1){
+        p <- p +
+          annotate(x = Inf, y = -Inf, hjust = 1, vjust = -2 - (i - 1) * 1.5,
+                   # x= quantile(data.m$x, probs = c(0.75)),
+                   # y= quantile(data.m$value, probs = c(0.99)) + (i - 1) * quantile(data.m$value, probs = c(0.15)),
+                   # hjust=0, vjust=0,
+                   size = 3,
+                   geom = "text",
+                   label = paste0("Kurtosis Shift ", colnames(data)[i], " (p=", data.kurtosis[which(plot.col[i] == data.kurtosis$V1),8], ")"))
+      }
+    }
+  }
+  return(suppressWarnings(print(p)))
 }
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

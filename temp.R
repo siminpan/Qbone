@@ -49,17 +49,94 @@ q1 = readQbone(data.dir, groupbyfolder = T)
 qa1 = getQboneData(q1, slot = 'data', assay = defaultAssay(q1))
 
 # save image ----
+{
+  mm_1 <- c(1,0.25,0,0.25)
+  mm_2 <- c(0,0.25,1,0.25)
+  mm_3 <- c(1,0.25,0.25,0)
+  mm_4 <- c(0,0.25,0.25,1)
+  mm_5 <- c(0.25,1,0.25,0)
+  mm_6 <- c(0.25,0,0.25,1)
+  mm_7 <- c(1,1,0.25,0.25)
+  mm_8 <- c(0.25,0.25,1,1)
+
+  PX0 <- rbind(mm_1,mm_2,mm_3,mm_4,mm_5,mm_6,mm_7,mm_8)
+  X1 <- PX0
+
 data.dir = "/home/span/Documents/MOSJ-3DCT/data/csv.group"
 q1 = readQbone(data.dir, groupbyfolder = T)
+q2 = thinData(q1,prop=0.01)
+q3 = lassoList(q2)
+q4 = preQuantlets(q3)
+# dxPlot(q4)
+# dxPlotRev(q4)
+q5 = ecQuantlets(q4)
+# qbasisPlot(q5)
+# object = q5
+q6 = qfrModel(q5, X1 = PX0)
+save(list=c("q1", "q2", "q3", "q4", "q5", "q6", "PX0"), file = "/home/span/Documents/Qbone.test.prop0.01.Rdata")
+gc()
+
 q2 = thinData(q1,prop=0.0001)
 q3 = lassoList(q2)
 q4 = preQuantlets(q3)
-dxPlot(q4)
-dxPlotRev(q4)
+# dxPlot(q4)
+# dxPlotRev(q4)
 q5 = ecQuantlets(q4)
-object = q5
+# qbasisPlot(q5)
+# object = q5
 q6 = qfrModel(q5, X1 = PX0)
-save.image("~/Documents/Qbone.test.Rdata")
+save(list=c("q1", "q2", "q3", "q4", "q5", "q6", "PX0"), file = "/home/span/Documents/Qbone.test.prop0.0001.Rdata")
+rm(list = ls())
+gc()
+
+mm_1 <- c(1,0.25,0,0.25)
+mm_2 <- c(0,0.25,1,0.25)
+mm_3 <- c(1,0.25,0.25,0)
+mm_4 <- c(0,0.25,0.25,1)
+mm_5 <- c(0.25,1,0.25,0)
+mm_6 <- c(0.25,0,0.25,1)
+mm_7 <- c(1,1,0.25,0.25)
+mm_8 <- c(0.25,0.25,1,1)
+
+PX0 <- rbind(mm_1,mm_2,mm_3,mm_4,mm_5,mm_6,mm_7,mm_8)
+X1 <- PX0
+
+load("/home/span/Documents/MOSJ-3DCT/data/05.6_3Dpoints/quafunreg_raw.data.RData")
+re1 = createQboneObject(raw.dataset)
+
+names(re1@assays[["Bone"]]@data) <- c(paste0("DkkMo_", seq(10)),
+                                      paste0("DkkMoDRB_", seq(9)),
+                                      paste0("DRB_", seq(10)),
+                                      paste0("NT_", seq(10))
+)
+re1@assays[["Bone"]]@meta.assays <- data.frame(id = names(re1@assays[["Bone"]]@data), row.names = c(1:39))
+
+re1 <- addMetaData(object = re1, metadata = re1@assays[["Bone"]]@meta.assays[["id"]]
+                   , col = "id")
+re1 <- addMetaData(object = re1, metadata = c(rep("DkkMo", c(10)),
+                                              rep("DkkMoDRB", c(9)),
+                                              rep("DRB", c(10)),
+                                              rep("NT", c(10))
+),
+col = "group")
+
+# no name if from list
+re2 = thinData(re1,prop=0.001)
+re3 = lassoList(re2)
+re4 = preQuantlets(re3)
+# object = re4
+# dxPlot(re4)
+# dxPlotRev(re4)
+re5 = ecQuantlets(re4)
+# object = re5
+# qbasisPlot(re5)
+re6 = qfrModel(re5, X1 = PX0)
+# object = re6
+save.image(file = "/home/span/Documents/MOSJ-3DCT/data/05.6_3Dpoints/Qbone.test.0.001.RData")
+gc()
+}
+save.image("~/Documents/Qbone.test.prop0.01.Rdata")
+
 
 document()
 q6 = lassolist2(q2)
@@ -793,6 +870,20 @@ document()
 document()
 qbasisPlot(object)
 # FIg 6 ----
+
+# NT,DRB,Dkk,inter
+mm_1 <- c(1,0.25,0,0.25)
+mm_2 <- c(0,0.25,1,0.25)
+mm_3 <- c(1,0.25,0.25,0)
+mm_4 <- c(0,0.25,0.25,1)
+mm_5 <- c(0.25,1,0.25,0)
+mm_6 <- c(0.25,0,0.25,1)
+mm_7 <- c(1,1,0.25,0.25)
+mm_8 <- c(0.25,0.25,1,1)
+
+PX0 <- rbind(mm_1,mm_2,mm_3,mm_4,mm_5,mm_6,mm_7,mm_8)
+X1 <- PX0
+
 mcmcinfer_object = object@assays[["Q.F.Regression"]]@scale.data[["mcmc_infer"]]
 
 p = object@assays[[defaultAssay(object)]]@scale.data[["p"]]
@@ -814,6 +905,64 @@ legend( 0.1, 11,
         col =c("black","red","blue" ,"orange") ,
         cex = 1 , bty = "n", ncol=1)
 
+# FIg 6.5
+plot(   0, type="n",    ylim=c(0,11), xlim=c(-0.2,0.2)  )
+lines(  xdomain[-1] ,  mcmcinfer_object$den_G[,2] , col="green3", lty=1 , lwd=1)  # DKKMo
+lines(  xdomain[-1] ,  mcmcinfer_object$den_G[,1] , col="blue", lty=1 , lwd=1) # NT
+lines(  xdomain[-1] ,  mcmcinfer_object$den_G[,4] , col="purple", lty=1 , lwd=1) # DKKMoDRB
+lines(  xdomain[-1] ,  mcmcinfer_object$den_G[,5] , col="red", lty=1 , lwd=1) # DRB
+# lines(  xdomain[-1] ,  mcmcinfer_object$den_G[,5] , col="red", lty=1 , lwd=1) # DRB
+# lines(  xdomain[-1] ,  mcmcinfer_object$den_G[,4] , col="orange", lty=1 , lwd=1) # DKKMoDRB
+# lines(  xdomain[-1] ,  mcmcinfer_object$den_G[,8] , col="purple", lty=1 , lwd=1) # No DkkMo
+# lines(  xdomain[-1] ,  mcmcinfer_object$den_G[,7] , col="dark green", lty=1 , lwd=1) # With DkkMo
+legend( 0.1, 3,
+        c("NT dist","DRB dist", "DKKMo dist", "Comb dist",
+          paste0( paste0( "1. NT vs DkkMo (p=", round( mcmcinfer_object$mu_diff[1, 8] ,3) ), sep="", ")", sep="" ) ,
+          paste0( paste0( "2. NT vs Comb (p=", round( mcmcinfer_object$mu_diff[2, 8] ,3) ), sep="", ")", sep="" ) ,
+          paste0( paste0( "1. Var shift (p=", round( mcmcinfer_object$sigma_diff[1, 8] ,3) ), sep="", ")", sep="" ),
+          paste0( paste0( "2. Var shift (p=", round( mcmcinfer_object$sigma_diff[2, 8] ,3) ), sep="", ")", sep="" )
+          # paste0( paste0( "Skewed shift (p=", round(mcmcinfer_object$mu3_diff[colno5-1, 8] ,3) ), sep="", ")", sep="" )
+        ),
+        lty= c(1,1,1,1,NA,NA,NA,NA)  ,
+        col =c("blue","red","green3","purple",NA ,NA,NA,NA) ,
+        cex = 1 , bty = "n", ncol=1)
+
+object@assays[["Q.F.Regression"]]@scale.data[["mcmc_infer"]][["den_G"]]
+object@assays[["Q.F.Regression"]]@scale.data[["mcmc_infer"]][["xdomain"]]
+
+object@assays[["Q.F.Regression"]]@scale.data[["mcmc_infer"]][["mu_diff"]]
+
+object@assays[["Q.F.Regression"]]@scale.data[["mcmc_infer"]][["sigma_diff"]]
+
+
+library("ggplot2")
+
+plot.col = c(1,3,5,7)
+
+datax = data.frame(x = object@assays[["Q.F.Regression"]]@scale.data[["mcmc_infer"]][["xdomain"]][-1])
+
+data = as.data.frame(object@assays[["Q.F.Regression"]]@scale.data[["mcmc_infer"]][["den_G"]])
+data = data[,c(plot.col)]
+
+data.m = reshape2::melt(data)
+
+data.m = cbind(datax, data.m)
+
+p <- ggplot(data.m,
+            aes(x=x, y = value, color = variable)) +
+  geom_line() +
+  geom_vline(xintercept = 0,
+             linetype="dotted",
+             color = "black",
+             size=0.5)
+
+p
+
+document()
+pdPlot(object,
+       plot.col= c(1,3,5,7),
+       group.names = c("NT", "DkkMo", "Comb", "DRB")
+       )
 # LCCC ----
 lasso.locc <- locc(
   leaveout.list = lasso_IncidenceVec_i_,
@@ -974,9 +1123,9 @@ re1 <- addMetaData(object = re1, metadata = c(rep("DkkMo", c(10)),
                    col = "group")
 
 # no name if from list
-library("devtools")
-document()
-re2 = thinData(re1,prop=0.01)
+# library("devtools")
+# document()
+re2 = thinData(re1,prop=0.0001)
 re3 = lassoList(re2)
 re4 = preQuantlets(re3)
 # object = re4
@@ -984,14 +1133,38 @@ re4 = preQuantlets(re3)
 # dxPlotRev(re4)
 re5 = ecQuantlets(re4)
 # object = re5
+# qbasisPlot(re5)
 re6 = qfrModel(re5, X1 = PX0)
-object = re6
-save.image(file = "/home/span/Documents/MOSJ-3DCT/data/05.6_3Dpoints/test.Qbone.RData")
+# object = re6
+document()
+
+pdPlot(re6,
+       plot.col= c(1,3,5,7),
+       group.names = c("DkkMo", "Comb", "DRB", "NT"),
+       mean.diff = T,
+       var.diff = T,
+       skewed.diff = T,
+       kurtosis.diff = T
+)
+
+document()
+pdPlot(re6,
+       plot.col= c(7,8),
+       group.names = c("DkkMo", "Without DkkMo"),
+       mean.diff = T,
+       var.diff = T,
+       skewed.diff = T,
+       kurtosis.diff = T
+)
+
+
+# save.image(file = "/home/span/Documents/MOSJ-3DCT/data/05.6_3Dpoints/Qbone.test.0.0001.RData")
 # save(list=c("re1", "re2", "re3", "re4", "re5"), file = "/home/span/Documents/MOSJ-3DCT/data/05.6_3Dpoints/test.Qbone.RData")
 
 load("/home/span/Documents/MOSJ-3DCT/data/05.6_3Dpoints/test.Qbone.RData")
 
 load("/home/span/Documents/MOSJ-3DCT/data/05.6_3Dpoints/quafunreg_5.RData")
+
 
 
 new.assay.name = "Q.F.Regression"
