@@ -903,7 +903,7 @@ re4 = preQuantlets(re3)
 # dxPlotRev(re4)
 re5 = ecQuantlets(re4)
 # object = re5
-re6 = qfrModel(object, X1 = PX0)
+re6 = qfrModel(re5, X1 = PX0)
 save.image(file = "/home/span/Documents/MOSJ-3DCT/data/05.6_3Dpoints/test.Qbone.RData")
 # save(list=c("re1", "re2", "re3", "re4", "re5"), file = "/home/span/Documents/MOSJ-3DCT/data/05.6_3Dpoints/test.Qbone.RData")
 
