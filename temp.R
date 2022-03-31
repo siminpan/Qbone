@@ -712,13 +712,93 @@ dxPlotRev(object)
 p2 = dxPlot(object)
 object@graphs <- list(p2)
 
+# Figure 4 ----
+p1024 = object@assays[[defaultAssay(object)]]@scale.data[["p"]]
+par(mfrow = c(4, 4), mar = c(4, 2, 3, 2))
+plot(p1024, rep(1, 1024), type = "l", lty = 1, lwd = 0.2, main = bquote("Quantlet" ~ psi[.(1)]))
+for (v in 1:15) {
+  if (v >= 7) {
+    ylims <- c(-0.05, 0.05)
+  }
+  if (v < 7) {
+    ylims <- c(-0.2, 0.2)
+  }
+  plot(p1024, object@assays[[defaultAssay(object)]]@scale.data[["quantlets"]][, v], type = "l", lty = 1, lwd = 0.2, main = bquote("Quantlet" ~ psi[.(v + 1)]), ylim = ylims, xlab = "")
+}
+
+n = 16
+
+for (v in 1:(n-1)) {
+  if (v >= 7) {
+    ylims <- c(-0.05, 0.05)
+  }
+  if (v < 7) {
+    ylims <- c(-0.2, 0.2)
+  }
+  plot(p1024, object@assays[[defaultAssay(object)]]@scale.data[["quantlets"]][, v], type = "l", lty = 1, lwd = 0.2, main = bquote("Quantlet" ~ psi[.(v + 1)]), ylim = ylims, xlab = "")
+}
+
+p1 <- ggplot(data.frame(x = p1024, y = object@assays[[defaultAssay(object)]]@scale.data[["quantlets"]][, v]), aes(x=x, y = y)) +
+  geom_smooth(formula = y ~ s(x, bs = "cs"), se=F, method = 'gam')
+p1
+
+p2 <- ggplot(data.frame(x = p1024, y = object@assays[[defaultAssay(object)]]@scale.data[["quantlets"]][, 9]), aes(x=x, y = y)) +
+  geom_smooth(formula = y ~ s(x, bs = "cs"), se=F, method = 'gam')
+p2
+
+n = 16
+p0 <- ggplot(data.frame(x = object@assays[[defaultAssay(object)]]@scale.data[["p"]],
+                        y = rep(1, length(object@assays[[defaultAssay(object)]]@scale.data[["p"]]))),
+             aes(x=x, y = y)) +
+  geom_line() +
+  # geom_point() +
+  ggtitle(bquote("Quantlet" ~ psi[.(1)])) +
+  theme_bw() +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        plot.title = element_text(hjust = 0.5))
+list <- list(p0)
+for (v in 1:(n-1)) {
+  if (v >= 7) {
+    ylims <- c(-0.05, 0.055)
+  } else {
+    ylims <- c(-0.2, 0.2)
+  }
+  p1 <- ggplot(data.frame(x = object@assays[[defaultAssay(object)]]@scale.data[["p"]],
+                          y = object@assays[[defaultAssay(object)]]@scale.data[["quantlets"]][, v]),
+               aes(x=x, y = y)) +
+    # geom_point() +
+    geom_line() +
+    # geom_smooth(formula = y ~ s(x, bs = "cs"), se=F, method = "REML", color = "black", size=0.5) +
+    scale_y_continuous(limits = ylims) +
+    ggtitle(bquote("Quantlet" ~ psi[.(v + 1)])) +
+    theme_bw() +
+    theme(axis.title.x = element_blank(),
+          axis.title.y = element_blank(),
+          plot.title = element_text(hjust = 0.5))
+  list <- append(list, list(p1))
+}
+
+library("gridExtra")
+# grid.arrange(list[[1]], list[[2]], list[[3]], list[[4]],
+#              list[[5]], list[[6]], list[[7]], list[[8]],
+#              list[[9]], list[[10]], list[[11]], list[[12]],
+#              list[[13]], list[[14]], list[[15]], list[[16]],
+#              nrow = 4)
+suppressWarnings(
+  grid.arrange(grobs = list,
+               nrow = 4)
+)
+document()
+qbasisPlot(object)
 # FIg 6 ----
-mcmcinfer_object = mcmc_infer
-p = p1024
+mcmcinfer_object = object@assays[["Q.F.Regression"]]@scale.data[["mcmc_infer"]]
+
+p = object@assays[[defaultAssay(object)]]@scale.data[["p"]]
 edit=10
 opt = 1
 n.sup = 100
-xdomain <- seq(xranges1[1], xranges1[2], length.out = n.sup)
+xdomain <- object@assays[["Q.F.Regression"]]@scale.data[["mcmc_infer"]][["xdomain"]]
 
 plot( 0, type="n",    ylim=c(0,11), xlim=c(-0.2,0.3)  )
 lines(  xdomain[-1] ,  mcmcinfer_object$den_G[,1] , col="black", lty=1 , lwd=1) # NT
@@ -904,6 +984,7 @@ re4 = preQuantlets(re3)
 re5 = ecQuantlets(re4)
 # object = re5
 re6 = qfrModel(re5, X1 = PX0)
+object = re6
 save.image(file = "/home/span/Documents/MOSJ-3DCT/data/05.6_3Dpoints/test.Qbone.RData")
 # save(list=c("re1", "re2", "re3", "re4", "re5"), file = "/home/span/Documents/MOSJ-3DCT/data/05.6_3Dpoints/test.Qbone.RData")
 

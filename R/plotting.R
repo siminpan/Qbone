@@ -166,7 +166,8 @@ dxPlotRev <- function(
 #' @param n Number of first n basis functions to plot, default = 16.
 #' @param ... Arguments passed to other methods
 #'
-#' @importFrom ggplot2 ggplot geom_point
+#' @importFrom ggplot2 ggplot geom_line geom_smooth theme_bw
+#' @importFrom gridExtra grid.arrange
 #'
 #' @export
 #'
@@ -174,7 +175,59 @@ qbasisPlot <- function(
   object,
   n = 16,
   ...
-){}
+){
+  # par(mfrow = c(4, 4), mar = c(4, 2, 3, 2))
+  # plot(object@assays[[defaultAssay(object)]]@scale.data[["p"]],
+  #      rep(1, length(object@assays[[defaultAssay(object)]]@scale.data[["p"]])),
+  #      type = "l", lty = 1, lwd = 0.2, main = bquote("Quantlet" ~ psi[.(1)]))
+  # for (v in 1:(n-1)) {
+  #   if (v >= 7) {
+  #     ylims <- c(-0.05, 0.05)
+  #   }
+  #   if (v < 7) {
+  #     ylims <- c(-0.2, 0.2)
+  #   }
+  #   plot(object@assays[[defaultAssay(object)]]@scale.data[["p"]],
+  #        object@assays[[defaultAssay(object)]]@scale.data[["quantlets"]][, v],
+  #        type = "l", lty = 1, lwd = 0.2, main = bquote("Quantlet" ~ psi[.(v + 1)]),
+  #        ylim = ylims, xlab = "")
+  # }
+  p0 <- ggplot(data.frame(x = object@assays[[defaultAssay(object)]]@scale.data[["p"]],
+                          y = rep(1, length(object@assays[[defaultAssay(object)]]@scale.data[["p"]]))),
+               aes(x=x, y = y)) +
+    geom_line() +
+    ggtitle(bquote("Quantlet" ~ psi[.(1)])) +
+    theme_bw() +
+    theme(axis.title.x = element_blank(),
+          axis.title.y = element_blank(),
+          plot.title = element_text(hjust = 0.5))
+  list <- list(p0)
+  for (v in 1:(n-1)) {
+    if (v >= 7) {
+      ylims <- c(-0.05, 0.055)
+    } else {
+      ylims <- c(-0.2, 0.2)
+    }
+    p1 <- ggplot(data.frame(x = object@assays[[defaultAssay(object)]]@scale.data[["p"]],
+                            y = object@assays[[defaultAssay(object)]]@scale.data[["quantlets"]][, v]),
+                 aes(x=x, y = y)) +
+      geom_line() +
+      # geom_smooth(formula = y ~ s(x, bs = "cs"), se=F, method = 'gam', color = "black", size=0.5) +
+      scale_y_continuous(limits = ylims) +
+      ggtitle(bquote("Quantlet" ~ psi[.(v + 1)])) +
+      theme_bw() +
+      theme(axis.title.x = element_blank(),
+            axis.title.y = element_blank(),
+            plot.title = element_text(hjust = 0.5))
+    list <- append(list, list(p1))
+  }
+  return(
+    suppressWarnings(
+      grid.arrange(grobs = list,
+                   nrow = 4)
+    )
+  )
+}
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # 3. Qbone-defined generics ----
