@@ -790,6 +790,7 @@ suppressWarnings(
                nrow = 4)
 )
 document()
+document()
 qbasisPlot(object)
 # FIg 6 ----
 mcmcinfer_object = object@assays[["Q.F.Regression"]]@scale.data[["mcmc_infer"]]

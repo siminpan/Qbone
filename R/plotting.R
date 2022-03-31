@@ -166,7 +166,7 @@ dxPlotRev <- function(
 #' @param n Number of first n basis functions to plot, default = 16.
 #' @param ... Arguments passed to other methods
 #'
-#' @importFrom ggplot2 ggplot geom_line geom_smooth theme_bw
+#' @importFrom ggplot2 ggplot geom_line geom_smooth theme_bw ggtitle theme element_text element_blank
 #' @importFrom gridExtra grid.arrange
 #'
 #' @export
@@ -176,6 +176,7 @@ qbasisPlot <- function(
   n = 16,
   ...
 ){
+  # use base R
   # par(mfrow = c(4, 4), mar = c(4, 2, 3, 2))
   # plot(object@assays[[defaultAssay(object)]]@scale.data[["p"]],
   #      rep(1, length(object@assays[[defaultAssay(object)]]@scale.data[["p"]])),
@@ -192,6 +193,7 @@ qbasisPlot <- function(
   #        type = "l", lty = 1, lwd = 0.2, main = bquote("Quantlet" ~ psi[.(v + 1)]),
   #        ylim = ylims, xlab = "")
   # }
+  # use ggplot2
   p0 <- ggplot(data.frame(x = object@assays[[defaultAssay(object)]]@scale.data[["p"]],
                           y = rep(1, length(object@assays[[defaultAssay(object)]]@scale.data[["p"]]))),
                aes(x=x, y = y)) +
