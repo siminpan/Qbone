@@ -247,7 +247,7 @@ concordCIMX <- function(input.yhat, input.y){
 #'
 loccplotdata <- function(
   object,
-  p = object@assays[[data.assay]]@scale.data[["p"]],
+  p = object@assays[[defaultAssay(object)]]@scale.data[["p"]],
   cutoff = 0.990,
   ...
   ){

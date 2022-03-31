@@ -898,11 +898,11 @@ document()
 re2 = thinData(re1,prop=0.01)
 re3 = lassoList(re2)
 re4 = preQuantlets(re3)
-object = re4
-dxPlot(re4)
-dxPlotRev(re4)
+# object = re4
+# dxPlot(re4)
+# dxPlotRev(re4)
 re5 = ecQuantlets(re4)
-object = re5
+# object = re5
 re6 = qfrModel(object, X1 = PX0)
 save.image(file = "/home/span/Documents/MOSJ-3DCT/data/05.6_3Dpoints/test.Qbone.RData")
 # save(list=c("re1", "re2", "re3", "re4", "re5"), file = "/home/span/Documents/MOSJ-3DCT/data/05.6_3Dpoints/test.Qbone.RData")
@@ -920,10 +920,12 @@ H = NULL
 pct.range = c(0.05, 0.95)
 assay.seed2 = .Random.seed
 
+# NT vs DkkMo, NT vs DkkMoDRB
+# NT,DRB,Dkk,inter
 mm_1 <- c(1,0.25,0,0.25)
-mm_2 <- c(0,0.25,0.25,1)
-mm_3 <- c(0,0.25,1,0.25)
-mm_4 <- c(1,0.25,0.25,0)
+mm_2 <- c(0,0.25,1,0.25)
+mm_3 <- c(1,0.25,0.25,0)
+mm_4 <- c(0,0.25,0.25,1)
 mm_5 <- c(0.25,1,0.25,0)
 mm_6 <- c(0.25,0,0.25,1)
 mm_7 <- c(1,1,0.25,0.25)
