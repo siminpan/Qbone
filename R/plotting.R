@@ -238,11 +238,11 @@ qbasisPlot <- function(
 #'
 #' @param object A Qboneobject
 #' @param plot.col Columns to plot from \code{qfrModel()} results \code{object@assays[["Q.F.Regression"]]@scale.data[["mcmc_infer"]][["den_G"]] }. Corresponding to \code{X1} (new covariates) agrement in \code{qfrModel()}.
+#' @param group.names Group name for plot legend for argument \cond{plot.col}.
 #' @param mean.diff T or F to add mean difference testing for two consecutive subjects posterior probability scores
 #' @param var.diff T or F to add variance difference testing for two consecutive subjects posterior probability scores
 #' @param skewed.diff T or F to add skewness difference testing for two consecutive subjects posterior probability scores
 #' @param kurtosis.diff T or F to add kurtosis difference testing for two consecutive subjects posterior probability scores
-#' @param group.names Group name for plot legend
 #' @param ... Arguments passed to other methods
 #'
 #' @importFrom ggplot2 ggplot geom_line geom_smooth theme_bw ggtitle theme element_text element_blank annotate
@@ -253,11 +253,11 @@ qbasisPlot <- function(
 pdPlot <- function(
   object,
   plot.col,
+  group.names,
   mean.diff = F,
   var.diff = F,
   skewed.diff = F,
   kurtosis.diff = F,
-  group.names,
   ...
 ){
   # x aixs
