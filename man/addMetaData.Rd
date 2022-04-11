@@ -22,3 +22,8 @@ addMetaData(object, metadata, col.name = NULL)
 \description{
 Add in metadata associated
 }
+\examples{
+qbone1 <- addMetaData(object = qbone1, metadata = meta.data)
+qbone1[["name"]] <- meta.data
+
+}

@@ -121,7 +121,7 @@ re1 <- addMetaData(object = re1, metadata = c(rep("DkkMo", c(10)),
 col = "group")
 
 # no name if from list
-re2 = thinData(re1,prop=0.001)
+re2 = thinData(re1,prop=0.1)
 re3 = lassoList(re2)
 re4 = preQuantlets(re3)
 # object = re4
@@ -137,6 +137,35 @@ gc()
 }
 save.image("~/Documents/Qbone.test.prop0.01.Rdata")
 
+{
+  re2 = thinData(re1,prop=0.1)
+  re3 = lassoList(re2)
+  re4 = preQuantlets(re3)
+  # object = re4
+  # dxPlot(re4)
+  # dxPlotRev(re4)
+  re5 = ecQuantlets(re4)
+  # object = re5
+  # qbasisPlot(re5)
+  re6 = qfrModel(re5, X1 = PX0)
+  # object = re6
+  save.image(file = "/home/span/Documents/MOSJ-3DCT/data/05.6_3Dpoints/Qbone.test.0.1.RData")
+  gc()
+
+  rm(re2)
+  re3 = lassoList(re1)
+  re4 = preQuantlets(re3)
+  # object = re4
+  # dxPlot(re4)
+  # dxPlotRev(re4)
+  re5 = ecQuantlets(re4)
+  # object = re5
+  # qbasisPlot(re5)
+  re6 = qfrModel(re5, X1 = PX0)
+  # object = re6
+  save.image(file = "/home/span/Documents/MOSJ-3DCT/data/05.6_3Dpoints/Qbone.test.1.RData")
+  gc()
+}
 
 document()
 q6 = lassolist2(q2)
@@ -1203,3 +1232,22 @@ all.equal(lasso.locc, lasso.values)
 test1 <- function(...) {if(hasArg(x1)){print("ex")}else{F}}
 test1(x1= NULL)
 x
+
+
+# examples ----
+library(devtools)
+
+document()
+
+## createQboneObject ----
+n = 10000
+list1 = list(rnorm(n, mean = 0, sd = 1),
+             rnorm(n, mean = 0, sd = 1),
+             rnorm(n, mean = 0.5, sd = 1),
+             rnorm(n, mean = 0.5, sd = 1))
+meta.data = data.frame(name = c("a_1", "a_2", "b_1", "b_2"), group = c("a", "a", "b", "b"))
+rownames(meta.data) = meta.data[,1]
+qbonedata = createQboneData(list1, meta.data, sampleid = 1)
+qbone1 = createQboneObject(qbonedata, meta.data = meta.data)
+
+

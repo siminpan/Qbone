@@ -47,7 +47,7 @@
 # 6. Internal ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-## 6.1 UpdateSlots ----
+## 6.1 updateSlots ----
 #' Update slots in an object
 #' Adopted from Seurateobject package
 #' @param object An object to update
@@ -59,6 +59,11 @@
 #' @keywords internal
 #'
 #' @noRd
+#'
+#' @examples
+#' \donttest{
+#' Qbone:::updateSlots(qbone1)
+#' }
 #'
 updateSlots <- function(object){
   object.list <- sapply(
@@ -80,7 +85,8 @@ updateSlots <- function(object){
   for (x in setdiff(x = slotNames(x = object), y = names(x = object.list))){
     xobj <- slot(object = object, name = x)
     if (is.vector(x = xobj) && !is.list(x = xobj) && length(x = xobj) == 0){
-      slot(object = object, name = x) <- vector(mode = class(x = xobj), length = 1L)
+      slot(object = object, name = x) <- vector(mode = class(x = xobj),
+                                                length = 1L)
     }
   }
   return(object)
@@ -104,6 +110,11 @@ updateSlots <- function(object){
 #' @keywords internal
 #'
 #' @noRd
+#'
+#' @examples
+#' \donttest{
+#' Qbone:::ExtractField(string)
+#' }
 #'
 ExtractField <- function(string, field = 1, delim = "_"){
   fields <- as.numeric(x = unlist(x = strsplit(
@@ -133,6 +144,15 @@ ExtractField <- function(string, field = 1, delim = "_"){
 #'
 #' @export
 #'
+#' @examples
+#' \dontrun{
+#' f <- function(x, ...) {
+#'   CheckDots(...)
+#'   return(x ^ 2)
+#' }
+#' f(x = 3, y = 9)
+#' }
+#'
 CheckDots <- function(..., fxns = NULL){
   args.names <- names(x = list(...))
   if (length(x = list(...)) == 0){
@@ -146,7 +166,8 @@ CheckDots <- function(..., fxns = NULL){
   }
   for (f in fxns){
     if (!(is.character(x = f) || is.function(x = f))){
-      stop("CheckDots only works on characters or functions, not ", class(x = f))
+      stop("CheckDots only works on characters or functions, not ",
+           class(x = f))
     }
   }
   fxn.args <- suppressWarnings(expr = sapply(
@@ -216,7 +237,8 @@ CheckDots <- function(..., fxns = NULL){
         FUN.VALUE = character(length = 1L)
       )
       message(
-        "The following functions and any applicable methods accept the dots: ",
+        "The following functions and any applicable methods accept the
+        dots: ",
         paste(unique(x = fx), collapse = ', ')
       )
       if (any(nchar(x = dfxns) < 1)){
@@ -227,7 +249,8 @@ CheckDots <- function(..., fxns = NULL){
         )
       }
     } else {
-      message("There is/are ", length(x = dfxns), 'function(s) that accept(s) the dots')
+      message("There is/are ", length(x = dfxns), 'function(s) that accept(s)
+              the dots')
     }
   } else {
     unused <- Filter(
@@ -254,7 +277,8 @@ CheckDots <- function(..., fxns = NULL){
       # if (length(x = unused.hints) > 0){
       #   message(
       #     "Suggested parameter: ",
-      #     paste(unused.hints, "instead of", names(x = unused.hints), collapse = '; '),
+      #     paste(unused.hints, "instead of", names(x = unused.hints),
+      # collapse = '; '),
       #     "\n"
       #   )
       # }

@@ -60,3 +60,14 @@ detected.}
 \description{
 Create a \code{Qbone} object
 }
+\examples{
+\dontrun{
+list1 = list(rnorm(10000, mean = 0, sd = 1),
+             rnorm(10000, mena = 0.5, sd = 1))
+meta.data = data.frame(name = c("a_1", "b_1"), names = c("a_1", "b_1"))
+rownames(meta.data) = meta.data[,1]
+qbonedata = createQboneData(list1, meta.data, sampleid = 2)
+qbone1 = createQboneObject(qbonedata, meta.data = meta.data)
+}
+
+}

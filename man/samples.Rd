@@ -21,3 +21,8 @@ A vector of sample names
 \description{
 Get samples present in an object
 }
+\examples{
+samples(x = q1)
+
+
+}

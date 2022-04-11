@@ -20,4 +20,14 @@ invisibly returns \code{NULL}
 Check the Use of Dots
 Adopted from Seurateobject package
 }
+\examples{
+\dontrun{
+f <- function(x, ...) {
+  CheckDots(...)
+  return(x ^ 2)
+}
+f(x = 3, y = 9)
+}
+
+}
 \keyword{internal}

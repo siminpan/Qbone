@@ -7,7 +7,7 @@ NULL
 # 1. Generics ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-## 1.1 Samples ----
+## 1.1 samples ----
 #' Get samples present in an object
 #' @param x An object
 #'
@@ -15,6 +15,10 @@ NULL
 #'
 #' @rdname samples
 #' @export samples
+#'
+#' @examples
+#' samples(x = q1)
+#'
 #'
 samples <- function(x) UseMethod(generic = 'samples', object = x)
 # as S3 method
@@ -40,6 +44,20 @@ samples <- function(x) UseMethod(generic = 'samples', object = x)
 #' @rdname createQboneObject
 #' @export
 #'
+#' @examples
+#' \dontrun{
+#' n = 10000
+#' list1 = list(rnorm(n, mean = 0, sd = 1),
+#'              rnorm(n, mean = 0, sd = 1),
+#'              rnorm(n, mean = 0.5, sd = 1),
+#'              rnorm(n, mean = 0.5, sd = 1))
+#' meta.data = data.frame(name = c("a_1", "a_2", "b_1", "b_2"),
+#'                        group = c("a", "a", "b", "b"))
+#' rownames(meta.data) = meta.data[,1]
+#' qbonedata = createQboneData(list1, meta.data, sampleid = 1)
+#' qbone1 = createQboneObject(qbonedata, meta.data = meta.data)
+#' }
+#'
 createQboneObject <- function(
   data,
   project = 'createQboneObject',
@@ -55,7 +73,7 @@ createQboneObject <- function(
 
 # setGeneric("createQboneObject", function(x) standardGeneric("createQboneObject"))
 
-## 1.3 DefaultAssay ----
+## 1.3 defaultAssay ----
 
 #' Get and set the default assay
 #' @param object An object
@@ -98,6 +116,9 @@ defaultAssay <- function(object, ...){
 #' @rdname addMetaData
 #' @export addMetaData
 #'
+#' @examples
+#' qbone1 <- addMetaData(object = qbone1, metadata = meta.data)
+#' qbone1[["name"]] <- meta.data
 #'
 addMetaData <- function(object, metadata, col.name = NULL){
   UseMethod(generic = 'addMetaData', object = object)

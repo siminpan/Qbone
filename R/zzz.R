@@ -41,14 +41,16 @@ setOldClass(Classes = 'package_version')
 #'
 .addMetaData <- function(object, metadata, col.name = NULL){
   if (is.null(x = col.name) && is.atomic(x = metadata)){
-    stop("'col.name' must be provided for atomic metadata types (eg. vectors)")
+    stop("'col.name' must be provided for atomic metadata types
+         (eg. vectors)")
   }
   if (inherits(x = metadata, what = c('matrix', 'Matrix'))){
     metadata <- as.data.frame(x = metadata)
   }
   col.name <- col.name %||% names(x = metadata) %||% colnames(x = metadata)
   if (is.null(x = col.name)){
-    stop("No metadata name provided and could not infer it from metadata object")
+    stop("No metadata name provided and could not infer it from metadata
+         object")
   }
   object[[col.name]] <- metadata
   return(object)
