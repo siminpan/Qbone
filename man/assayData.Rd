@@ -33,4 +33,9 @@ expression matrices (eg. \dQuote{counts}, \dQuote{data}, or
 \dQuote{scale.data}). \code{SetAssayData} can be used to replace one of these
 expression matrices                                              || double check
 }
+\examples{
+# Get the data directly from an QboneData object
+getQboneData(qbone1[["Bone"]], slot = "data")
+
+}
 \concept{data-access}

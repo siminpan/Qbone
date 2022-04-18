@@ -1255,9 +1255,10 @@ qbone1 <- addMetaData(object = qbone1, metadata = meta.data2[,1], col.name = "gr
 qbone1[["group2"]] <- meta.data2[,1]
 
 
-idents(qbone1, samples = 3) <- 'c'
+idents(qbone1, samples = 3:4) <- 'c'
 idents(qbone1)
 
 colnames(qbone1[[]])
 idents(qbone1) <- 'group2'
 levels(idents(qbone1))
+

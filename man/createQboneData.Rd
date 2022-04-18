@@ -28,11 +28,24 @@ track assay provenance}
 
 \item{sort}{sort the data before put into data slot if T, default is F.}
 
-\item{...}{|| double check}
+\item{...}{}
 }
 \value{
 A \code{\link{QboneData}} object
 }
 \description{
 create an QboneData object
+}
+\examples{
+\dontrun{
+n = 10000
+list1 = list(rnorm(n, mean = 0, sd = 1),
+             rnorm(n, mean = 0, sd = 1),
+            rnorm(n, mean = 0.5, sd = 1),
+            rnorm(n, mean = 0.5, sd = 1))
+meta.data = data.frame(name = c("a_1", "a_2", "b_1", "b_2"), group = c("a", "a", "b", "b"))
+rownames(meta.data) = meta.data[,1]
+qbonedata = createQboneData(list1, meta.data, sampleid = 1)
+}
+
 }

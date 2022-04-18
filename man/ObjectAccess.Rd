@@ -17,7 +17,6 @@ in this \code{Qbone} object. Otherwise, the specific object specified
 }
 \description{
 Adopted from Seurateobject package
-List the names of \code{\link{assay}}, \code{\link{Image}},
-\code{\link{Graph}} objects              || double check
+List the names of \code{\link{assay}}
 }
 \concept{data-access}

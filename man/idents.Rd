@@ -20,7 +20,7 @@ idents(object, ...) <- value
 
 \method{levels}{Qbone}(x)
 
-\method{levels}{.Qbone}(x) <- value
+\method{levels}{Qbone}(x) <- value
 
 \method{droplevels}{Qbone}(x, ...)
 }
@@ -47,8 +47,8 @@ Get, set, and manipulate an object's identity classes
 idents(qbone1)
 
 # Set sample identity classes
-# Can be used to set identities for specific cells to a new level
-idents(qbone1, samples = 3) <- 'c'
+# Can be used to set identities for specific samples to a new level
+idents(qbone1, samples = 3:4) <- 'c'
 idents(qbone1)
 
 # Can also set idents from a value in object metadata
@@ -57,6 +57,7 @@ idents(qbone1) <- colnames(qbone1[[]])[3]
 # or
 idents(qbone1) <- 'group2'
 idents(qbone1)
+
 # Get the levels of identity classes of a Qbone object
 levels(x = qbone1)
 

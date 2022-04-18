@@ -16,12 +16,10 @@ NULL
 #'
 #' @slot data Sample data
 #' @slot scale.data Parameter of data processing
-#' @slot key Key for the Assay                                                || double check
 #' @slot assay.name name of assay
 #' @slot assay.orig Original assay that this assay is based off of. Used to
 #' track assay provenance
 #' @slot meta.assays Metadata for the data processing
-#' @slot misc Utility slot for storing additional data associated with the assay   || double check
 #'
 #' @name QboneData-class
 #' @rdname QboneData-class
@@ -35,20 +33,16 @@ QboneData <- setClass(
   slots = c(
     data = 'list',
     scale.data = 'list',
-    key = 'character',
     assay.name = 'optionalCharacter',
     assay.orig = 'optionalCharacter',
-    meta.assays = 'data.frame',
-    misc = 'optionalList'
+    meta.assays = 'data.frame'
   ),
   prototype = c(
     data = list(),
     scale.data = list(),
-    key = character(),
     assay.name = NULL,
     assay.orig = NULL,
-    meta.assays = data.frame(),
-    misc = NULL
+    meta.assays = data.frame()
   )
 )
 
@@ -66,13 +60,25 @@ QboneData <- setClass(
 #' @param assay.orig Original assay that this assay is based off of. Used to
 #' track assay provenance
 #' @param sort sort the data before put into data slot if T, default is F.
-#' @param ... || double check
+#' @param ...
 #'
 #' @return A \code{\link{QboneData}} object
 #'
 #' @importFrom methods as
 #'
 #' @export
+#'
+#' @examples
+#' \dontrun{
+#' n = 10000
+#' list1 = list(rnorm(n, mean = 0, sd = 1),
+#'              rnorm(n, mean = 0, sd = 1),
+#'             rnorm(n, mean = 0.5, sd = 1),
+#'             rnorm(n, mean = 0.5, sd = 1))
+#' meta.data = data.frame(name = c("a_1", "a_2", "b_1", "b_2"), group = c("a", "a", "b", "b"))
+#' rownames(meta.data) = meta.data[,1]
+#' qbonedata = createQboneData(list1, meta.data, sampleid = 1)
+#' }
 #'
 createQboneData <- function(
   data,
@@ -124,8 +130,7 @@ createQboneData <- function(
     assay.name = assay.name,
     assay.orig = assay.orig,
     meta.assays = data.frame(id = meta.assays[,sampleid.assays],
-                             row.names = meta.assays[,sampleid.assays]),
-    misc = NULL
+                             row.names = meta.assays[,sampleid.assays])
   )
   # qbonedata@scale.data <- append(qbonedata@scale.data,
   #                                list(id = meta.assays[,sampleid.assays]))
@@ -148,6 +153,9 @@ createQboneData <- function(
 #' @export
 #' @method getQboneData QboneData
 #'
+#' @examples
+#' # Get the data directly from an QboneData object
+#' getQboneData(qbone1[["Bone"]], slot = "data")
 #'
 getQboneData.QboneData <- function(
   object,

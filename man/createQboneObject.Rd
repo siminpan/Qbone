@@ -46,16 +46,16 @@ createQboneObject(
 
 \item{assay}{Name of the initial assay}
 
-\item{names.field}{|| double check}
+\item{names.field}{number of field of names}
 
-\item{names.delim}{|| double check}
+\item{names.delim}{delimiter of names}
 
 \item{meta.data}{Include cells where at least this many features are
 detected.}
 
 \item{sampleid}{column number of sample name in mate.data}
 
-\item{...}{|| double check}
+\item{...}{}
 }
 \description{
 Create a \code{Qbone} object
@@ -69,6 +69,18 @@ list1 = list(rnorm(n, mean = 0, sd = 1),
              rnorm(n, mean = 0.5, sd = 1))
 meta.data = data.frame(name = c("a_1", "a_2", "b_1", "b_2"),
                        group = c("a", "a", "b", "b"))
+rownames(meta.data) = meta.data[,1]
+qbonedata = createQboneData(list1, meta.data, sampleid = 1)
+qbone1 = createQboneObject(qbonedata, meta.data = meta.data)
+}
+
+\dontrun{
+n = 10000
+list1 = list(rnorm(n, mean = 0, sd = 1),
+             rnorm(n, mean = 0, sd = 1),
+             rnorm(n, mean = 0.5, sd = 1),
+             rnorm(n, mean = 0.5, sd = 1))
+meta.data = data.frame(name = c("a_1", "a_2", "b_1", "b_2"), group = c("a", "a", "b", "b"))
 rownames(meta.data) = meta.data[,1]
 qbonedata = createQboneData(list1, meta.data, sampleid = 1)
 qbone1 = createQboneObject(qbonedata, meta.data = meta.data)
