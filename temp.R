@@ -1250,4 +1250,14 @@ rownames(meta.data) = meta.data[,1]
 qbonedata = createQboneData(list1, meta.data, sampleid = 1)
 qbone1 = createQboneObject(qbonedata, meta.data = meta.data)
 
+meta.data2 = data.frame(group2 = c("a2", "a2", "b2", "b2"))
+qbone1 <- addMetaData(object = qbone1, metadata = meta.data2[,1], col.name = "group2")
+qbone1[["group2"]] <- meta.data2[,1]
 
+
+idents(qbone1, samples = 3) <- 'c'
+idents(qbone1)
+
+colnames(qbone1[[]])
+idents(qbone1) <- 'group2'
+levels(idents(qbone1))

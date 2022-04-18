@@ -17,7 +17,7 @@ NULL
 #' @export samples
 #'
 #' @examples
-#' samples(x = q1)
+#' samples(x = qbone1)
 #'
 #'
 samples <- function(x) UseMethod(generic = 'samples', object = x)
@@ -117,8 +117,10 @@ defaultAssay <- function(object, ...){
 #' @export addMetaData
 #'
 #' @examples
-#' qbone1 <- addMetaData(object = qbone1, metadata = meta.data)
-#' qbone1[["name"]] <- meta.data
+#' meta.data2 = data.frame(group2 = c("a2", "a2", "b2", "b2"))
+#' qbone1 <- addMetaData(object = qbone1, metadata = meta.data2[,1], col.name = "group2")
+#' # or
+#' qbone1[["group2"]] <- meta.data2[,1]
 #'
 addMetaData <- function(object, metadata, col.name = NULL){
   UseMethod(generic = 'addMetaData', object = object)
@@ -127,7 +129,7 @@ addMetaData <- function(object, metadata, col.name = NULL){
 # setGeneric("addMetaData", function(x) standardGeneric("addMetaData"))
 
 
-## 1.5 Idents ----
+## 1.5 idents ----
 #' Get, set, and manipulate an object's identity classes
 #'
 #' @param object An object
@@ -135,6 +137,10 @@ addMetaData <- function(object, metadata, col.name = NULL){
 #'
 #' @rdname idents
 #' @export idents
+#'
+#' @examples
+#' # Get sample identity classes
+#' idents(qbone1)
 #'
 idents <- function(object, ... ){
   UseMethod(generic = 'idents', object = object)
@@ -151,6 +157,19 @@ idents <- function(object, ... ){
 #'
 #' @rdname idents
 #' @export idents<-
+#'
+#' @examples
+#' # Set sample identity classes
+#' # Can be used to set identities for specific samples to a new level
+#' idents(qbone1, samples = 3:4) <- 'c'
+#' idents(qbone1)
+#'
+#' # Can also set idents from a value in object metadata
+#' colnames(qbone1[[]])
+#' idents(qbone1) <- colnames(qbone1[[]])[3]
+#' # or
+#' idents(qbone1) <- 'group2'
+#' idents(qbone1)
 #'
 "idents<-" <- function(object, ..., value){
   UseMethod(generic = 'idents<-', object = object)

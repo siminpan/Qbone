@@ -22,7 +22,7 @@ A vector of sample names
 Get samples present in an object
 }
 \examples{
-samples(x = q1)
+samples(x = qbone1)
 
 
 }

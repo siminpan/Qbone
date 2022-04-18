@@ -23,7 +23,9 @@ addMetaData(object, metadata, col.name = NULL)
 Add in metadata associated
 }
 \examples{
-qbone1 <- addMetaData(object = qbone1, metadata = meta.data)
-qbone1[["name"]] <- meta.data
+meta.data2 = data.frame(group2 = c("a2", "a2", "b2", "b2"))
+qbone1 <- addMetaData(object = qbone1, metadata = meta.data2[,1], col.name = "group2")
+# or
+qbone1[["group2"]] <- meta.data2[,1]
 
 }

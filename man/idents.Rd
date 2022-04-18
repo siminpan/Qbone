@@ -5,6 +5,9 @@
 \alias{idents<-}
 \alias{idents.Qbone}
 \alias{idents<-.Qbone}
+\alias{levels.Qbone}
+\alias{levels<-.Qbone}
+\alias{droplevels.Qbone}
 \title{Get, set, and manipulate an object's identity classes}
 \usage{
 idents(object, ...)
@@ -14,6 +17,12 @@ idents(object, ...) <- value
 \method{idents}{Qbone}(object, ...)
 
 \method{idents}{Qbone}(object, samples = NULL, drop = FALSE, ...) <- value
+
+\method{levels}{Qbone}(x)
+
+\method{levels}{.Qbone}(x) <- value
+
+\method{droplevels}{Qbone}(x, ...)
 }
 \arguments{
 \item{object}{An Qbone object}
@@ -32,4 +41,28 @@ identities themselves}
 }
 \description{
 Get, set, and manipulate an object's identity classes
+}
+\examples{
+# Get sample identity classes
+idents(qbone1)
+
+# Set sample identity classes
+# Can be used to set identities for specific cells to a new level
+idents(qbone1, samples = 3) <- 'c'
+idents(qbone1)
+
+# Can also set idents from a value in object metadata
+colnames(qbone1[[]])
+idents(qbone1) <- colnames(qbone1[[]])[3]
+# or
+idents(qbone1) <- 'group2'
+idents(qbone1)
+# Get the levels of identity classes of a Qbone object
+levels(x = qbone1)
+
+# Reorder identity classes
+levels(x = qbone1)
+levels(x = qbone1) <- c('A', 'B')
+levels(x = qbone1)
+
 }
