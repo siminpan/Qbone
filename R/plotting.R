@@ -238,7 +238,7 @@ qbasisPlot <- function(
 #'
 #' @param object A Qboneobject
 #' @param plot.col Columns to plot from \code{qfrModel()} results \code{object@assays[["Q.F.Regression"]]@scale.data[["mcmc_infer"]][["den_G"]] }. Corresponding to \code{X1} (new covariates) agrement in \code{qfrModel()}.
-#' @param group.names Group name for plot legend for argument \cond{plot.col}.
+#' @param group.names Group name for plot legend for argument \code{plot.col}.
 #' @param mean.diff T or F to add mean difference testing for two consecutive subjects posterior probability scores
 #' @param var.diff T or F to add variance difference testing for two consecutive subjects posterior probability scores
 #' @param skewed.diff T or F to add skewness difference testing for two consecutive subjects posterior probability scores

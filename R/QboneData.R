@@ -60,7 +60,6 @@ QboneData <- setClass(
 #' @param assay.orig Original assay that this assay is based off of. Used to
 #' track assay provenance
 #' @param sort sort the data before put into data slot if T, default is F.
-#' @param ...
 #'
 #' @return A \code{\link{QboneData}} object
 #'

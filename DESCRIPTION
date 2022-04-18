@@ -34,7 +34,10 @@ Imports:
     Matrix,
     foreach,
     MASS,
-    ggplot2
+    ggplot2,
+    gridExtra,
+    pracma,
+    wavethresh
 Collate: 
     'Qbone-package.R'
     'utils.R'

@@ -54,8 +54,6 @@ createQboneObject(
 detected.}
 
 \item{sampleid}{column number of sample name in mate.data}
-
-\item{...}{}
 }
 \description{
 Create a \code{Qbone} object

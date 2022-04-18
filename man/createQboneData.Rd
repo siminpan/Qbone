@@ -27,8 +27,6 @@ createQboneData(
 track assay provenance}
 
 \item{sort}{sort the data before put into data slot if T, default is F.}
-
-\item{...}{}
 }
 \value{
 A \code{\link{QboneData}} object

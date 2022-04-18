@@ -20,7 +20,7 @@ pdPlot(
 
 \item{plot.col}{Columns to plot from \code{qfrModel()} results \code{object@assays[["Q.F.Regression"]]@scale.data[["mcmc_infer"]][["den_G"]] }. Corresponding to \code{X1} (new covariates) agrement in \code{qfrModel()}.}
 
-\item{group.names}{Group name for plot legend for argument \cond{plot.col}.}
+\item{group.names}{Group name for plot legend for argument \code{plot.col}.}
 
 \item{mean.diff}{T or F to add mean difference testing for two consecutive subjects posterior probability scores}
 
