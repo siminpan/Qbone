@@ -529,6 +529,7 @@ MCMC <- function(
         } else {
           B_j_ <- matrix(temp.B00[ -j, ], ncol = K, nrow = (Px - 1), byrow = TRUE)
           X_j <- matrix(X[, -j], ncol = (Px - 1), nrow = N, byrow = TRUE)
+          X_j_ <- 1 # || double check
         }
 
         B_j <- temp.B00[  j, ]

@@ -1262,3 +1262,76 @@ colnames(qbone1[[]])
 idents(qbone1) <- 'group2'
 levels(idents(qbone1))
 
+# PDX DAR CT ----
+load("~/Documents/DAR_RWV_CT/DAR_quafunreg_raw.data.RData")
+
+re1 = createQboneObject(raw.dataset)
+
+names(re1@assays[["Bone"]]@data) <- names(raw.dataset)
+
+re1@assays[["Bone"]]@meta.assays <- data.frame(id = names(re1@assays[["Bone"]]@data), row.names = c(1:6))
+
+re1 <- addMetaData(object = re1,
+                   metadata = re1@assays[["Bone"]]@meta.assays[["id"]]
+                   , col = "id")
+re1 <- addMetaData(object = re1,
+                   metadata = c(rep("DkkMo", c(3)),
+                                rep("ScrMo", c(3))),
+                   col = "group")
+
+# no name if from list
+# library("devtools")
+# document()
+re2 = thinData(re1,prop=0.001)
+re3 = lassoList(re2)
+re4 = preQuantlets(re3)
+# object = re4
+# dxPlot(re4)
+# dxPlotRev(re4)
+re5 = ecQuantlets(re4)
+# object = re5
+# qbasisPlot(re5)
+
+# mm_1 <- c(1,0.25,0,0.25)
+# mm_2 <- c(0,0.25,1,0.25)
+# mm_3 <- c(1,0.25,0.25,0)
+# mm_4 <- c(0,0.25,0.25,1)
+# mm_5 <- c(0.25,1,0.25,0)
+# mm_6 <- c(0.25,0,0.25,1)
+# mm_7 <- c(1,1,0.25,0.25)
+# mm_8 <- c(0.25,0.25,1,1)
+
+# PX0 <- rbind(mm_1,mm_2,mm_3,mm_4,mm_5,mm_6,mm_7,mm_8)
+
+mm_1 <- c(1,1,0.25)
+mm_2 <- c(1,0.25,1)
+mm_3 <- c(1,0.5,0.25)
+mm_4 <- c(1,0.25,0.5)
+mm_5 <- c(1,0.75,0.25)
+mm_6 <- c(1,0.25,0.75)
+PX0 <- rbind(mm_3,mm_4,mm_5,mm_6)
+
+re6 = qfrModel(re5,
+               X = cbind(matrix(rep(1,6), byrow = T),covM(re5)),
+               X1 = PX0)
+# object = re6
+document()
+
+pdPlot(re6,
+       plot.col= c(1,3,5,7),
+       group.names = c("DkkMo", "Comb", "DRB", "NT"),
+       mean.diff = T,
+       var.diff = T,
+       skewed.diff = T,
+       kurtosis.diff = T
+)
+
+document()
+pdPlot(re6,
+       plot.col= c(7,8),
+       group.names = c("DkkMo", "Without DkkMo"),
+       mean.diff = T,
+       var.diff = T,
+       skewed.diff = T,
+       kurtosis.diff = T
+)
