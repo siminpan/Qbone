@@ -34,8 +34,10 @@ expression matrices (eg. \dQuote{counts}, \dQuote{data}, or
 expression matrices                                              || double check
 }
 \examples{
+\dontrun{
 # Get the data directly from an QboneData object
 getQboneData(qbone1[["Bone"]], slot = "data")
+}
 
 }
 \concept{data-access}

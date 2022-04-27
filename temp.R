@@ -1231,7 +1231,7 @@ all.equal(lasso.locc, lasso.values)
 # 3d plot ----
 document()
 qbasisPlot(object)
-qbasisPlot3D(object)
+qbasisPlot3D(object, n = 20)
 # install.packages("plotly")
 
 library(plotly)

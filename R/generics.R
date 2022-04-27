@@ -17,7 +17,9 @@ NULL
 #' @export samples
 #'
 #' @examples
+#' \dontrun{
 #' samples(x = qbone1)
+#' }
 #'
 #'
 samples <- function(x) UseMethod(generic = 'samples', object = x)
@@ -142,8 +144,10 @@ addMetaData <- function(object, metadata, col.name = NULL){
 #' @export idents
 #'
 #' @examples
+#' \dontrun{
 #' # Get sample identity classes
 #' idents(qbone1)
+#' }
 #'
 idents <- function(object, ... ){
   UseMethod(generic = 'idents', object = object)
@@ -162,6 +166,7 @@ idents <- function(object, ... ){
 #' @export idents<-
 #'
 #' @examples
+#' \dontrun{
 #' # Set sample identity classes
 #' # Can be used to set identities for specific samples to a new level
 #' idents(qbone1, samples = 3:4) <- 'c'
@@ -173,6 +178,7 @@ idents <- function(object, ... ){
 #' # or
 #' idents(qbone1) <- 'group2'
 #' idents(qbone1)
+#' }
 #'
 "idents<-" <- function(object, ..., value){
   UseMethod(generic = 'idents<-', object = object)

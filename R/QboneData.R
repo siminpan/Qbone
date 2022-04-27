@@ -153,8 +153,10 @@ createQboneData <- function(
 #' @method getQboneData QboneData
 #'
 #' @examples
+#' \dontrun{
 #' # Get the data directly from an QboneData object
 #' getQboneData(qbone1[["Bone"]], slot = "data")
+#' }
 #'
 getQboneData.QboneData <- function(
   object,

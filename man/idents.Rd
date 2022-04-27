@@ -43,9 +43,12 @@ identities themselves}
 Get, set, and manipulate an object's identity classes
 }
 \examples{
+\dontrun{
 # Get sample identity classes
 idents(qbone1)
+}
 
+\dontrun{
 # Set sample identity classes
 # Can be used to set identities for specific samples to a new level
 idents(qbone1, samples = 3:4) <- 'c'
@@ -57,13 +60,18 @@ idents(qbone1) <- colnames(qbone1[[]])[3]
 # or
 idents(qbone1) <- 'group2'
 idents(qbone1)
+}
 
+\dontrun{
 # Get the levels of identity classes of a Qbone object
 levels(x = qbone1)
+}
 
+\dontrun{
 # Reorder identity classes
 levels(x = qbone1)
 levels(x = qbone1) <- c('A', 'B')
 levels(x = qbone1)
+}
 
 }

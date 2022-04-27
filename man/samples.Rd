@@ -22,7 +22,9 @@ A vector of sample names
 Get samples present in an object
 }
 \examples{
+\dontrun{
 samples(x = qbone1)
+}
 
 
 }

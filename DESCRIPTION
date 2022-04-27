@@ -37,7 +37,8 @@ Imports:
     ggplot2,
     gridExtra,
     pracma,
-    wavethresh
+    wavethresh,
+    plotly
 Collate: 
     'Qbone-package.R'
     'utils.R'

@@ -470,8 +470,10 @@ NULL
 #' @method levels Qbone
 #'
 #' @examples
+#' \dontrun{
 #' # Get the levels of identity classes of a Qbone object
 #' levels(x = qbone1)
+#' }
 #'
 levels.Qbone <- function(x) {
   x <- updateSlots(object = x)
@@ -484,10 +486,12 @@ levels.Qbone <- function(x) {
 #' @method levels<- Qbone
 #'
 #' @examples
+#' \dontrun{
 #' # Reorder identity classes
 #' levels(x = qbone1)
 #' levels(x = qbone1) <- c('A', 'B')
 #' levels(x = qbone1)
+#' }
 #'
 "levels<-.Qbone" <- function(x, value) {
   x <- updateSlots(object = x)
