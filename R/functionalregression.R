@@ -428,7 +428,8 @@ MCMC <- function(
           X_j_ <- X[, -j]
         } else {
           B_j_ <- matrix(temp.B00[ -j, ], ncol = K, nrow = (Px - 1), byrow = TRUE)
-          X_j <- matrix(X[, -j], ncol = (Px - 1), nrow = N, byrow = TRUE)
+          X_j_ <- matrix(X[, -j], ncol = (Px - 1), nrow = N, byrow = TRUE) # || double check
+          # X_j <- matrix(X[, -j], ncol = (Px - 1), nrow = N, byrow = TRUE)
         }
 
         B_j <- temp.B00[  j, ]
@@ -528,8 +529,9 @@ MCMC <- function(
           X_j_ <- X[, -j]
         } else {
           B_j_ <- matrix(temp.B00[ -j, ], ncol = K, nrow = (Px - 1), byrow = TRUE)
-          X_j <- matrix(X[, -j], ncol = (Px - 1), nrow = N, byrow = TRUE)
-          X_j_ <- 1 # || double check
+          X_j_ <- matrix(X[, -j], ncol = (Px - 1), nrow = N, byrow = TRUE) # || double check
+          # X_j <- matrix(X[, -j], ncol = (Px - 1), nrow = N, byrow = TRUE)
+          # X_j_ <- 1 # || double check
         }
 
         B_j <- temp.B00[  j, ]

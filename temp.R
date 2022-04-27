@@ -1263,7 +1263,11 @@ idents(qbone1) <- 'group2'
 levels(idents(qbone1))
 
 # PDX DAR CT ----
+library(devtools)
+document()
 load("~/Documents/DAR_RWV_CT/DAR_quafunreg_raw.data.RData")
+
+raw.dataset = lapply(raw.dataset, function(x) {x[x!=0]})
 
 re1 = createQboneObject(raw.dataset)
 
@@ -1288,10 +1292,11 @@ re4 = preQuantlets(re3)
 # object = re4
 # dxPlot(re4)
 # dxPlotRev(re4)
-re5 = ecQuantlets(re4)
+# dxPlot(re4, sparsity = 0.004)
+re5 = ecQuantlets(re4, sparsity = 0.004)
 # object = re5
-# qbasisPlot(re5)
-
+# qbasisPlot(re5, n = 9)
+save.image(file = "~/Documents/DAR_RWV_CT/DAR_Qbone.RData")
 # mm_1 <- c(1,0.25,0,0.25)
 # mm_2 <- c(0,0.25,1,0.25)
 # mm_3 <- c(1,0.25,0.25,0)
@@ -1303,23 +1308,22 @@ re5 = ecQuantlets(re4)
 
 # PX0 <- rbind(mm_1,mm_2,mm_3,mm_4,mm_5,mm_6,mm_7,mm_8)
 
-mm_1 <- c(1,1,0.25)
-mm_2 <- c(1,0.25,1)
-mm_3 <- c(1,0.5,0.25)
-mm_4 <- c(1,0.25,0.5)
-mm_5 <- c(1,0.75,0.25)
-mm_6 <- c(1,0.25,0.75)
-PX0 <- rbind(mm_3,mm_4,mm_5,mm_6)
+mm_1 <- c(1,0.25)
+mm_2 <- c(0.25,1)
+mm_3 <- c(0.5,0.25)
+mm_4 <- c(0.25,0.5)
+mm_5 <- c(0.75,0.25)
+mm_6 <- c(0.25,0.75)
+PX0 <- rbind(mm_5,mm_6)
 
 re6 = qfrModel(re5,
-               X = cbind(matrix(rep(1,6), byrow = T),covM(re5)),
                X1 = PX0)
 # object = re6
 document()
 
 pdPlot(re6,
-       plot.col= c(1,3,5,7),
-       group.names = c("DkkMo", "Comb", "DRB", "NT"),
+       plot.col= c(1,2),
+       group.names = c("DkkMo", "ScrMo"),
        mean.diff = T,
        var.diff = T,
        skewed.diff = T,
