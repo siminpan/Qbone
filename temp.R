@@ -1227,6 +1227,52 @@ all.equal(Values, locc)
 all.equal(raw.dataset, raw.dataset2)
 all.equal(lasso.locc, lasso.values)
 
+
+# 3d plot ----
+document()
+qbasisPlot(object)
+qbasisPlot3D(object)
+# install.packages("plotly")
+
+library(plotly)
+mydata = read.csv("density_plot.txt")
+df = as.data.frame(mydata)
+plot_ly(df, x = Y, y = X, z = Z, group = X, type = "scatter3d", mode = "lines")
+
+# df = data.frame(x = rep(object@assays[[defaultAssay(object)]]@scale.data[["p"]],dim(object@assays[[defaultAssay(object)]]@scale.data[["quantlets"]])[2]+1),
+#                 y = c(rowSums(object@assays[[defaultAssay(object)]]@scale.data[["quantlets"]]),
+#                       object@assays[[defaultAssay(object)]]@scale.data[["quantlets"]]),
+#                 z = rep(0:dim(object@assays[[defaultAssay(object)]]@scale.data[["quantlets"]])[2], each = dim(object@assays[[defaultAssay(object)]]@scale.data[["quantlets"]])[1])
+# )
+
+df = data.frame(x = rep(object@assays[[defaultAssay(object)]]@scale.data[["p"]],dim(object@assays[[defaultAssay(object)]]@scale.data[["quantlets"]])[2]+1),
+                y = c(rep(1, length(object@assays[[defaultAssay(object)]]@scale.data[["p"]])),
+                object@assays[[defaultAssay(object)]]@scale.data[["quantlets"]]),
+                z = rep(1:(dim(object@assays[[defaultAssay(object)]]@scale.data[["quantlets"]])[2]+1), each = dim(object@assays[[defaultAssay(object)]]@scale.data[["quantlets"]])[1])
+)
+n = 16
+# f1 = as.character(1:n)
+# plot_ly(df[which(df$z %in% f1),], x = ~x, y = ~z, z = ~y,
+#         type = "scatter3d", mode = "lines", color= ~z)
+axx <- list(
+  title = "Percentile"
+)
+
+axy <- list(
+  title = "Quantlets"
+)
+
+axz <- list(
+  title = " "
+)
+
+plot_ly(df[which(df$z <= n),], x = ~x, y = ~z, z = ~y, split = ~z,
+        type = "scatter3d", mode = "lines", color= ~z) %>%
+  layout(title = "Quantlet &#936;",
+         # plot_bgcolor = "#e5ecf6",
+         scene = list(xaxis=axx,yaxis=axy,zaxis=axz),
+         legend = list(title=list(text='<b> Quantlets </b>')))
+
 # test hasArg(x1) in function ----
 
 test1 <- function(...) {if(hasArg(x1)){print("ex")}else{F}}
@@ -1286,7 +1332,7 @@ re1 <- addMetaData(object = re1,
 # no name if from list
 # library("devtools")
 # document()
-re2 = thinData(re1,prop=0.001)
+re2 = thinData(re1,prop=0.01) # prop=0.01 at 100k level is too much for PT7280
 re3 = lassoList(re2)
 re4 = preQuantlets(re3)
 # object = re4
@@ -1296,7 +1342,104 @@ re4 = preQuantlets(re3)
 re5 = ecQuantlets(re4, sparsity = 0.004)
 # object = re5
 # qbasisPlot(re5, n = 9)
-save.image(file = "~/Documents/DAR_RWV_CT/DAR_Qbone.RData")
+save.image(file = "~/Documents/DAR_RWV_CT/DAR_Qbone.0.01.RData")
+# mm_1 <- c(1,0.25,0,0.25)
+# mm_2 <- c(0,0.25,1,0.25)
+# mm_3 <- c(1,0.25,0.25,0)
+# mm_4 <- c(0,0.25,0.25,1)
+# mm_5 <- c(0.25,1,0.25,0)
+# mm_6 <- c(0.25,0,0.25,1)
+# mm_7 <- c(1,1,0.25,0.25)
+# mm_8 <- c(0.25,0.25,1,1)
+
+# PX0 <- rbind(mm_1,mm_2,mm_3,mm_4,mm_5,mm_6,mm_7,mm_8)
+
+mm_1 <- c(1,0.25)
+mm_2 <- c(0.25,1)
+mm_3 <- c(0.5,0.25)
+mm_4 <- c(0.25,0.5)
+mm_5 <- c(0.75,0.25)
+mm_6 <- c(0.25,0.75)
+PX0 <- rbind(mm_5,mm_6)
+
+re6 = qfrModel(re5,
+               X1 = PX0)
+# object = re6
+document()
+
+pdPlot(re6,
+       plot.col= c(1,2),
+       group.names = c("DkkMo", "ScrMo"),
+       mean.diff = T,
+       var.diff = T,
+       skewed.diff = T,
+       kurtosis.diff = T
+)
+
+document()
+pdPlot(re6,
+       plot.col= c(7,8),
+       group.names = c("DkkMo", "Without DkkMo"),
+       mean.diff = T,
+       var.diff = T,
+       skewed.diff = T,
+       kurtosis.diff = T
+)
+# PDX DAR CT X2----
+library(devtools)
+document()
+load("~/Documents/DAR_RWV_CT/DAR_quafunreg_raw.data.RData")
+
+raw.dataset = lapply(raw.dataset, function(x) {x[x!=0]})
+
+raw.dataset2 = list()
+
+set.seed(1234)
+for (i in 1:length(raw.dataset)){
+  if (i <= length(raw.dataset)/2){
+    bar1 = raw.dataset[[i]] + rnorm(length(raw.dataset[[i]]), 0, 1)
+  } else {
+    bar1 = raw.dataset[[i]] + rnorm(length(raw.dataset[[i]]), -1, 1)
+  }
+  raw.dataset2 = append(raw.dataset2, list(bar1))
+}
+
+names(raw.dataset2) = c("dkkmo4", "dkkmo5", "dkkmo6",
+                        "scrmo1", "scrmo2", "scrmo3")
+
+
+raw.dataset = append(raw.dataset, raw.dataset2)
+
+re1 = createQboneObject(raw.dataset)
+
+names(re1@assays[["Bone"]]@data) <- names(raw.dataset)
+
+re1@assays[["Bone"]]@meta.assays <- data.frame(id = names(re1@assays[["Bone"]]@data), row.names = c(1:12))
+
+re1 <- addMetaData(object = re1,
+                   metadata = re1@assays[["Bone"]]@meta.assays[["id"]]
+                   , col = "id")
+re1 <- addMetaData(object = re1,
+                   metadata = c(rep("DkkMo", c(3)),
+                                rep("ScrMo", c(3)),
+                                rep("DkkMo", c(3)),
+                                rep("ScrMo", c(3))),
+                   col = "group")
+
+# no name if from list
+# library("devtools")
+# document()
+re2 = thinData(re1,prop=0.001) # prop=0.01 at 100k level is too much for PT7280
+re3 = lassoList(re2)
+re4 = preQuantlets(re3)
+# object = re4
+# dxPlot(re4)
+# dxPlotRev(re4)
+# dxPlot(re4, sparsity = 0.004)
+re5 = ecQuantlets(re4)
+# object = re5
+# qbasisPlot(re5)
+save.image(file = "~/Documents/DAR_RWV_CT/DAR_Qbone.X2.0.001.RData")
 # mm_1 <- c(1,0.25,0,0.25)
 # mm_2 <- c(0,0.25,1,0.25)
 # mm_3 <- c(1,0.25,0.25,0)

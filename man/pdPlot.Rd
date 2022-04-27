@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotting.R
 \name{pdPlot}
 \alias{pdPlot}
-\title{Plot predicted densities}
+\title{Predicted Density Plot}
 \usage{
 pdPlot(
   object,

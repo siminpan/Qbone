@@ -205,11 +205,13 @@ qbasisPlot <- function(
           plot.title = element_text(hjust = 0.5))
   list <- list(p0)
   for (v in 1:(n-1)) {
-    if (v >= 7) {
-      ylims <- c(-0.05, 0.055)
-    } else {
-      ylims <- c(-0.2, 0.2)
-    }
+    # if (v >= 7) {
+    #   ylims <- c(-0.05, 0.055)
+    # } else {
+    #   ylims <- c(-0.2, 0.2)
+    # }
+    ylims <- c(min(object@assays[[defaultAssay(object)]]@scale.data[["quantlets"]][, v]) - 0.05,
+               max(object@assays[[defaultAssay(object)]]@scale.data[["quantlets"]][, v]) + 0.05)
     p1 <- ggplot(data.frame(x = object@assays[[defaultAssay(object)]]@scale.data[["p"]],
                             y = object@assays[[defaultAssay(object)]]@scale.data[["quantlets"]][, v]),
                  aes(x=x, y = y)) +
@@ -231,8 +233,51 @@ qbasisPlot <- function(
   )
 }
 
-## 2.4 pdPlot ----
-#' Plot predicted densities
+## 2.4 qbasisPlot3D ----
+#' 3D Plot of first n quantlet basis functions
+#'
+#' Plot first n quantlet basis functions in 3D Plots
+#'
+#' @param object A Qboneobject
+#' @param n Number of first n basis functions to plot, default = 16.
+#' @param ... Arguments passed to other methods
+#'
+#' @importFrom plotly plot_ly
+#'
+#' @export
+#'
+qbasisPlot3D <- function(
+  object,
+  n = 16,
+  ...
+){
+  df = data.frame(x = rep(object@assays[[defaultAssay(object)]]@scale.data[["p"]],dim(object@assays[[defaultAssay(object)]]@scale.data[["quantlets"]])[2]+1),
+                  y = c(rep(1, length(object@assays[[defaultAssay(object)]]@scale.data[["p"]])),
+                        object@assays[[defaultAssay(object)]]@scale.data[["quantlets"]]),
+                  z = rep(1:(dim(object@assays[[defaultAssay(object)]]@scale.data[["quantlets"]])[2]+1), each = dim(object@assays[[defaultAssay(object)]]@scale.data[["quantlets"]])[1])
+  )
+  axx <- list(
+    title = "Percentile"
+  )
+
+  axy <- list(
+    title = "Quantlets"
+  )
+
+  axz <- list(
+    title = " "
+  )
+  p <- plot_ly(df[which(df$z <= n),], x = ~x, y = ~z, z = ~y, split = ~z,
+               type = "scatter3d", mode = "lines", color= ~z)%>%
+    layout(title = "Quantlet &#936;",
+           # plot_bgcolor = "#e5ecf6",
+           scene = list(xaxis=axx,yaxis=axy,zaxis=axz),
+           legend = list(title=list(text='<b> Quantlets </b>')))
+  return(p)
+}
+
+## 2.5 pdPlot ----
+#' Predicted Density Plot
 #'
 #' Plot predicted densities
 #'
