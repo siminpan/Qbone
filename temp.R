@@ -1319,16 +1319,16 @@ df2.m$variable = rep(unique(df$x), each = nrow(df2))
 plot_ly(df2.m, x = ~variable, y = ~group, z = ~value, split = ~id,
         type = "scatter3d", mode = "lines", color= ~id)
 
-fun_range <- function(x, range) {
+reRange <- function(x, range) {
   (x - min(x))/(max(x)-min(x)) * (range[2] - range[1]) + range[1]
 }
 
 # library("microbenchmark")
-# microbenchmark(fun_range(df3.m$value, range = c(min(df$y), max(df$y))), scales::rescale(df3.m$value, to = c(min(df$y), max(df$y))))
+# microbenchmark(reRange(df3.m$value, range = c(min(df$y), max(df$y))), scales::rescale(df3.m$value, to = c(min(df$y), max(df$y))))
 
 df3.m = df2.m
 # df3.m$value = scales::rescale(df3.m$value, to = c(min(df$y), max(df$y)))
-df3.m$value = fun_range(df3.m$value, range = c(min(df$y), max(df$y)))
+df3.m$value = reRange(df3.m$value, range = c(min(df$y), max(df$y)))
 
 df3.m$group = paste("Predicted", df3.m$group)
 
@@ -1391,7 +1391,7 @@ df4 = data.frame(variable = rep(object@assays[[defaultAssay(object)]]@scale.data
 )
 
 df4$group = paste("obseverd", df4$group)
-df4$value = fun_range(df4$value, range = c(min(df$y), max(df$y)))
+df4$value = reRange(df4$value, range = c(min(df$y), max(df$y)))
 
 p2 <- plot_ly(df4[grep(unique(object@meta.data[["group"]])[1], df4$group), ],
               x = ~variable, y = ~group, z = ~value, split = ~id,
@@ -1411,6 +1411,9 @@ fig2 <- subplot(p2, p0.0, p1) %>%
          )
 fig2
 
+object = re5
+qbasisPlot3D(object)
+quantileFPlot3D(object, group = 1)
 # examples ----
 library(devtools)
 

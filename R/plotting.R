@@ -394,6 +394,133 @@ pdPlot <- function(
   return(suppressWarnings(print(p)))
 }
 
+## 2.6 quantileFPlot3D ----
+#' 3D Plot of first n quantlet with observed and predicted quantile function
+#'
+#'
+#'
+#' @param object A Qboneobject
+#' @param n Number of first n basis functions to plot, default = 16.
+#' @param group Group to be plotted.
+#' @param data.assay It is the name of the assay whose data will be plotted
+#' @param ... Arguments passed to other methods
+#'
+#' @importFrom plotly plot_ly layout subplot
+#' @importFrom magrittr %>%
+#'
+#' @export
+#'
+quantileFPlot3D <- function(
+  object,
+  n = 16,
+  group = NULL,
+  data.assay = defaultAssay(object),
+  ...
+){
+  # Get Data
+  empCoefs.list <- getQboneData(object, slot = 'data', assay = data.assay)
+  empCoefs <- matrix(unlist(empCoefs.list, use.names = F), nrow=length(empCoefs.list), byrow=TRUE)
+  reduceBasis <- object@assays[[data.assay]]@scale.data[["reduceBasis"]]
+  orthogBasis <- object@assays[[data.assay]]@scale.data[["orthogBasis"]]
+  quantlets <- object@assays[[data.assay]]@scale.data[["quantlets"]]
+  p <- object@assays[[data.assay]]@scale.data[["p"]]
+  ## quantlets data
+  df = data.frame(x = rep(p,dim(quantlets)[2]+1),
+                  y = c(rep(1, length(p)),
+                        quantlets),
+                  z = rep(1:(dim(quantlets)[2]+1), each = dim(quantlets)[1])
+  )
+  ## Predicted
+  df2 = eigenmapmmt(empCoefs, cbind(rep(1, length(p)),
+                                    quantlets)
+  )
+  df2 = cbind(data.frame(id = object@meta.data[["id"]],
+                         group = object@meta.data[["group"]]),
+              df2)
+
+  df3.m = reshape2::melt(df2)
+  df3.m$variable = rep(unique(df$x), each = nrow(df2))
+  df3.m$value = reRange(df3.m$value, range = c(min(df$y), max(df$y)))
+  df3.m$group = paste("Predicted", df3.m$group)
+  ## Observed
+  observed = lapply(object@assays[["Thin"]]@data,
+                    quantile,
+                    prob = p)
+  df4 = data.frame(variable = rep(p, length(observed)),
+                   value = unlist(observed, use.names = F),
+                   group = rep(object@meta.data[["group"]], each = length(p)),
+                   id = rep(object@meta.data[["id"]], each = length(p))
+  )
+
+  df4$group = paste("Obseverd", df4$group)
+  df4$value = reRange(df4$value, range = c(min(df$y), max(df$y)))
+  if (is.null(group)){
+    ## plot n basis
+    fig0 <- plot_ly(df[which(df$z <= n),], x = ~x, y = ~z, z = ~y, split = ~z,
+                    type = "scatter3d", mode = "lines", color= ~z)
+    ## plot Predicted
+    f <- list(
+      family = "Courier New, monospace",
+      size = 18,
+      color = "black")
+    a <- list(
+      text = "Predicted",
+      font = f,
+      xref = "paper",
+      yref = "paper",
+      yanchor = "bottom",
+      xanchor = "center",
+      align = "center",
+      x = 0.5,
+      y = 1,
+      showarrow = FALSE
+    )
+    fig1 <- plot_ly(df3.m,
+                    x = ~variable, y = ~value, split = ~id,
+                    type = "scatter", mode = "lines", color= ~id) %>%
+      layout(annotations = a)
+    ## plot Observed
+    b <- list(
+      text = "Observed",
+      font = f,
+      xref = "paper",
+      yref = "paper",
+      yanchor = "bottom",
+      xanchor = "center",
+      align = "center",
+      x = 0.5,
+      y = 1,
+      showarrow = FALSE
+    )
+    fig2 <- plot_ly(df4,
+                    x = ~variable, y = ~value, split = ~id,
+                    type = "scatter", mode = "lines", color= ~id) %>%
+      layout(annotations = b)
+  } else {
+    ## plot n basis
+    fig0 <- plot_ly(df[which(df$z <= n),], x = ~x, y = ~z, z = ~y, split = ~z,
+                    type = "scatter3d", mode = "lines", color= ~z)
+    ## plot Predicted
+    fig1 <- plot_ly(df3.m[grep(unique(object@meta.data[["group"]])[group], df3.m$group), ],
+                    x = ~variable, y = ~group, z = ~value, split = ~id,
+                    type = "scatter3d", mode = "lines", color= ~id)
+    ## plot Observed
+    fig2 <- plot_ly(df4[grep(unique(object@meta.data[["group"]])[group], df4$group), ],
+                    x = ~variable, y = ~group, z = ~value, split = ~id,
+                    type = "scatter3d", mode = "lines", color= ~id)
+  }
+  ## plot together
+  axy <- list(
+    title = "Obseverd -> Quantlets -> Predicted"
+  )
+
+  fig3 <- subplot(fig2, fig0, fig1) %>%
+    layout(title = paste0('From Obseverd to Predicted \n Plot with First ', n, ' Basis'),
+           scene = list(yaxis=axy)
+    )
+  return(suppressWarnings(print(fig3)))
+}
+
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # 3. Qbone-defined generics ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -527,6 +654,22 @@ loccplotdata <- function(
   outputs <- list(quantlet.set, lasso.min_i_[ this ], plotdata)
   names(outputs) <- list("quantlet", "lccc", "plotdata")
   return(outputs)
+}
+
+## 6.4 reRange ----
+#' rescale the data in diserd range
+#'
+#' @param x input data
+#' @param range new data range
+#'
+#' @return rescaled value
+#'
+#' @keywords internal
+#'
+#' @noRd
+#'
+reRange <- function(x, range) {
+  (x - min(x))/(max(x)-min(x)) * (range[2] - range[1]) + range[1]
 }
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # 7. TESTING ----
