@@ -242,7 +242,8 @@ qbasisPlot <- function(
 #' @param n Number of first n basis functions to plot, default = 16.
 #' @param ... Arguments passed to other methods
 #'
-#' @importFrom plotly plot_ly
+#' @importFrom plotly plot_ly layout
+#' @importFrom magrittr %>%
 #'
 #' @export
 #'
@@ -268,9 +269,8 @@ qbasisPlot3D <- function(
     title = " "
   )
   p <- plot_ly(df[which(df$z <= n),], x = ~x, y = ~z, z = ~y, split = ~z,
-               type = "scatter3d", mode = "lines", color= ~z)%>%
+               type = "scatter3d", mode = "lines", color= ~z) %>%
     layout(title = "Quantlet &#936;",
-           # plot_bgcolor = "#e5ecf6",
            scene = list(xaxis=axx,yaxis=axy,zaxis=axz),
            legend = list(title=list(text='<b> Quantlets </b>')))
   return(p)

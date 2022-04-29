@@ -1229,7 +1229,11 @@ all.equal(lasso.locc, lasso.values)
 
 
 # 3d plot ----
+library(devtools)
 document()
+
+# object = re5
+# qbasisPlot(re5)
 qbasisPlot(object)
 qbasisPlot3D(object, n = 20)
 # install.packages("plotly")
@@ -1266,7 +1270,7 @@ axz <- list(
   title = " "
 )
 
-plot_ly(df[which(df$z <= n),], x = ~x, y = ~z, z = ~y, split = ~z,
+p0 <- plot_ly(df[which(df$z <= n),], x = ~x, y = ~z, z = ~y, split = ~z,
         type = "scatter3d", mode = "lines", color= ~z) %>%
   layout(title = "Quantlet &#936;",
          # plot_bgcolor = "#e5ecf6",
@@ -1279,6 +1283,133 @@ test1 <- function(...) {if(hasArg(x1)){print("ex")}else{F}}
 test1(x1= NULL)
 x
 
+# basis function to original density ----
+library(devtools)
+document()
+
+# object = re5
+# qbasisPlot(re5)
+qbasisPlot(object)
+qbasisPlot3D(object, n = 20)
+
+
+empCoefs.list <- getQboneData(object, slot = 'data', assay = defaultAssay(object))
+empCoefs <- matrix(unlist(empCoefs.list, use.names = F), nrow=length(empCoefs.list), byrow=TRUE)
+reduceBasis <- object@assays[[defaultAssay(object)]]@scale.data[["reduceBasis"]]
+orthogBasis <- object@assays[[defaultAssay(object)]]@scale.data[["orthogBasis"]]
+quantlets <- object@assays[[defaultAssay(object)]]@scale.data[["quantlets"]]
+
+
+df = data.frame(x = rep(object@assays[[defaultAssay(object)]]@scale.data[["p"]],dim(object@assays[[defaultAssay(object)]]@scale.data[["quantlets"]])[2]+1),
+                y = c(rep(1, length(object@assays[[defaultAssay(object)]]@scale.data[["p"]])),
+                      object@assays[[defaultAssay(object)]]@scale.data[["quantlets"]]),
+                z = rep(1:(dim(object@assays[[defaultAssay(object)]]@scale.data[["quantlets"]])[2]+1), each = dim(object@assays[[defaultAssay(object)]]@scale.data[["quantlets"]])[1])
+)
+
+df2 = eigenmapmmt(empCoefs, cbind(rep(1, length(object@assays[[defaultAssay(object)]]@scale.data[["p"]])),
+                                  object@assays[[defaultAssay(object)]]@scale.data[["quantlets"]])
+                  )
+df2 = cbind(data.frame(id = object@meta.data[["id"]],
+                       group = object@meta.data[["group"]]),
+            df2)
+df2.m = reshape2::melt(df2)
+df2.m$variable = rep(unique(df$x), each = nrow(df2))
+
+
+plot_ly(df2.m, x = ~variable, y = ~group, z = ~value, split = ~id,
+        type = "scatter3d", mode = "lines", color= ~id)
+
+fun_range <- function(x, range) {
+  (x - min(x))/(max(x)-min(x)) * (range[2] - range[1]) + range[1]
+}
+
+# library("microbenchmark")
+# microbenchmark(fun_range(df3.m$value, range = c(min(df$y), max(df$y))), scales::rescale(df3.m$value, to = c(min(df$y), max(df$y))))
+
+df3.m = df2.m
+# df3.m$value = scales::rescale(df3.m$value, to = c(min(df$y), max(df$y)))
+df3.m$value = fun_range(df3.m$value, range = c(min(df$y), max(df$y)))
+
+df3.m$group = paste("Predicted", df3.m$group)
+
+p1 <- plot_ly(df3.m, x = ~variable, y = ~group, z = ~value, split = ~id,
+        type = "scatter3d", mode = "lines", color= ~id)
+
+df3.m2 = data.frame(x = df3.m$variable,
+                    y = df3.m$value,
+                    z = df3.m$id)
+df3.m2 = df3.m2[which(df3.m2$z %in% c("dkkmo2")),]
+df3.m2$z = 0
+
+n = 16
+df4 = rbind(df[which(df$z <= n),], df3.m2)
+
+# plot_ly(df4[which(df4$z == "dkkmo1"),], x = ~x, y = ~z, z = ~y, split = ~z,
+#         type = "scatter3d", mode = "lines", color= ~z)
+
+p2 <- plot_ly(df4, x = ~x, y = ~z, z = ~y, split = ~z,
+        type = "scatter3d", mode = "lines", color= ~z)
+
+n1 = 16
+n2 = 40
+
+p0.0 <- plot_ly(df[which(df$z <= n1),], x = ~x, y = ~z, z = ~y, split = ~z,
+              type = "scatter3d", mode = "lines", color= ~z)
+p0.1 <- plot_ly(df[which(df$z <= n2 & df$z > n1),], x = ~x, y = ~z, z = ~y, split = ~z,
+                type = "scatter3d", mode = "lines", color= ~z)
+
+p1 <- plot_ly(df3.m, x = ~variable, y = ~group, z = ~value, split = ~id,
+              type = "scatter3d", mode = "lines", color= ~id)
+
+
+fig0 <- subplot(p1, p0.0, p1)  %>%
+  layout(title = 'Side By Side Subplots')
+fig0
+
+
+fig <- subplot(p1, p0.0) %>%
+  layout(title = 'Side By Side Subplots')
+fig
+
+stats::ecdf(x)
+
+
+fig1 <- subplot(p1, p0.0, p2)  %>%
+  layout(title = 'Side By Side Subplots')
+fig1
+
+## observed quantile ----
+object@assays[[defaultAssay(object)]]@scale.data[["p"]]
+
+observed = lapply(re5@assays[["Thin"]]@data,
+                  quantile,
+                  prob = object@assays[[defaultAssay(object)]]@scale.data[["p"]])
+df4 = data.frame(variable = rep(object@assays[[defaultAssay(object)]]@scale.data[["p"]], length(observed)),
+                 value = unlist(observed, use.names = F),
+                 group = rep(object@meta.data[["group"]], each = length(object@assays[[defaultAssay(object)]]@scale.data[["p"]])),
+                 id = rep(object@meta.data[["id"]], each = length(object@assays[[defaultAssay(object)]]@scale.data[["p"]]))
+)
+
+df4$group = paste("obseverd", df4$group)
+df4$value = fun_range(df4$value, range = c(min(df$y), max(df$y)))
+
+p2 <- plot_ly(df4[grep(unique(object@meta.data[["group"]])[1], df4$group), ],
+              x = ~variable, y = ~group, z = ~value, split = ~id,
+              type = "scatter3d", mode = "lines", color= ~id)
+
+p1 <- plot_ly(df3.m[grep(unique(object@meta.data[["group"]])[1], df3.m$group), ],
+              x = ~variable, y = ~group, z = ~value, split = ~id,
+              type = "scatter3d", mode = "lines", color= ~id)
+
+axy <- list(
+  title = "Obseverd -> Quantlets -> Predicted"
+)
+
+fig2 <- subplot(p2, p0.0, p1) %>%
+  layout(title = 'Side By Side Subplots',
+         scene = list(yaxis=axy)
+         )
+fig2
 
 # examples ----
 library(devtools)
