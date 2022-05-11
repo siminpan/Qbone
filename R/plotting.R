@@ -559,7 +559,7 @@ histogram3D <- function(
   # Plot
   fig <- plot_ly(df1, x = ~z, y = ~cut, z = ~Freq, split = ~group, type = "scatter3d", mode = 'lines')
   fig1 <- fig  %>%
-    layout(title = 'Sample Histogram')
+    layout(title = title)
   # Output
   return(suppressWarnings(print(fig1)))
 }
