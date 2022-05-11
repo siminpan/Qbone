@@ -38,7 +38,11 @@ Imports:
     gridExtra,
     pracma,
     wavethresh,
-    plotly
+    plotly,
+    magrittr,
+    dplyr,
+    grDevices,
+    RColorBrewer
 Collate: 
     'Qbone-package.R'
     'utils.R'

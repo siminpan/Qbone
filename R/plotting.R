@@ -244,6 +244,8 @@ qbasisPlot <- function(
 #'
 #' @importFrom plotly plot_ly layout
 #' @importFrom magrittr %>%
+#' @importFrom grDevices colorRampPalette
+#' @importFrom RColorBrewer brewer.pal
 #'
 #' @export
 #'
@@ -269,7 +271,8 @@ qbasisPlot3D <- function(
     title = " "
   )
   p <- plot_ly(df[which(df$z <= n),], x = ~x, y = ~z, z = ~y, split = ~z,
-               type = "scatter3d", mode = "lines", color= ~z) %>%
+               type = "scatter3d", mode = "lines", color = ~z,
+               colors = colorRampPalette(brewer.pal(8, "Set2"))(length(unique(df$z)))) %>%
     layout(title = "Quantlet &#936;",
            scene = list(xaxis=axx,yaxis=axy,zaxis=axz),
            legend = list(title=list(text='<b> Quantlets </b>')))
@@ -403,10 +406,13 @@ pdPlot <- function(
 #' @param n Number of first n basis functions to plot, default = 16.
 #' @param group Group to be plotted.
 #' @param data.assay It is the name of the assay whose data will be plotted
+#' @param plot Plot "Obseverd", "Quantlets", "Predicted" or "All" which is "Obseverd -> Quantlets -> Predicted". Default is "All"
 #' @param ... Arguments passed to other methods
 #'
 #' @importFrom plotly plot_ly layout subplot
 #' @importFrom magrittr %>%
+#' @importFrom grDevices colorRampPalette
+#' @importFrom RColorBrewer brewer.pal
 #'
 #' @export
 #'
@@ -415,8 +421,12 @@ quantileFPlot3D <- function(
   n = 16,
   group = NULL,
   data.assay = defaultAssay(object),
+  plot = "All",
   ...
 ){
+  if (!(plot %in% c("Obseverd", "Quantlets", "Predicted", "All"))){
+    stop('plot argument should be either "Obseverd", "Quantlets", "Predicted" or "All"')
+  }
   # Get Data
   empCoefs.list <- getQboneData(object, slot = 'data', assay = data.assay)
   empCoefs <- matrix(unlist(empCoefs.list, use.names = F), nrow=length(empCoefs.list), byrow=TRUE)
@@ -456,8 +466,10 @@ quantileFPlot3D <- function(
   df4$value = reRange(df4$value, range = c(min(df$y), max(df$y)))
   if (is.null(group)){
     ## plot n basis
+    mycolors0 = colorRampPalette(brewer.pal(8, "Set2"))(length(unique(df$z)))
     fig0 <- plot_ly(df[which(df$z <= n),], x = ~x, y = ~z, z = ~y, split = ~z,
-                    type = "scatter3d", mode = "lines", color= ~z)
+                    type = "scatter3d", mode = "lines", color= ~z,
+                    colors = mycolors0)
     ## plot Predicted
     f <- list(
       family = "Courier New, monospace",
@@ -475,9 +487,11 @@ quantileFPlot3D <- function(
       y = 1,
       showarrow = FALSE
     )
+    mycolors1 = colorRampPalette(brewer.pal(8, "Set2"))(length(unique(df3.m$id)))
     fig1 <- plot_ly(df3.m,
                     x = ~variable, y = ~value, split = ~id,
-                    type = "scatter", mode = "lines", color= ~id) %>%
+                    type = "scatter", mode = "lines", color= ~id,
+                    colors = mycolors1) %>%
       layout(annotations = a)
     ## plot Observed
     b <- list(
@@ -492,22 +506,30 @@ quantileFPlot3D <- function(
       y = 1,
       showarrow = FALSE
     )
+    mycolors2 = colorRampPalette(brewer.pal(8, "Set2"))(length(unique(df4$id)))
     fig2 <- plot_ly(df4,
                     x = ~variable, y = ~value, split = ~id,
-                    type = "scatter", mode = "lines", color= ~id) %>%
+                    type = "scatter", mode = "lines", color= ~id,
+                    colors = mycolors2) %>%
       layout(annotations = b)
   } else {
     ## plot n basis
+    mycolors0 = colorRampPalette(brewer.pal(8, "Set2"))(length(unique(df$z)))
     fig0 <- plot_ly(df[which(df$z <= n),], x = ~x, y = ~z, z = ~y, split = ~z,
-                    type = "scatter3d", mode = "lines", color= ~z)
+                    type = "scatter3d", mode = "lines", color= ~z,
+                    colors = mycolors0)
     ## plot Predicted
-    fig1 <- plot_ly(df3.m[grep(unique(object@meta.data[["group"]])[group], df3.m$group), ],
+    mycolors1 = colorRampPalette(brewer.pal(8, "Set2"))(length(unique(df3.m$id)))
+    fig1 <- plot_ly(df3.m[grep(paste0(" ",unique(object@meta.data[["group"]])[group],"$"), df3.m$group), ],
                     x = ~variable, y = ~group, z = ~value, split = ~id,
-                    type = "scatter3d", mode = "lines", color= ~id)
+                    type = "scatter3d", mode = "lines", color= ~id,
+                    colors = mycolors1)
     ## plot Observed
-    fig2 <- plot_ly(df4[grep(unique(object@meta.data[["group"]])[group], df4$group), ],
+    mycolors2 = colorRampPalette(brewer.pal(8, "Set2"))(length(unique(df4$id)))
+    fig2 <- plot_ly(df4[grep(paste0(" ",unique(object@meta.data[["group"]])[group],"$"), df4$group), ],
                     x = ~variable, y = ~group, z = ~value, split = ~id,
-                    type = "scatter3d", mode = "lines", color= ~id)
+                    type = "scatter3d", mode = "lines", color= ~id,
+                    colors = mycolors2)
   }
   ## plot together
   axy <- list(
@@ -518,7 +540,17 @@ quantileFPlot3D <- function(
     layout(title = paste0('From Obseverd to Predicted \n Plot with First ', n, ' Basis'),
            scene = list(yaxis=axy)
     )
-  return(suppressWarnings(print(fig3)))
+  # Output
+  if (plot == "Obseverd"){
+    return(suppressWarnings(print(fig2)))
+  } else if (plot == "Quantlets"){
+    return(suppressWarnings(print(fig0)))
+  } else if (plot == "Predicted"){
+    return(suppressWarnings(print(fig1)))
+  } else if (plot == "All"){
+    return(suppressWarnings(print(fig3)))
+  }
+
 }
 
 ## 2.7 histogram3D ----
@@ -535,6 +567,8 @@ quantileFPlot3D <- function(
 #' @importFrom plotly plot_ly layout subplot
 #' @importFrom magrittr %>%
 #' @importFrom dplyr group_by summarise n
+#' @importFrom grDevices colorRampPalette
+#' @importFrom RColorBrewer brewer.pal
 #'
 #' @export
 #'
@@ -557,7 +591,8 @@ histogram3D <- function(
     summarise(Freq = n())
   df1$group = object@meta.data[["group"]][c(match(df1$z, object@meta.data[["id"]]))]
   # Plot
-  fig <- plot_ly(df1, x = ~z, y = ~cut, z = ~Freq, split = ~group, type = "scatter3d", mode = 'lines')
+  mycolors = colorRampPalette(brewer.pal(8, "Set2"))(length(unique(df1$group)))
+  fig <- plot_ly(df1, x = ~z, y = ~cut, z = ~Freq, split = ~group, type = "scatter3d", mode = 'lines', colors = mycolors)
   fig1 <- fig  %>%
     layout(title = title)
   # Output
