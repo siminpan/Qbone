@@ -39,5 +39,5 @@ defaultAssay(object).}
 \item{...}{Arguments passed to other methods}
 }
 \description{
-fFit the quantlet space model in using Markov chain Monte Carlo (MCMC)
+Fit the quantlet space model in using Markov chain Monte Carlo (MCMC)
 }

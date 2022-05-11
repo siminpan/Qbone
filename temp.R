@@ -1616,3 +1616,10 @@ pdPlot(re6,
        skewed.diff = T,
        kurtosis.diff = T
 )
+
+# reference ----
+library(devtools)
+document()
+
+cran <- tools::CRAN_package_db()
+desc_with_doi <- grep("doi:", cran$Description, value = TRUE)

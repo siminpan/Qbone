@@ -17,7 +17,7 @@ NULL
 ## 2.1 qfrModel ----
 #' Fit the quantile functional regression model
 #'
-#' fFit the quantlet space model in using Markov chain Monte Carlo (MCMC)
+#' Fit the quantlet space model in using Markov chain Monte Carlo (MCMC)
 #'
 #' @param object A Qboneobject
 #' @param new.assay.name New assay name assigned to the quantlets data

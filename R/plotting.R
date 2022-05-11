@@ -521,6 +521,48 @@ quantileFPlot3D <- function(
   return(suppressWarnings(print(fig3)))
 }
 
+## 2.7 histogram3D ----
+#' Histogram Plot for each sample in 3D layout
+#'
+#'
+#'
+#' @param object A Qboneobject
+#' @param title Title of the plot.
+#' @param binbreaks bin width breaks for the Histogram. Defulat is 1000
+#' @param data.assay It is the name of the assay whose data will be plotted
+#' @param ... Arguments passed to other methods
+#'
+#' @importFrom plotly plot_ly layout subplot
+#' @importFrom magrittr %>%
+#' @importFrom dplyr group_by summarise n
+#'
+#' @export
+#'
+histogram3D <- function(
+  object,
+  title = "Histogram",
+  binbreaks = 1000,
+  data.assay = defaultAssay(object),
+  ...
+){
+  # Get data
+  df = data.frame(x = unlist(object@assays[[data.assay]]@data, use.names = F),
+                  y = unlist(mapply(seq, 1, unlist(lapply(object@assays[[data.assay]]@data, length), use.names = F)), use.names = F),
+                  z = rep(names(object@assays[[data.assay]]@data), unlist(lapply(object@assays[[data.assay]]@data, length), use.names = F))
+  )
+  df$cut = cut(df$x, breaks = binbreaks)
+  # Get histogram infor
+  df1 <- df %>%
+    group_by(z,cut) %>%
+    summarise(Freq = n())
+  df1$group = object@meta.data[["group"]][c(match(df1$z, object@meta.data[["id"]]))]
+  # Plot
+  fig <- plot_ly(df1, x = ~z, y = ~cut, z = ~Freq, split = ~group, type = "scatter3d", mode = 'lines')
+  fig1 <- fig  %>%
+    layout(title = 'Sample Histogram')
+  # Output
+  return(suppressWarnings(print(fig1)))
+}
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # 3. Qbone-defined generics ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
