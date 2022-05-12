@@ -404,7 +404,7 @@ pdPlot <- function(
 #'
 #' @param object A Qboneobject
 #' @param n Number of first n basis functions to plot, default = 16.
-#' @param group Group to be plotted.
+#' @param group Group to be plotted. All group will be plotted if NULL. Default is NULL.
 #' @param data.assay It is the name of the assay whose data will be plotted
 #' @param plot Plot "Observed", "Quantlets", "Predicted" or "All" which is "Observed -> Quantlets -> Predicted". Default is "All"
 #' @param ... Arguments passed to other methods
