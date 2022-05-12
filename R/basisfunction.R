@@ -785,7 +785,7 @@ empCoefs <- function(
 # 7. TESTING ----
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-## 7.1 lassolist2 ----
+## 7.1 lassolistparallel ----
 #' Run lasso list to build basis function
 #'
 #'
@@ -803,9 +803,9 @@ empCoefs <- function(
 #' @importFrom foreach foreach %dopar%
 #'
 #'
-#' @export
+#' @noRd
 #'
-lassolist2 <- function(
+lassolistparallel <- function(
   object,
   verbose = F,
   new.assay.name = "Lasso.list",

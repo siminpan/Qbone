@@ -406,7 +406,7 @@ pdPlot <- function(
 #' @param n Number of first n basis functions to plot, default = 16.
 #' @param group Group to be plotted.
 #' @param data.assay It is the name of the assay whose data will be plotted
-#' @param plot Plot "Obseverd", "Quantlets", "Predicted" or "All" which is "Obseverd -> Quantlets -> Predicted". Default is "All"
+#' @param plot Plot "Observed", "Quantlets", "Predicted" or "All" which is "Observed -> Quantlets -> Predicted". Default is "All"
 #' @param ... Arguments passed to other methods
 #'
 #' @importFrom plotly plot_ly layout subplot
@@ -424,8 +424,8 @@ quantileFPlot3D <- function(
   plot = "All",
   ...
 ){
-  if (!(plot %in% c("Obseverd", "Quantlets", "Predicted", "All"))){
-    stop('plot argument should be either "Obseverd", "Quantlets", "Predicted" or "All"')
+  if (!(plot %in% c("Observed", "Quantlets", "Predicted", "All"))){
+    stop('plot argument should be either "Observed", "Quantlets", "Predicted" or "All"')
   }
   # Get Data
   empCoefs.list <- getQboneData(object, slot = 'data', assay = data.assay)
@@ -462,7 +462,7 @@ quantileFPlot3D <- function(
                    id = rep(object@meta.data[["id"]], each = length(p))
   )
 
-  df4$group = paste("Obseverd", df4$group)
+  df4$group = paste("Observed", df4$group)
   df4$value = reRange(df4$value, range = c(min(df$y), max(df$y)))
   if (is.null(group)){
     ## plot n basis
@@ -533,15 +533,15 @@ quantileFPlot3D <- function(
   }
   ## plot together
   axy <- list(
-    title = "Obseverd -> Quantlets -> Predicted"
+    title = "Observed -> Quantlets -> Predicted"
   )
 
   fig3 <- subplot(fig2, fig0, fig1) %>%
-    layout(title = paste0('From Obseverd to Predicted \n Plot with First ', n, ' Basis'),
+    layout(title = paste0('From Observed to Predicted \n Plot with First ', n, ' Basis'),
            scene = list(yaxis=axy)
     )
   # Output
-  if (plot == "Obseverd"){
+  if (plot == "Observed"){
     return(suppressWarnings(print(fig2)))
   } else if (plot == "Quantlets"){
     return(suppressWarnings(print(fig0)))
