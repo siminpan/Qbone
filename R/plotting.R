@@ -562,6 +562,7 @@ quantileFPlot3D <- function(
 #' @param title Title of the plot.
 #' @param binbreaks bin width breaks for the Histogram. Defulat is 1000
 #' @param data.assay It is the name of the assay whose data will be plotted
+#' @param plotting  Plotting type, default is "scatter3d".
 #' @param ... Arguments passed to other methods
 #'
 #' @importFrom plotly plot_ly layout subplot
@@ -577,11 +578,12 @@ histogram3D <- function(
   title = "Histogram",
   binbreaks = 1000,
   data.assay = defaultAssay(object),
+  plotting = "scatter3d",
   ...
 ){
   # Get data
   df = data.frame(x = unlist(object@assays[[data.assay]]@data, use.names = F),
-                  y = unlist(mapply(seq, 1, unlist(lapply(object@assays[[data.assay]]@data, length), use.names = F)), use.names = F),
+                  # y = unlist(mapply(seq, 1, unlist(lapply(object@assays[[data.assay]]@data, length), use.names = F)), use.names = F),
                   z = rep(names(object@assays[[data.assay]]@data), unlist(lapply(object@assays[[data.assay]]@data, length), use.names = F))
   )
   df$cut = cut(df$x, breaks = binbreaks)
@@ -592,7 +594,12 @@ histogram3D <- function(
   df1$group = object@meta.data[["group"]][c(match(df1$z, object@meta.data[["id"]]))]
   # Plot
   mycolors = colorRampPalette(brewer.pal(8, "Set2"))(length(unique(df1$group)))
-  fig <- plot_ly(df1, x = ~z, y = ~cut, z = ~Freq, split = ~group, type = "scatter3d", mode = 'lines', colors = mycolors)
+  if (plotting == "scatter3d"){
+    fig <- plot_ly(df1, x = ~z, y = ~cut, z = ~Freq, split = ~group, type = plotting, mode = 'lines', colors = mycolors)
+  } else if (plotting == "histogram"){
+    fig <- plot_ly(df, x = ~x, split = ~z, type = plotting, colors = mycolors) %>%
+      layout(barmode = "overlay")
+  }
   fig1 <- fig  %>%
     layout(title = title)
   # Output
