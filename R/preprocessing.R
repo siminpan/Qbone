@@ -88,7 +88,7 @@ thinData <- function(
 ){
   if (is.null(prop)){
     stop("Proportion(prop) must be provided")
-  } else if (prop <= 0 | prop >= 1){
+  } else if (prop <= 0 | prop > 1){
     stop("Proportion(prop) must be between 0 and 1.")
   }
   orig.data = getQboneData(object, slot = 'data', assay = defaultAssay(object))
