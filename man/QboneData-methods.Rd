@@ -31,7 +31,7 @@ other packages
 }
 \section{Functions}{
 \itemize{
-\item \code{[[.QboneData}: Metadata and associated object accessor
-}}
+\item \code{[[}: Metadata and associated object accessor
 
+}}
 \concept{QboneData}

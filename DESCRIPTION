@@ -14,11 +14,10 @@ Authors@R: c(
 URL: https://github.com/siminpan/Qbone
 BugReports: https://github.com/siminpan/Qbone/issues
 Description: The `Qbone` package is a set of tools that enables efficient estimation of quantlets used in quantile functional regression to analyze distributional data. This package can be used to analyze distributional data in broader applications such as climate change analysis, image recognition analysis, and personalized health data analysis, etc. At current stage, it is just for independent functional linear regression.
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.1
 LinkingTo: 
     Rcpp, 
     RcppEigen

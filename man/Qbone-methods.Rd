@@ -47,8 +47,8 @@ packages
 }
 \section{Functions}{
 \itemize{
-\item \code{[[.Qbone}: Metadata and associated object accessor
+\item \code{[[}: Metadata and associated object accessor
 
-\item \code{[[<-,Qbone-method}: Metadata and associated object accessor
+\item \code{`[[`(Qbone) <- value}: Metadata and associated object accessor
+
 }}
-
