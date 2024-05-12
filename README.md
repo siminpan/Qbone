@@ -25,3 +25,7 @@ Yang, Hojin, et al. "Quantile function on scalar regression analysis for distrib
 
 This is my first R package. "R packages" by Hadley Wickham and Jenny Bryan and "Advanced R", a book in Chapman & Hall's R Series, both taught me a lot.
 The structure of my package is heavily influenced by Seurat and SeuratObject.
+
+## Cite this package
+Pan, Simin, et al. "Morpholino-driven blockade of Dkk-1 in osteosarcoma inhibits bone damage and tumour expansion by multiple mechanisms." British Journal of Cancer 127.1 (2022): 43-55.
+
