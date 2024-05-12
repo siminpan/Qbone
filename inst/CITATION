@@ -1,0 +1,27 @@
+citHeader("To cite Qbone in publications use:")
+
+citEntry(
+  entry    = "Article",
+  title    = "Morpholino-driven blockade of Dkk-1 in osteosarcoma inhibits bone damage and tumour expansion by multiple mechanisms",
+  author   = "Simin Pan, Michael Cesarek, Carla Godoy, Cynthia M Co, Catherine Schindler, Kelbi Padilla, Andrew Haskell, Heather Barreda, Christopher Story, Roy Poole, Alan Dabney, Carl A Gregory",
+  journal  = "British Journal of Cancer",
+  year     = "2022/7/1",
+  volume   = "127",
+  number   = "https://doi.org/10.1038/s41416-022-01764-z",
+  pages    = "43-55",
+  url      = "https://www.nature.com/articles/s41416-022-01764-z",
+  textVersion = paste(
+Abstract:
+Background
+Osteosarcoma (OS) is the most common primary bone malignancy. Chemotherapy plays an essential role in OS treatment, potentially doubling 5-year event-free survival if tumour necrosis can be stimulated. The canonical Wnt inhibitor Dickkopf-1 (Dkk-1) enhances OS survival in part through upregulation of aldehyde-dehydrogenase-1A1 which neutralises reactive oxygen species originating from nutritional stress and chemotherapeutic challenge.
+
+Methods
+A vivo morpholino (DkkMo) was employed to block the expression of Dkk-1 in OS cells. Cell mitosis, gene expression and bone destruction were measured in vitro and in vivo in the presence and absence of doxorubicin (DRB).
+
+Results
+DkkMo reduced the expression of Dkk-1 and Aldh1a1, reduced expansion of OS tumours, preserved bone volume and architecture and stimulated tumour necrosis. This was observed in the presence or absence of DRB.
+
+Conclusion
+These results indicate that administration of DkkMo with or without chemotherapeutics can substantially improve OS outcome with respect to tumour expansion and osteolytic corruption of bone in experimental OS model.
+  )
+)
