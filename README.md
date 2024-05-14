@@ -29,6 +29,6 @@ Wickham, Hadley. Advanced r. chapman and hall/CRC, 2019.
 ## Acknowledgment
 
 This work was funded by an Investigator Initiated Award (RP170496) and a High Impact Award (RP160765) from the Cancer Prevention and Research Institute of Texas. <br />
-The structure of my package is heavily influenced by Seurat and SeuratObject.
+The structure of this package is heavily influenced by Seurat and SeuratObject.
 
 
